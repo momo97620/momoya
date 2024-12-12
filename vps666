@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# 检查脚本是否被直接运行
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    echo "This script must be run directly, not sourced."
+    exit 1
+fi
+
 # 快捷指令检查标志文件
 ALIAS_SET_FLAG="$HOME/.script_alias_set.log"
 SCRIPT_NAME="vps_script.sh"  # 设定脚本名称，用于后续引用
@@ -53,7 +59,7 @@ show_main_menu() {
 
 # 设置快捷命令
 setup_alias() {
-    SCRIPT_PATH=$(realpath "$0")  # 获取当前脚本的绝对路径
+    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")  # 获取当前脚本的绝对路径
     if [[ -f "$ALIAS_SET_FLAG" ]]; then
         echo "快捷指令 'mo' 已设置，跳过重复设置。"
     else
@@ -84,7 +90,7 @@ uninstall_script() {
     fi
     
     # 删除主脚本文件
-    SCRIPT_PATH=$(realpath "$0")
+    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
     sudo rm -f "$SCRIPT_PATH"
     echo "主脚本已删除。"
     
