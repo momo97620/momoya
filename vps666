@@ -55,64 +55,40 @@ show_main_menu() {
 
 # 设置快捷命令
 setup_alias() {
-    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")  # 获取当前脚本的绝对路径
+    TARGET_PATH="/usr/local/bin/$SCRIPT_NAME"
+    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
+
     if [[ -f "$ALIAS_SET_FLAG" ]]; then
         echo "快捷指令 'mo' 已设置，跳过重复设置。"
     else
-        # 删除可能已有的错误别名
+        sudo cp "$SCRIPT_PATH" "$TARGET_PATH"
+        sudo chmod +x "$TARGET_PATH"
+
         sed -i '/alias mo=/d' ~/.bashrc
-
-        # 将快捷指令添加到 .bashrc
-        echo "alias mo='bash $SCRIPT_PATH'" >> ~/.bashrc
+        echo "alias mo='bash $TARGET_PATH'" >> ~/.bashrc
         touch "$ALIAS_SET_FLAG"
-        echo "已添加快捷命令 'mo'。"
-
-        # 重新加载 .bashrc 使别名生效
-        if [[ $SHELL == *bash ]]; then
-            source ~/.bashrc
-        elif [[ $SHELL == *zsh ]]; then
-            source ~/.zshrc
-        fi
+        echo "快捷指令 'mo' 已成功设置。"
+        source ~/.bashrc
     fi
-}
-
-# 自动设置主机名
-setup_hostname() {
-    CURRENT_HOSTNAME=$(hostname)
-    echo "当前主机名是：$CURRENT_HOSTNAME"
-    # 可在此添加自动设置主机名的逻辑
 }
 
 # 卸载主脚本
 uninstall_script() {
     echo "开始卸载主脚本并清除相关数据..."
-    
     read -p "确定要卸载主脚本并清除相关数据吗？(y/n): " confirm
     if [ "$confirm" != "y" ]; then
         echo "卸载已取消。"
         exit 1
     fi
-    
-    # 删除主脚本文件
-    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
-    sudo rm -f "$SCRIPT_PATH"
-    echo "主脚本已删除。"
-    
-    # 从~/.bashrc中删除别名'mo'
-    sed -i '/alias mo/d' ~/.bashrc
-    echo "别名'mo'已移除，请运行'source ~/.bashrc'使更改生效。"
-    
-    # 删除与主脚本相关的日志文件
-    if [ -f "$ALIAS_SET_FLAG" ]; then
-        sudo rm -f "$ALIAS_SET_FLAG"
-        echo "相关日志文件已删除。"
-    fi
-    
-    echo "主脚本卸载完成。"
+
+    TARGET_PATH="/usr/local/bin/$SCRIPT_NAME"
+    sudo rm -f "$TARGET_PATH"
+    sed -i '/alias mo=/d' ~/.bashrc
+    rm -f "$ALIAS_SET_FLAG"
+    echo "主脚本已卸载。"
     exit 0
 }
 
 # 脚本入口逻辑
-setup_alias  # 设置快捷命令
-setup_hostname  # 设置主机名
-show_main_menu  # 显示主菜单
+setup_alias
+show_main_menu
