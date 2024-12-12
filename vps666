@@ -69,6 +69,7 @@ setup_alias() {
         echo "快捷指令 'mo' 已设置，跳过重复设置。"
     else
         if ! grep -q "alias mo='sudo bash $SCRIPT_PATH'" ~/.bashrc; then
+            # 将快捷指令添加到 .bashrc
             echo "alias mo='sudo bash $SCRIPT_PATH'" >> ~/.bashrc
             touch "$ALIAS_SET_FLAG"
             echo "已添加快捷命令 'mo'。请运行 'source ~/.bashrc' 使更改生效。"
