@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# 检查脚本是否被直接运行
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-    echo "This script must be run directly, not sourced."
-    exit 1
-fi
-
 # 快捷指令检查标志文件
 ALIAS_SET_FLAG="$HOME/.script_alias_set.log"
 SCRIPT_NAME="vps_script.sh"  # 设定脚本名称，用于后续引用
@@ -70,15 +64,14 @@ uninstall_script() {
 
 # 设置快捷命令
 setup_alias() {
-    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")  # 获取当前脚本的绝对路径
+    SCRIPT_PATH=$(realpath "$0")  # 获取当前脚本的绝对路径
     if [[ -f "$ALIAS_SET_FLAG" ]]; then
-        echo "快捷指令 'n' 已设置，跳过重复设置。"
+        echo "快捷指令 'mo' 已设置，跳过重复设置。"
     else
-        if ! grep -q "alias n='bash $SCRIPT_PATH'" ~/.bashrc; then
-            # 将快捷指令添加到 .bashrc
-            echo "alias n='bash $SCRIPT_PATH'" >> ~/.bashrc
+        if ! grep -q "alias mo='sudo bash $SCRIPT_PATH'" ~/.bashrc; then
+            echo "alias mo='sudo bash $SCRIPT_PATH'" >> ~/.bashrc
             touch "$ALIAS_SET_FLAG"
-            echo "已添加快捷命令 'n'。请运行 'source ~/.bashrc' 使更改生效。"
+            echo "已添加快捷命令 'mo'。请运行 'source ~/.bashrc' 使更改生效。"
         fi
     fi
 }
@@ -90,30 +83,10 @@ setup_hostname() {
     # 取消设置主机名的代码，避免重复设置
 }
 
-# 自动赋予权限
-setup_permissions() {
-    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
-    chmod +x "$SCRIPT_PATH"
-    echo "脚本已赋予执行权限。"
-}
-
-# 自动加载更新
-auto_update() {
-    echo "正在检查更新..."
-    LATEST_SCRIPT=$(curl -sSL https://gist.githubusercontent.com/momo97620/your_gist_id/raw/vps_script.sh)
-    if [[ "$LATEST_SCRIPT" != "$(cat "$SCRIPT_PATH")" ]]; then
-        echo "发现新版本，正在更新..."
-        echo "$LATEST_SCRIPT" > "$SCRIPT_PATH"
-        chmod +x "$SCRIPT_PATH"
-        echo "脚本已更新。"
-    else
-        echo "脚本已是最新版本。"
-    fi
-}
-
 # 脚本入口逻辑
 setup_alias  # 设置快捷命令
 setup_hostname  # 设置主机名
-setup_permissions  # 自动赋予权限
-auto_update  # 自动加载更新
 show_main_menu  # 显示主菜单
+
+# 重新加载 .bashrc 文件
+source ~/.bashrc
