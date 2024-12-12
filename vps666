@@ -24,18 +24,22 @@ show_main_menu() {
     case $choice in
         1)
             echo "正在执行：搭建 Hysteria 节点"
+            # 执行搭建 Hysteria 节点的子脚本
             bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)
             ;;
         2)
             echo "正在执行：安装并配置 UFW 防火墙"
+            # 调用修改后的 UFW 子脚本链接
             bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/e7d1e2ad49decc464f0a814c436ca4b6151986e7/ufw_install.sh)
             ;;
         3)
             echo "正在执行：配置密钥登录"
+            # 配置密钥登录的子脚本链接
             bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)
             ;;
         4)
             echo "正在执行：修改登录端口号"
+            # 修改登录端口号的子脚本链接
             bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
             ;;
         5)
@@ -59,13 +63,16 @@ setup_alias() {
     if [[ -f "$ALIAS_SET_FLAG" ]]; then
         echo "快捷指令 'mo' 已设置，跳过重复设置。"
     else
-        if ! grep -q "alias mo='bash $SCRIPT_PATH'" ~/.bashrc; then
-            # 将快捷指令添加到 .bashrc
-            echo "alias mo='bash $SCRIPT_PATH'" >> ~/.bashrc
-            touch "$ALIAS_SET_FLAG"
-            echo "已添加快捷命令 'mo'。正在重新加载 ~/.bashrc 以使其生效..."
-            source ~/.bashrc  # 自动重载 bashrc 文件
-        fi
+        # 删除可能已有的错误别名
+        sed -i '/alias mo=/d' ~/.bashrc
+
+        # 将快捷指令添加到 .bashrc
+        echo "alias mo='bash $SCRIPT_PATH'" >> ~/.bashrc
+        touch "$ALIAS_SET_FLAG"
+        echo "已添加快捷命令 'mo'，自动刷新使其生效。"
+
+        # 自动加载 ~/.bashrc 使别名生效
+        source ~/.bashrc
     fi
 }
 
@@ -73,6 +80,7 @@ setup_alias() {
 setup_hostname() {
     CURRENT_HOSTNAME=$(hostname)
     echo "当前主机名是：$CURRENT_HOSTNAME"
+    # 取消设置主机名的代码，避免重复设置
 }
 
 # 卸载主脚本
@@ -91,7 +99,7 @@ uninstall_script() {
     echo "主脚本已删除。"
     
     # 从~/.bashrc中删除别名'mo'
-    sed -i '/alias mo=/d' ~/.bashrc
+    sed -i '/alias mo/d' ~/.bashrc
     echo "别名'mo'已移除，请运行'source ~/.bashrc'使更改生效。"
     
     # 删除与主脚本相关的日志文件
