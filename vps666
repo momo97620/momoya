@@ -6,6 +6,9 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     exit 1
 fi
 
+# 获取当前 VPS 主机名
+HOSTNAME=$(hostname)
+
 # 下载脚本到本地
 download_script() {
     SCRIPT_URL="https://raw.githubusercontent.com/momo97620/momoya/main/vps_script.sh"
@@ -36,6 +39,7 @@ setup_alias() {
 
 # 显示主菜单
 show_main_menu() {
+    echo -e "当前主机名：$HOSTNAME"
     echo -e "请选择要执行的任务："
     echo "1. 搭建 Hysteria 节点"
     echo "2. 安装并配置 UFW 防火墙"
