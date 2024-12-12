@@ -6,10 +6,6 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     exit 1
 fi
 
-# 快捷指令检查标志文件
-ALIAS_SET_FLAG="$HOME/.script_alias_set.log"
-SCRIPT_NAME="vps_script.sh"  # 设定脚本名称，用于后续引用
-
 # 显示主菜单
 show_main_menu() {
     echo -e "请选择要执行的任务："
@@ -53,25 +49,6 @@ show_main_menu() {
     esac
 }
 
-# 设置快捷命令
-setup_alias() {
-    TARGET_PATH="/usr/local/bin/$SCRIPT_NAME"
-    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
-
-    if [[ -f "$ALIAS_SET_FLAG" ]]; then
-        echo "快捷指令 'mo' 已设置，跳过重复设置。"
-    else
-        sudo cp "$SCRIPT_PATH" "$TARGET_PATH"
-        sudo chmod +x "$TARGET_PATH"
-
-        sed -i '/alias mo=/d' ~/.bashrc
-        echo "alias mo='bash $TARGET_PATH'" >> ~/.bashrc
-        touch "$ALIAS_SET_FLAG"
-        echo "快捷指令 'mo' 已成功设置。"
-        source ~/.bashrc
-    fi
-}
-
 # 卸载主脚本
 uninstall_script() {
     echo "开始卸载主脚本并清除相关数据..."
@@ -81,14 +58,12 @@ uninstall_script() {
         exit 1
     fi
 
-    TARGET_PATH="/usr/local/bin/$SCRIPT_NAME"
+    TARGET_PATH="/usr/local/bin/vps_script.sh"
     sudo rm -f "$TARGET_PATH"
     sed -i '/alias mo=/d' ~/.bashrc
-    rm -f "$ALIAS_SET_FLAG"
     echo "主脚本已卸载。"
     exit 0
 }
 
 # 脚本入口逻辑
-setup_alias
 show_main_menu
