@@ -6,14 +6,10 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     exit 1
 fi
 
-# 快捷命令设置标志
-ALIAS_SET_FLAG="$HOME/.script_alias_set.log"
-SCRIPT_NAME="vps_script.sh"  # 设定脚本名称，用于后续引用
-
 # 下载脚本到本地
 download_script() {
     SCRIPT_URL="https://raw.githubusercontent.com/momo97620/momoya/main/vps_script.sh"
-    TARGET_PATH="/usr/local/bin/$SCRIPT_NAME"
+    TARGET_PATH="/usr/local/bin/vps_script.sh"
 
     if [[ ! -f "$TARGET_PATH" ]]; then
         echo "下载脚本并保存到 $TARGET_PATH"
@@ -27,20 +23,16 @@ download_script() {
 
 # 设置快捷命令
 setup_alias() {
-    if [[ ! -f "$ALIAS_SET_FLAG" ]]; then
+    # 检查是否已设置别名
+    if ! grep -q "alias n=" ~/.bashrc; then
         echo "设置快捷命令 n"
-        echo "alias n='bash /usr/local/bin/$SCRIPT_NAME'" >> ~/.bashrc
-        touch "$ALIAS_SET_FLAG"
-        echo "快捷命令 n 已成功设置"
+        echo "alias n='bash /usr/local/bin/vps_script.sh'" >> ~/.bashrc
         source ~/.bashrc
+        echo "快捷命令 n 已成功设置"
     else
         echo "快捷命令 n 已设置，跳过重复设置"
     fi
 }
-
-# 主逻辑
-download_script
-setup_alias
 
 # 显示主菜单
 show_main_menu() {
@@ -102,4 +94,6 @@ uninstall_script() {
 }
 
 # 脚本入口逻辑
+download_script
+setup_alias
 show_main_menu
