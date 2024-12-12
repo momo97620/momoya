@@ -6,40 +6,8 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     exit 1
 fi
 
-# 获取当前 VPS 主机名
-HOSTNAME=$(hostname)
-
-# 下载脚本到本地
-download_script() {
-    SCRIPT_URL="https://raw.githubusercontent.com/momo97620/momoya/main/vps_script.sh"
-    TARGET_PATH="/usr/local/bin/vps_script.sh"
-
-    if [[ ! -f "$TARGET_PATH" ]]; then
-        echo "下载脚本并保存到 $TARGET_PATH"
-        curl -sSL "$SCRIPT_URL" -o "$TARGET_PATH"
-        sudo chmod +x "$TARGET_PATH"
-        echo "脚本已成功下载并保存"
-    else
-        echo "脚本已存在，无需重复下载"
-    fi
-}
-
-# 设置快捷命令
-setup_alias() {
-    # 检查是否已设置别名
-    if ! grep -q "alias n=" ~/.bashrc; then
-        echo "设置快捷命令 n"
-        echo "alias n='bash /usr/local/bin/vps_script.sh'" >> ~/.bashrc
-        source ~/.bashrc
-        echo "快捷命令 n 已成功设置"
-    else
-        echo "快捷命令 n 已设置，跳过重复设置"
-    fi
-}
-
 # 显示主菜单
 show_main_menu() {
-    echo -e "当前主机名：$HOSTNAME"
     echo -e "请选择要执行的任务："
     echo "1. 搭建 Hysteria 节点"
     echo "2. 安装并配置 UFW 防火墙"
@@ -92,12 +60,9 @@ uninstall_script() {
 
     TARGET_PATH="/usr/local/bin/vps_script.sh"
     sudo rm -f "$TARGET_PATH"
-    sed -i '/alias n=/d' ~/.bashrc
     echo "主脚本已卸载。"
     exit 0
 }
 
 # 脚本入口逻辑
-download_script
-setup_alias
 show_main_menu
