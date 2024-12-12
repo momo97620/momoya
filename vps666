@@ -6,17 +6,33 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     exit 1
 fi
 
+# 设置脚本路径和快捷方式
+SCRIPT_PATH="/usr/local/bin/vps_script.sh"
+SHORTCUT_PATH="/usr/local/bin/n"
+
+# 自动获取主机名
+HOSTNAME=$(hostname)
+
+# 添加更新和权限设置函数
+update_script() {
+    echo "正在检查并更新脚本..."
+    curl -sSL https://gist.githubusercontent.com/momo97620/your_gist_id/raw/vps_script.sh > "$SCRIPT_PATH"
+    chmod +x "$SCRIPT_PATH"
+    echo "脚本已更新。当前主机名：$HOSTNAME"
+}
+
 # 显示主菜单
 show_main_menu() {
-    echo -e "请选择要执行的任务："
+    echo -e "主机 [$HOSTNAME] - 请选择要执行的任务："
     echo "1. 搭建 Hysteria 节点"
     echo "2. 安装并配置 UFW 防火墙"
     echo "3. 配置密钥登录"
     echo "4. 修改登录端口号"
     echo "5. 卸载主脚本"
+    echo "6. 更新脚本"
     echo "0. 退出"
 
-    read -p "请输入选项 (0-5): " choice
+    read -p "请输入选项 (0-6): " choice
     case $choice in
         1)
             echo "正在执行：搭建 Hysteria 节点"
@@ -38,6 +54,10 @@ show_main_menu() {
             echo "正在执行：卸载主脚本"
             uninstall_script
             ;;
+        6)
+            update_script
+            show_main_menu
+            ;;
         0)
             echo "退出程序"
             exit 0
@@ -58,11 +78,26 @@ uninstall_script() {
         exit 1
     fi
 
-    TARGET_PATH="/usr/local/bin/vps_script.sh"
-    sudo rm -f "$TARGET_PATH"
-    echo "主脚本已卸载。"
+    sudo rm -f "$SCRIPT_PATH"
+    sudo rm -f "$SHORTCUT_PATH"
+    echo "主脚本和快捷方式已卸载。"
     exit 0
 }
+
+# 创建快捷方式
+create_shortcut() {
+    sudo cp "$0" "$SCRIPT_PATH"
+    sudo ln -sf "$SCRIPT_PATH" "$SHORTCUT_PATH"
+    sudo chmod +x "$SCRIPT_PATH"
+    sudo chmod +x "$SHORTCUT_PATH"
+    echo "快捷方式 'n' 已创建。现在可以直接输入 'n' 运行脚本。"
+}
+
+# 初始化
+if [[ "$1" == "install" ]]; then
+    create_shortcut
+    exit 0
+fi
 
 # 脚本入口逻辑
 show_main_menu
