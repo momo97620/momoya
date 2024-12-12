@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 快捷指令检查标志文件
-ALIAS_SET_FLAG="/var/log/script_alias_set.log"
+ALIAS_SET_FLAG="$HOME/.script_alias_set.log"
 SCRIPT_NAME="vps_script.sh"  # 设定脚本名称，用于后续引用
 
 # 显示主菜单
@@ -52,10 +52,11 @@ setup_alias() {
     if [[ -f "$ALIAS_SET_FLAG" ]]; then
         echo "快捷指令 'mo' 已设置，跳过重复设置。"
     else
-        if ! grep -q "alias mo=" ~/.bashrc; then
+        if ! grep -q "alias mo='bash $SCRIPT_PATH'" ~/.bashrc; then
             # 将快捷指令添加到 .bashrc
             echo "alias mo='bash $SCRIPT_PATH'" >> ~/.bashrc
-            echo "快捷命令 'mo' 已添加。请重新登录或运行 'source ~/.bashrc' 生效。" | tee "$ALIAS_SET_FLAG"
+            touch "$ALIAS_SET_FLAG"
+            echo "已添加快捷命令 'mo'。请运行 'source ~/.bashrc' 使更改生效。"
         fi
     fi
 }
@@ -63,37 +64,8 @@ setup_alias() {
 # 自动设置主机名
 setup_hostname() {
     CURRENT_HOSTNAME=$(hostname)
-    hostnamectl set-hostname "$CURRENT_HOSTNAME"
-    echo "主机名已设置为：$CURRENT_HOSTNAME"
-}
-
-# 子脚本：安装并配置 UFW 防火墙
-install_ufw() {
-    echo -e "请选择要执行的操作："
-    echo "1. 安装 UFW"
-    echo "2. 配置 UFW 防火墙"
-    echo "0. 返回主菜单"
-    
-    read -p "请输入选项 (0-2): " choice
-    case $choice in
-        1)
-            echo "正在安装 UFW..."
-            sudo apt-get update && sudo apt-get install -y ufw
-            ;;
-        2)
-            echo "正在配置 UFW..."
-            sudo ufw allow OpenSSH
-            sudo ufw enable
-            sudo ufw status
-            ;;
-        0)
-            show_main_menu  # 返回主菜单
-            ;;
-        *)
-            echo "无效的选项，请重新输入！"
-            install_ufw
-            ;;
-    esac
+    echo "当前主机名是：$CURRENT_HOSTNAME"
+    # 取消设置主机名的代码，避免重复设置
 }
 
 # 脚本入口逻辑
