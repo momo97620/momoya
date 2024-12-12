@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# 快捷指令检查标志文件
+ALIAS_SET_FLAG="/var/log/script_alias_set.log"
+SCRIPT_NAME="vps_script.sh"  # 设定脚本名称，用于后续引用
+
+# 显示主菜单
+show_main_menu() {
+    echo -e "请选择要执行的任务："
+    echo "1. 搭建 Hysteria 节点"
+    echo "2. 安装并配置 UFW 防火墙"
+    echo "3. 配置密钥登录"
+    echo "4. 修改登录端口号"
+    echo "0. 退出"
+
+    read -p "请输入选项 (0-4): " choice
+    case $choice in
+        1)
+            echo "正在执行：搭建 Hysteria 节点"
+            # 执行搭建 Hysteria 节点的子脚本
+            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)
+            ;;
+        2)
+            echo "正在执行：安装并配置 UFW 防火墙"
+            # 调用修改后的 UFW 子脚本链接
+            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/e7d1e2ad49decc464f0a814c436ca4b6151986e7/ufw_install.sh)
+            ;;
+        3)
+            echo "正在执行：配置密钥登录"
+            # 配置密钥登录的子脚本链接
+            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)
+            ;;
+        4)
+            echo "正在执行：修改登录端口号"
+            # 修改登录端口号的子脚本链接
+            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
+            ;;
+        0)
+            echo "退出程序"
+            exit 0
+            ;;
+        *)
+            echo "无效的选择，请重新输入！"
+            show_main_menu
+            ;;
+    esac
+}
+
+# 设置快捷命令
+setup_alias() {
+    SCRIPT_PATH=$(realpath "$0")  # 获取当前脚本的绝对路径
+    if [[ -f "$ALIAS_SET_FLAG" ]]; then
+        echo "快捷指令 'mo' 已设置，跳过重复设置。"
+    else
+        if ! grep -q "alias mo=" ~/.bashrc; then
+            # 将快捷指令添加到 .bashrc
+            echo "alias mo='bash $SCRIPT_PATH'" >> ~/.bashrc
+            echo "快捷命令 'mo' 已添加。请重新登录或运行 'source ~/.bashrc' 生效。" | tee "$ALIAS_SET_FLAG"
+        fi
+    fi
+}
+
+# 自动设置主机名
+setup_hostname() {
+    CURRENT_HOSTNAME=$(hostname)
+    hostnamectl set-hostname "$CURRENT_HOSTNAME"
+    echo "主机名已设置为：$CURRENT_HOSTNAME"
+}
+
+# 子脚本：安装并配置 UFW 防火墙
+install_ufw() {
+    echo -e "请选择要执行的操作："
+    echo "1. 安装 UFW"
+    echo "2. 配置 UFW 防火墙"
+    echo "0. 返回主菜单"
+    
+    read -p "请输入选项 (0-2): " choice
+    case $choice in
+        1)
+            echo "正在安装 UFW..."
+            sudo apt-get update && sudo apt-get install -y ufw
+            ;;
+        2)
+            echo "正在配置 UFW..."
+            sudo ufw allow OpenSSH
+            sudo ufw enable
+            sudo ufw status
+            ;;
+        0)
+            show_main_menu  # 返回主菜单
+            ;;
+        *)
+            echo "无效的选项，请重新输入！"
+            install_ufw
+            ;;
+    esac
+}
+
+# 脚本入口逻辑
+setup_alias  # 设置快捷命令
+setup_hostname  # 设置主机名
+show_main_menu  # 显示主菜单
