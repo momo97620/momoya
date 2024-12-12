@@ -6,23 +6,12 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     exit 1
 fi
 
-# 自动设置主机名为当前 VPS 的主机名
-hostnamectl set-hostname $(hostname -s)
+# 获取当前主机名（自动识别VPS主机名）
+HOSTNAME=$(hostname -s)
 
-# 设置快捷指令
-setup_alias() {
-    SCRIPT_NAME="vps_script.sh"
-    TARGET_PATH="/usr/local/bin/$SCRIPT_NAME"
-    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
-
-    if ! grep -q "alias n=" ~/.bashrc; then
-        echo "alias n='bash $TARGET_PATH'" >> ~/.bashrc
-        echo "快捷指令 'n' 已成功设置。"
-        source ~/.bashrc
-    else
-        echo "快捷指令 'n' 已存在，无需重复设置。"
-    fi
-}
+# 设置主机名（如果需要）
+hostnamectl set-hostname "$HOSTNAME"
+echo "主机名已设置为：$HOSTNAME"
 
 # 显示主菜单
 show_main_menu() {
@@ -78,11 +67,36 @@ uninstall_script() {
 
     TARGET_PATH="/usr/local/bin/vps_script.sh"
     sudo rm -f "$TARGET_PATH"
-    sed -i '/alias n=/d' ~/.bashrc
+    sed -i '/alias mo=/d' ~/.bashrc
     echo "主脚本已卸载。"
     exit 0
 }
 
-# 脚本入口逻辑
+# 设置快捷指令 n
+setup_alias() {
+    TARGET_PATH="/usr/local/bin/vps_script.sh"
+    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
+
+    if [[ -f "$ALIAS_SET_FLAG" ]]; then
+        echo "快捷指令 'n' 已设置，跳过重复设置。"
+    else
+        sudo cp "$SCRIPT_PATH" "$TARGET_PATH"
+        sudo chmod +x "$TARGET_PATH"
+
+        sed -i '/alias n=/d' ~/.bashrc
+        echo "alias n='bash $TARGET_PATH'" >> ~/.bashrc
+
+        touch "$ALIAS_SET_FLAG"
+        echo "快捷指令 'n' 已成功设置。"
+        source ~/.bashrc
+    fi
+}
+
+# 快捷指令设置标志文件
+ALIAS_SET_FLAG="$HOME/.script_alias_set.log"
+
+# 设置快捷指令
 setup_alias
+
+# 脚本入口逻辑
 show_main_menu
