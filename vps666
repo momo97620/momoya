@@ -6,6 +6,24 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     exit 1
 fi
 
+# 自动设置主机名为当前 VPS 的主机名
+hostnamectl set-hostname $(hostname -s)
+
+# 设置快捷指令
+setup_alias() {
+    SCRIPT_NAME="vps_script.sh"
+    TARGET_PATH="/usr/local/bin/$SCRIPT_NAME"
+    SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
+
+    if ! grep -q "alias n=" ~/.bashrc; then
+        echo "alias n='bash $TARGET_PATH'" >> ~/.bashrc
+        echo "快捷指令 'n' 已成功设置。"
+        source ~/.bashrc
+    else
+        echo "快捷指令 'n' 已存在，无需重复设置。"
+    fi
+}
+
 # 显示主菜单
 show_main_menu() {
     echo -e "请选择要执行的任务："
@@ -60,10 +78,11 @@ uninstall_script() {
 
     TARGET_PATH="/usr/local/bin/vps_script.sh"
     sudo rm -f "$TARGET_PATH"
-    sed -i '/alias mo=/d' ~/.bashrc
+    sed -i '/alias n=/d' ~/.bashrc
     echo "主脚本已卸载。"
     exit 0
 }
 
 # 脚本入口逻辑
+setup_alias
 show_main_menu
