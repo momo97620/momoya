@@ -11,9 +11,10 @@ show_main_menu() {
     echo "2. 安装并配置 UFW 防火墙"
     echo "3. 配置密钥登录"
     echo "4. 修改登录端口号"
+    echo "5. 卸载主脚本"
     echo "0. 退出"
 
-    read -p "请输入选项 (0-4): " choice
+    read -p "请输入选项 (0-5): " choice
     case $choice in
         1)
             echo "正在执行：搭建 Hysteria 节点"
@@ -34,6 +35,10 @@ show_main_menu() {
             echo "正在执行：修改登录端口号"
             # 修改登录端口号的子脚本链接
             bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
+            ;;
+        5)
+            echo "正在执行：卸载主脚本"
+            uninstall_script
             ;;
         0)
             echo "退出程序"
@@ -66,6 +71,38 @@ setup_hostname() {
     CURRENT_HOSTNAME=$(hostname)
     echo "当前主机名是：$CURRENT_HOSTNAME"
     # 取消设置主机名的代码，避免重复设置
+}
+
+# 卸载主脚本
+uninstall_script() {
+    echo "开始卸载主脚本并清除相关数据..."
+    
+    read -p "确定要卸载主脚本并清除相关数据吗？(y/n): " confirm
+    if [ "$confirm" != "y" ]; then
+        echo "卸载已取消。"
+        exit 1
+    fi
+    
+    # 删除主脚本文件
+    SCRIPT_PATH=$(realpath "$0")
+    sudo rm -f "$SCRIPT_PATH"
+    echo "主脚本已删除。"
+    
+    # 从~/.bashrc中删除别名'mo'
+    sed -i '/alias mo/d' ~/.bashrc
+    echo "别名'mo'已移除，请运行'source ~/.bashrc'使更改生效。"
+    
+    # 删除与主脚本相关的日志文件
+    if [ -f "$ALIAS_SET_FLAG" ]; then
+        sudo rm -f "$ALIAS_SET_FLAG"
+        echo "相关日志文件已删除。"
+    fi
+    
+    # 提示用户重新加载.bashrc
+    echo "请运行'source ~/.bashrc'以更新配置。"
+    
+    echo "主脚本卸载完成。"
+    exit 0
 }
 
 # 脚本入口逻辑
