@@ -101,3 +101,81 @@ fi
 
 # 脚本入口逻辑
 show_main_menu
+#!/bin/bash
+
+# 安装快捷方式脚本
+install_shortcut() {
+    SCRIPT_PATH="/usr/local/bin/vps_script.sh"
+    SHORTCUT_PATH="/usr/local/bin/n"
+
+    # 复制当前脚本到目标位置
+    sudo cp "$0" "$SCRIPT_PATH"
+
+    # 创建软链接
+    sudo ln -sf "$SCRIPT_PATH" "$SHORTCUT_PATH"
+
+    # 赋予执行权限
+    sudo chmod +x "$SCRIPT_PATH"
+    sudo chmod +x "$SHORTCUT_PATH"
+
+    echo "快捷指令 'n' 已成功安装。可以直接输入 'n' 运行脚本。"
+}
+
+# 主菜单逻辑
+show_main_menu() {
+    echo -e "请选择要执行的任务："
+    echo "1. 搭建 Hysteria 节点"
+    echo "2. 安装并配置 UFW 防火墙"
+    echo "3. 配置密钥登录"
+    echo "4. 修改登录端口号"
+    echo "5. 卸载主脚本"
+    echo "0. 退出"
+
+    read -p "请输入选项 (0-5): " choice
+    case $choice in
+        1)
+            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)
+            ;;
+        2)
+            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/e7d1e2ad49decc464f0a814c436ca4b6151986e7/ufw_install.sh)
+            ;;
+        3)
+            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)
+            ;;
+        4)
+            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
+            ;;
+        5)
+            uninstall_script
+            ;;
+        0)
+            exit 0
+            ;;
+        *)
+            echo "无效的选择，请重新输入！"
+            show_main_menu
+            ;;
+    esac
+}
+
+# 卸载脚本
+uninstall_script() {
+    read -p "确定要卸载主脚本吗？(y/n): " confirm
+    if [ "$confirm" = "y" ]; then
+        sudo rm -f /usr/local/bin/vps_script.sh
+        sudo rm -f /usr/local/bin/n
+        echo "脚本已卸载"
+        exit 0
+    else
+        echo "取消卸载"
+    fi
+}
+
+# 脚本入口
+if [[ "$1" == "install" ]]; then
+    install_shortcut
+    exit 0
+fi
+
+# 显示主菜单
+show_main_menu
