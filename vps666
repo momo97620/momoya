@@ -94,7 +94,16 @@ setup_alias() {
     fi
 }
 
+# 确保脚本具有执行权限
+ensure_script_permissions() {
+    if [ ! -x "$(realpath "$0")" ]; then
+        echo "给脚本添加执行权限..."
+        sudo chmod +x "$(realpath "$0")"
+    fi
+}
+
 # 脚本入口逻辑
+ensure_script_permissions  # 确保脚本有执行权限
 setup_hostname  # 设置主机名
 setup_alias  # 设置快捷命令
 show_main_menu  # 显示主菜单
