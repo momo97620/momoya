@@ -5,14 +5,14 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+LIGHTBLUE='\033[1;34m'  # 亮蓝色
+LIGHTCYAN='\033[1;36m'  # 亮青色
 NC='\033[0m' # No Color
 
-# 自动创建快捷命令 'n'
-if [ ! -f /usr/local/bin/n ]; then
-    echo '#!/bin/bash
-bash <(curl -fsSL https://raw.githubusercontent.com/momo97620/momoya/main/vps666)' > /usr/local/bin/n
-    chmod +x /usr/local/bin/n
-    echo -e "${GREEN}快捷命令 'n' 已创建！你可以直接输入 'n' 来运行此脚本。${NC}"
+# 检查脚本是否被直接运行
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    echo -e "${RED}This script must be run directly, not sourced.${NC}"
+    exit 1
 fi
 
 # 显示主菜单
@@ -28,11 +28,14 @@ show_main_menu() {
         echo -e "${GREEN}   ██║   ██║  ██║██║██║██████╗${NC}"
         echo -e "${GREEN}   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝${NC}"
         
+        # 插入快捷键提示
+        echo -e "${YELLOW}使用快捷键 ${LIGHTCYAN}n${NC} 可以快速打开脚本 ${LIGHTBLUE}😊${NC}"
+        
         echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
         echo -e "${GREEN}请选择要执行的任务：${NC}"
 
         # 调整后的两排菜单选项，确保上下对齐
-        echo -e "1. 搭建 Hysteria 节点           5. 卸载主脚本和快捷命令"
+        echo -e "1. 搭建 Hysteria 节点           5. 卸载主脚本"
         echo -e "2. 安装并配置 UFW 防火墙       6. 一键WARP"
         echo -e "3. 配置密钥登录               7. BBR加速"
         echo -e "4. 修改登录端口号             0. 退出"
@@ -58,7 +61,7 @@ show_main_menu() {
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
                 ;;
             5)
-                echo -e "${YELLOW}正在执行：卸载主脚本和快捷命令...${NC}"
+                echo -e "${YELLOW}正在执行：卸载主脚本...${NC}"
                 uninstall_script
                 ;;
             6)
@@ -80,18 +83,18 @@ show_main_menu() {
     done
 }
 
-# 卸载主脚本和快捷命令
+# 卸载主脚本
 uninstall_script() {
-    echo -e "${YELLOW}开始卸载主脚本并清除快捷命令...${NC}"
-    read -p "确定要卸载主脚本和快捷命令吗？(y/n): " confirm
+    echo -e "${YELLOW}开始卸载主脚本并清除相关数据...${NC}"
+    read -p "确定要卸载主脚本并清除相关数据吗？(y/n): " confirm
     if [ "$confirm" != "y" ]; then
         echo -e "${RED}卸载已取消。${NC}"
         return  # 返回主菜单
     fi
 
-    TARGET_PATH="/usr/local/bin/n"
+    TARGET_PATH="/usr/local/bin/vps_script.sh"
     sudo rm -f "$TARGET_PATH"
-    echo -e "${GREEN}快捷命令 'n' 已删除。${NC}"
+    echo -e "${GREEN}主脚本已卸载。${NC}"
     exit 0
 }
 
