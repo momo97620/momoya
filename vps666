@@ -18,19 +18,19 @@ show_main_menu() {
     case $choice in
         1)
             echo "正在执行：搭建 Hysteria 节点"
-            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)
+            curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2 | bash
             ;;
         2)
             echo "正在执行：安装并配置 UFW 防火墙"
-            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/e7d1e2ad49decc464f0a814c436ca4b6151986e7/ufw_install.sh)
+            curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/e7d1e2ad49decc464f0a814c436ca4b6151986e7/ufw_install.sh | bash
             ;;
         3)
             echo "正在执行：配置密钥登录"
-            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)
+            curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao | bash
             ;;
         4)
             echo "正在执行：修改登录端口号"
-            bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
+            curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank | bash
             ;;
         5)
             echo "正在执行：卸载主脚本"
@@ -64,7 +64,7 @@ uninstall_script() {
 
 # 设置快捷命令
 setup_alias() {
-    SCRIPT_PATH="bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/main/vps666)"  # GitHub 脚本 URL
+    SCRIPT_PATH="curl -sSL https://raw.githubusercontent.com/momo97620/momoya/main/vps666 | bash"  # GitHub 脚本 URL
     if [[ -f "$ALIAS_SET_FLAG" ]]; then
         echo "快捷指令 'mo' 已设置，跳过重复设置。"
     else
