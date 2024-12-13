@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Docker管理脚本
-# 版本：1.0
+# 版本：1.1
 # 作者：Assistant
 # 描述：提供Docker安装、管理和卸载的一站式脚本
 
@@ -30,6 +30,14 @@ check_system() {
         echo -e "${RED}无法检测操作系统类型！${NC}"
         exit 1
     fi
+}
+
+# 更换Docker源函数
+change_docker_source() {
+    echo -e "${BLUE}正在更换Docker源...${NC}"
+    bash <(curl -sSL https://cdn.jsdelivr.net/gh/SuperManito/LinuxMirrors@main/DockerInstallation.sh)
+    echo -e "${GREEN}Docker源更新完成！${NC}"
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # Docker安装函数
@@ -76,6 +84,7 @@ install_docker() {
     systemctl enable docker
     
     echo -e "${GREEN}Docker安装完成！${NC}"
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # Docker卸载函数
@@ -97,6 +106,7 @@ uninstall_docker() {
     rm -rf /var/lib/docker
     
     echo -e "${GREEN}Docker已成功卸载！${NC}"
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # 容器管理
@@ -216,6 +226,7 @@ main_menu() {
         echo "4. 镜像管理"
         echo "5. Docker网络管理"
         echo "6. Docker系统信息"
+        echo "7. 更换Docker源"
         echo "0. 退出脚本"
         
         read -p "请选择操作: " choice
@@ -227,6 +238,7 @@ main_menu() {
             4) image_management ;;
             5) network_management ;;
             6) docker info ;;
+            7) change_docker_source ;;
             0) 
                 echo -e "${YELLOW}感谢使用Docker管理脚本！${NC}"
                 exit 0 
