@@ -30,16 +30,16 @@ show_main_menu() {
         
         echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
         echo -e "${GREEN}请选择要执行的任务：${NC}"
-        echo -e "1. 搭建 Hysteria 节点"
-        echo -e "2. 安装并配置 UFW 防火墙"
-        echo -e "3. 配置密钥登录"
-        echo -e "4. 修改登录端口号"
-        echo -e "5. 卸载主脚本"
-        echo -e "6. 一键WARP"
-        echo -e "0. 退出"
+
+        # 调整后的两排菜单选项，确保上下对齐
+        echo -e "1. 搭建 Hysteria 节点           5. 卸载主脚本"
+        echo -e "2. 安装并配置 UFW 防火墙       6. 一键WARP"
+        echo -e "3. 配置密钥登录               7. BBR加速"
+        echo -e "4. 修改登录端口号             0. 退出"
+
         echo -e "${BLUE}============================================================${NC}"
 
-        read -p "请输入选项 (0-6): " choice
+        read -p "请输入选项 (0-7): " choice
         case $choice in
             1)
                 echo -e "${YELLOW}正在执行：搭建 Hysteria 节点...${NC}"
@@ -64,6 +64,10 @@ show_main_menu() {
             6)
                 echo -e "${YELLOW}正在执行：一键WARP...${NC}"
                 wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+                ;;
+            7)
+                echo -e "${YELLOW}正在执行：BBR加速...${NC}"
+                wget -O tcp.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
