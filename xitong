@@ -1,29 +1,13 @@
 #!/bin/bash
 
-# 检查是否安装 curl 和 jq
+# 检查是否安装必要工具
 check_dependencies() {
-    # 如果 curl 没有安装，则自动安装
-    if ! command -v curl &>/dev/null; then
-        echo "curl 未安装，正在自动安装..."
-        sudo apt update -y > /dev/null 2>&1
-        sudo apt install -y curl > /dev/null 2>&1
-    fi
-
-    # 如果 jq 没有安装，则自动安装
-    if ! command -v jq &>/dev/null; then
-        echo "jq 未安装，正在自动安装..."
-        sudo apt update -y > /dev/null 2>&1
-        sudo apt install -y jq > /dev/null 2>&1
-    fi
-}
-
-# 获取本机的 IPv6 地址
-get_ipv6() {
-    IPV6=$(ip -6 addr show scope global | grep -oP 'inet6 \K[0-9a-fA-F:]+')
-    if [ -z "$IPV6" ]; then
-        IPV6="未分配"
-    fi
-    echo "$IPV6"
+    for cmd in curl jq; do
+        if ! command -v $cmd &>/dev/null; then
+            echo "正在安装 $cmd..."
+            sudo apt update -y && sudo apt install -y $cmd > /dev/null 2>&1
+        fi
+    done
 }
 
 # 获取地理位置
@@ -45,10 +29,22 @@ get_location() {
 # 获取运行时长
 get_uptime() {
     UPTIME_SEC=$(awk '{print $1}' /proc/uptime)
+    if [ -z "$UPTIME_SEC" ]; then
+        echo "未知"
+        return
+    fi
+
     DAYS=$((UPTIME_SEC / 86400))
-    HOURS=$(( (UPTIME_SEC % 86400) / 3600 ))
-    MINUTES=$(( (UPTIME_SEC % 3600) / 60 ))
-    echo "${DAYS}天 ${HOURS}小时 ${MINUTES}分钟"
+    HOURS=$(((UPTIME_SEC % 86400) / 3600))
+    MINUTES=$(((UPTIME_SEC % 3600) / 60))
+
+    if [ "$DAYS" -gt 0 ]; then
+        echo "${DAYS}天 ${HOURS}小时 ${MINUTES}分钟"
+    elif [ "$HOURS" -gt 0 ]; then
+        echo "${HOURS}小时 ${MINUTES}分钟"
+    else
+        echo "${MINUTES}分钟"
+    fi
 }
 
 # 获取防火墙状态
@@ -60,16 +56,6 @@ get_firewall_status() {
         echo "未安装"
     fi
 }
-
-# 设置颜色
-COLORS=( 
-    '\033[0m'  # 默认
-    '\033[32m' # 绿色
-    '\033[34m' # 蓝色
-    '\033[36m' # 青色
-    '\033[33m' # 黄色
-    '\033[31m' # 红色
-)
 
 # 主程序
 main() {
@@ -95,44 +81,44 @@ main() {
     FIREWALL_STATUS=$(get_firewall_status)
     ISP=$(curl -s https://ipinfo.io/org | sed 's/AS[0-9]* //')
     IPV4=$(curl -s4 https://ipinfo.io/ip || echo "未分配")
-    IPV6=$(get_ipv6)
+    IPV6=$(curl -s6 https://ipinfo.io/ip || echo "未分配")
     DNS=$(cat /etc/resolv.conf | grep 'nameserver' | awk '{print $2}' | xargs)
     TIMEZONE=$(cat /etc/timezone 2>/dev/null || timedatectl | grep "Time zone" | awk '{print $3}')
     SYSTEM_TIME=$(date "+%Y-%m-%d %H:%M:%S")
     UPTIME=$(get_uptime)
 
     clear
-    echo -e "${COLORS[2]}系统信息查询${COLORS[0]}\n"
-    echo -e "${COLORS[1]}主机名:${COLORS[0]}       $HOSTNAME"
-    echo -e "${COLORS[1]}系统版本:${COLORS[0]}     $OS_VERSION"
-    echo -e "${COLORS[1]}Linux版本:${COLORS[0]}    $KERNEL_VERSION"
-    echo -e "${COLORS[4]}-------------${COLORS[0]}"
-    echo -e "${COLORS[1]}CPU架构:${COLORS[0]}      $ARCH"
-    echo -e "${COLORS[1]}CPU型号:${COLORS[0]}      $CPU_MODEL"
-    echo -e "${COLORS[1]}CPU核心数:${COLORS[0]}    $CPU_CORES"
-    echo -e "${COLORS[1]}CPU频率:${COLORS[0]}      $CPU_FREQ"
-    echo -e "${COLORS[4]}-------------${COLORS[0]}"
-    echo -e "${COLORS[1]}CPU占用:${COLORS[0]}      $(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5); printf "%.0f%%", usage}')"
-    echo -e "${COLORS[1]}系统负载:${COLORS[0]}     $LOAD_AVG"
-    echo -e "${COLORS[1]}物理内存:${COLORS[0]}     ${MEM_USED}/${MEM_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $MEM_USED/$MEM_TOTAL*100}")%)"
-    echo -e "${COLORS[1]}虚拟内存:${COLORS[0]}     ${SWAP_USED}/${SWAP_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $SWAP_USED/$SWAP_TOTAL*100}")%)"
-    echo -e "${COLORS[1]}硬盘占用:${COLORS[0]}     $DISK_USAGE"
-    echo -e "${COLORS[4]}-------------${COLORS[0]}"
-    echo -e "${COLORS[1]}总接收:${COLORS[0]}       $RX_BYTES"
-    echo -e "${COLORS[1]}总发送:${COLORS[0]}       $TX_BYTES"
-    echo -e "${COLORS[4]}-------------${COLORS[0]}"
-    echo -e "${COLORS[1]}网络算法:${COLORS[0]}     $NETWORK_ALGO"
-    echo -e "${COLORS[1]}防火墙状态:${COLORS[0]}   $FIREWALL_STATUS"
-    echo -e "${COLORS[4]}-------------${COLORS[0]}"
-    echo -e "${COLORS[1]}运营商:${COLORS[0]}       $ISP"
-    echo -e "${COLORS[1]}IPv4地址:${COLORS[0]}     $IPV4"
-    echo -e "${COLORS[1]}IPv6地址:${COLORS[0]}     $IPV6"
-    echo -e "${COLORS[1]}DNS地址:${COLORS[0]}      $DNS"
-    echo -e "${COLORS[1]}地理位置:${COLORS[0]}     $LOCATION"
-    echo -e "${COLORS[1]}系统时间:${COLORS[0]}     $TIMEZONE $SYSTEM_TIME"
-    echo -e "${COLORS[1]}运行时长:${COLORS[0]}     $UPTIME"
-    echo -e "${COLORS[4]}-------------${COLORS[0]}"
-    echo -e "${COLORS[5]}操作完成${COLORS[0]}"
+    echo -e "\033[1;32m系统信息查询\033[0m\n"
+    echo -e "\033[1;34m主机名:\033[0m       $HOSTNAME"
+    echo -e "\033[1;34m系统版本:\033[0m     $OS_VERSION"
+    echo -e "\033[1;34mLinux版本:\033[0m    $KERNEL_VERSION"
+    echo -e "-------------"
+    echo -e "\033[1;34mCPU架构:\033[0m      $ARCH"
+    echo -e "\033[1;34mCPU型号:\033[0m      $CPU_MODEL"
+    echo -e "\033[1;34mCPU核心数:\033[0m    $CPU_CORES"
+    echo -e "\033[1;34mCPU频率:\033[0m      $CPU_FREQ"
+    echo -e "-------------"
+    echo -e "\033[1;34mCPU占用:\033[0m      $(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5); printf "%.0f%%", usage}')"
+    echo -e "\033[1;34m系统负载:\033[0m     $LOAD_AVG"
+    echo -e "\033[1;34m物理内存:\033[0m     ${MEM_USED}/${MEM_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $MEM_USED/$MEM_TOTAL*100}")%)"
+    echo -e "\033[1;34m虚拟内存:\033[0m     ${SWAP_USED}/${SWAP_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $SWAP_USED/$SWAP_TOTAL*100}")%)"
+    echo -e "\033[1;34m硬盘占用:\033[0m     $DISK_USAGE"
+    echo -e "-------------"
+    echo -e "\033[1;34m总接收:\033[0m       $RX_BYTES"
+    echo -e "\033[1;34m总发送:\033[0m       $TX_BYTES"
+    echo -e "-------------"
+    echo -e "\033[1;34m网络算法:\033[0m     $NETWORK_ALGO"
+    echo -e "\033[1;34m防火墙状态:\033[0m   $FIREWALL_STATUS"
+    echo -e "-------------"
+    echo -e "\033[1;34m运营商:\033[0m       $ISP"
+    echo -e "\033[1;34mIPv4地址:\033[0m     $IPV4"
+    echo -e "\033[1;34mIPv6地址:\033[0m     $IPV6"
+    echo -e "\033[1;34mDNS地址:\033[0m      $DNS"
+    echo -e "\033[1;34m地理位置:\033[0m     $LOCATION"
+    echo -e "\033[1;34m系统时间:\033[0m     $TIMEZONE $SYSTEM_TIME"
+    echo -e "\033[1;34m运行时长:\033[0m     $UPTIME"
+    echo -e "-------------"
+    echo -e "\033[1;32m操作完成\033[0m"
     echo -e "按任意键继续..."
     read -n 1
 }
