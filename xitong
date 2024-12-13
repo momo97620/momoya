@@ -4,8 +4,7 @@
 check_dependencies() {
     for cmd in curl jq; do
         if ! command -v $cmd &>/dev/null; then
-            echo "正在安装 $cmd..."
-            sudo apt update && sudo apt install -y $cmd
+            sudo apt update && sudo apt install -y $cmd &>/dev/null
         fi
     done
 }
@@ -26,15 +25,6 @@ get_location() {
     echo "$LOCATION"
 }
 
-# 获取运行时长
-get_uptime() {
-    UPTIME_SEC=$(awk '{print $1}' /proc/uptime)
-    DAYS=$((UPTIME_SEC / 86400))
-    HOURS=$(( (UPTIME_SEC % 86400) / 3600 ))
-    MINUTES=$(( (UPTIME_SEC % 3600) / 60 ))
-    echo "${DAYS}天 ${HOURS}小时 ${MINUTES}分钟"
-}
-
 # 获取防火墙状态
 get_firewall_status() {
     if command -v ufw &>/dev/null; then
@@ -47,8 +37,8 @@ get_firewall_status() {
 
 # 获取IPv6地址
 get_ipv6() {
-    IPV6=$(curl -s6 https://ipinfo.io/ip || echo "未分配")
-    if [ "$IPV6" == "::1" ]; then
+    IPV6=$(ip -6 addr show | grep inet6 | grep -v '::1' | grep -v 'fe80' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
+    if [ -z "$IPV6" ]; then
         IPV6="未分配"
     fi
     echo "$IPV6"
@@ -82,7 +72,6 @@ main() {
     DNS=$(cat /etc/resolv.conf | grep 'nameserver' | awk '{print $2}' | xargs)
     TIMEZONE=$(cat /etc/timezone 2>/dev/null || timedatectl | grep "Time zone" | awk '{print $3}')
     SYSTEM_TIME=$(date "+%Y-%m-%d %H:%M:%S")
-    UPTIME=$(get_uptime)
 
     clear
     echo -e "系统信息查询\n"
@@ -113,7 +102,6 @@ main() {
     echo -e "DNS地址:      $DNS"
     echo -e "地理位置:     $LOCATION"
     echo -e "系统时间:     $TIMEZONE $SYSTEM_TIME"
-    echo -e "运行时长:     $UPTIME"
     echo -e "-------------"
     echo -e "操作完成"
     echo -e "按任意键继续..."
