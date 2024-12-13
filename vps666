@@ -38,6 +38,18 @@ uninstall_script() {
     exit 0
 }
 
+# 添加 n 快捷指令
+setup_n_alias() {
+    echo -e "${YELLOW}正在配置快捷指令 'n'...${NC}"
+    
+    # 打开 .bashrc 文件并在末尾添加 alias
+    echo "alias n='bash $SCRIPT_PATH'" >> ~/.bashrc
+
+    # 重新加载 .bashrc 文件
+    source ~/.bashrc
+    echo -e "${GREEN}快捷指令 'n' 已配置！现在你可以通过输入 'n' 来启动该脚本。${NC}"
+}
+
 # 显示主菜单
 show_main_menu() {
     while true; do
@@ -112,9 +124,10 @@ show_main_menu() {
                 ;;
             n)
                 echo -e "${YELLOW}正在执行快捷指令 n...${NC}"
-                # 使用当前脚本的路径重新启动脚本
-                bash "$SCRIPT_PATH"  # 通过脚本的路径重新执行脚本
-                exit 0  # 退出当前进程，避免重复执行
+                # 在这里添加快捷指令 n 的逻辑
+                echo "快捷指令 n 的逻辑正在执行..."
+                # 你可以在这里添加你想要执行的命令
+                echo -e "${GREEN}快捷指令 n 已执行！${NC}"
                 ;;
             *)
                 echo -e "${RED}无效的选择，请重新输入！${NC}"
@@ -122,6 +135,9 @@ show_main_menu() {
         esac
     done
 }
+
+# 自动配置 n 快捷指令
+setup_n_alias
 
 # 脚本入口
 show_main_menu
