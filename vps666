@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# 快捷指令检查标志文件
-ALIAS_SET_FLAG="$HOME/.script_alias_set.log"
-SCRIPT_NAME="vps_script.sh"  # 设定脚本名称，用于后续引用
+# 检查脚本是否被直接运行
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    echo "This script must be run directly, not sourced."
+    exit 1
+fi
 
 # 显示主菜单
 show_main_menu() {
@@ -62,32 +64,5 @@ uninstall_script() {
     exit 0
 }
 
-# 设置快捷命令
-setup_alias() {
-    SCRIPT_PATH=$(realpath "$0")  # 获取当前脚本的绝对路径
-    if [[ -f "$ALIAS_SET_FLAG" ]]; then
-        echo "快捷指令 'mo' 已设置，跳过重复设置。"
-    else
-        if ! grep -q "alias mo='sudo bash $SCRIPT_PATH'" ~/.bashrc; then
-            # 将快捷指令添加到 .bashrc
-            echo "alias mo='sudo bash $SCRIPT_PATH'" >> ~/.bashrc
-            touch "$ALIAS_SET_FLAG"
-            echo "已添加快捷命令 'mo'。请运行 'source ~/.bashrc' 使更改生效。"
-        fi
-    fi
-}
-
-# 自动设置主机名
-setup_hostname() {
-    CURRENT_HOSTNAME=$(hostname)
-    echo "当前主机名是：$CURRENT_HOSTNAME"
-    # 取消设置主机名的代码，避免重复设置
-}
-
 # 脚本入口逻辑
-setup_alias  # 设置快捷命令
-setup_hostname  # 设置主机名
-show_main_menu  # 显示主菜单
-
-# 重新加载 .bashrc 文件
-source ~/.bashrc 
+show_main_menu
