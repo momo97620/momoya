@@ -65,7 +65,7 @@ show_main_menu() {
         echo -e "2. 安装并配置 UFW 防火墙       6. 一键WARP"
         echo -e "3. 配置密钥登录               7. BBR加速"
         echo -e "4. 修改登录端口号             8. Docker管理"
-        echo -e "0. 退出"
+        echo -e "9. 系统信息查询               0. 退出"
         
         echo -e "${BLUE}============================================================${NC}"
         
@@ -101,6 +101,10 @@ show_main_menu() {
             8)
                 echo -e "${YELLOW}正在执行：Docker管理...${NC}"
                 curl -fsSL "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" -o docker_script && chmod +x docker_script && ./docker_script
+                ;;
+            9)
+                echo -e "${YELLOW}正在执行：系统信息查询...${NC}"
+                bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/main/xitong)
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
