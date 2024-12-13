@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# 定义颜色
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# 获取基本信息
+HOSTNAME=$(hostname)
+OS_VERSION=$(lsb_release -d 2>/dev/null | awk -F':' '{print $2}' | sed 's/^[ \t]*//')
+KERNEL_VERSION=$(uname -r)
+ARCH=$(uname -m)
+
+# 获取 CPU 信息
+CPU_MODEL=$(grep "model name" /proc/cpuinfo | uniq | awk -F': ' '{print $2}')
+CPU_CORES=$(grep -c '^processor' /proc/cpuinfo)
+CPU_FREQ=$(awk -F'[ :]' '/cpu MHz/{printf "%.1f GHz", $3/1000; exit}' /proc/cpuinfo)
+CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk '{print $2+$4+$6"%"}')
+
+# 系统负载
+LOAD_AVERAGE=$(uptime | awk -F'load average: ' '{print $2}')
+
+# 内存信息
+MEMORY_INFO=$(free -m)
+MEMORY_TOTAL=$(echo "$MEMORY_INFO" | awk '/Mem:/{print $2 " MB"}')
+MEMORY_USED=$(echo "$MEMORY_INFO" | awk '/Mem:/{print $3 " MB"}')
+MEMORY_PERCENT=$(echo "$MEMORY_INFO" | awk '/Mem:/{printf "%.2f%%", $3/$2*100}')
+
+SWAP_TOTAL=$(echo "$MEMORY_INFO" | awk '/Swap:/{print $2 " MB"}')
+SWAP_USED=$(echo "$MEMORY_INFO" | awk '/Swap:/{print $3 " MB"}')
+SWAP_PERCENT=$(echo "$MEMORY_INFO" | awk '/Swap:/{if ($2>0) printf "%.2f%%", $3/$2*100; else print "0%"}')
+
+# 磁盘信息
+DISK_INFO=$(df -h --output=used,size,pcent / | tail -1)
+DISK_USED=$(echo "$DISK_INFO" | awk '{print $1}')
+DISK_TOTAL=$(echo "$DISK_INFO" | awk '{print $2}')
+DISK_PERCENT=$(echo "$DISK_INFO" | awk '{print $3}')
+
+# 网络信息
+RX_BYTES=$(ifconfig | grep 'RX bytes' | awk '{print $2}' | awk -F':' '{sum+=$2} END {printf "%.2f GB", sum/1024/1024/1024}')
+TX_BYTES=$(ifconfig | grep 'TX bytes' | awk '{print $6}' | awk -F':' '{sum+=$2} END {printf "%.2f GB", sum/1024/1024/1024}')
+TCP_ALGO=$(sysctl net.ipv4.tcp_congestion_control 2>/dev/null | awk '{print $3}')
+
+# 防火墙状态
+if command -v ufw >/dev/null 2>&1; then
+    FIREWALL_STATUS=$(ufw status | grep "Status:" | awk '{print $2}')
+    [ -z "$FIREWALL_STATUS" ] && FIREWALL_STATUS="未启用"
+else
+    FIREWALL_STATUS="未安装 ufw"
+fi
+
+# IP 和地理信息
+IPv4=$(curl -s4 ifconfig.co)
+IPv6=$(curl -s6 ifconfig.co)
+DNS_SERVER=$(cat /etc/resolv.conf | grep 'nameserver' | awk '{print $2}' | tr '\n' ' ')
+LOCATION=$(curl -s https://ipinfo.io | jq -r '.region + " " + .country')
+
+# 时间和运行时长
+SYSTEM_TIME=$(date "+%Z %Y-%m-%d %I:%M %p")
+UPTIME=$(uptime -p)
+
+# 输出结果
+echo -e "${BLUE}------------- 系统信息 -------------${NC}"
+echo -e "主机名:       $HOSTNAME"
+echo -e "系统版本:     $OS_VERSION"
+echo -e "Linux版本:    $KERNEL_VERSION"
+echo -e "------------------------------------"
+echo -e "CPU架构:      $ARCH"
+echo -e "CPU型号:      $CPU_MODEL"
+echo -e "CPU核心数:    $CPU_CORES"
+echo -e "CPU频率:      $CPU_FREQ"
+echo -e "------------------------------------"
+echo -e "CPU占用:      $CPU_USAGE"
+echo -e "系统负载:     $LOAD_AVERAGE"
+echo -e "物理内存:     $MEMORY_USED/$MEMORY_TOTAL ($MEMORY_PERCENT)"
+echo -e "虚拟内存:     $SWAP_USED/$SWAP_TOTAL ($SWAP_PERCENT)"
+echo -e "硬盘占用:     $DISK_USED/$DISK_TOTAL ($DISK_PERCENT)"
+echo -e "------------------------------------"
+echo -e "防火墙状态:   $FIREWALL_STATUS"
+echo -e "------------------------------------"
+echo -e "总接收:       $RX_BYTES"
+echo -e "总发送:       $TX_BYTES"
+echo -e "------------------------------------"
+echo -e "网络算法:     $TCP_ALGO"
+echo -e "------------------------------------"
+echo -e "IPv4地址:     $IPv4"
+echo -e "IPv6地址:     $IPv6"
+echo -e "DNS地址:      $DNS_SERVER"
+echo -e "地理位置:     $LOCATION"
+echo -e "系统时间:     $SYSTEM_TIME"
+echo -e "------------------------------------"
+echo -e "运行时长:     $UPTIME"
+echo -e "------------------------------------"
