@@ -2,7 +2,7 @@
 
 # Docker管理脚本
 # 版本：1.1
-# 作者：emo小默默
+# 作者：Assistant
 # 描述：提供Docker安装、管理和卸载的一站式脚本
 
 # 颜色定义
@@ -114,12 +114,10 @@ container_management() {
     while true; do
         clear
         echo -e "${BLUE}\n===== 容器管理 =====${NC}"
-        echo "1. 列出所有容器"
-        echo "2. 启动容器"
-        echo "3. 停止容器"
-        echo "4. 重启容器"
-        echo "5. 删除容器"
-        echo "6. 查看容器日志"
+        echo "1. 列出所有容器      2. 启动容器"
+        echo "3. 停止容器          4. 重启容器"
+        echo "5. 删除容器          6. 查看容器日志"
+        echo "7. 停止所有容器      8. 启动所有容器"
         echo "0. 返回主菜单"
         
         read -p "请选择操作: " container_choice
@@ -146,6 +144,16 @@ container_management() {
                 read -p "请输入容器名称或ID: " container
                 docker logs $container 
                 ;;
+            7) 
+                echo -e "${YELLOW}正在停止所有容器...${NC}"
+                docker stop $(docker ps -q)
+                echo -e "${GREEN}所有容器已停止！${NC}"
+                ;;
+            8) 
+                echo -e "${YELLOW}正在启动所有容器...${NC}"
+                docker start $(docker ps -a -q)
+                echo -e "${GREEN}所有容器已启动！${NC}"
+                ;;
             0) break ;;
             *) echo -e "${RED}无效选择！${NC}" ;;
         esac
@@ -158,12 +166,9 @@ image_management() {
     while true; do
         clear
         echo -e "${BLUE}\n===== 镜像管理 =====${NC}"
-        echo "1. 列出本地镜像"
-        echo "2. 拉取镜像"
-        echo "3. 删除镜像"
-        echo "4. 构建镜像"
-        echo "5. 推送镜像到仓库"
-        echo "0. 返回主菜单"
+        echo "1. 列出本地镜像      2. 拉取镜像"
+        echo "3. 删除镜像          4. 构建镜像"
+        echo "5. 推送镜像到仓库    0. 返回主菜单"
         
         read -p "请选择操作: " image_choice
         
@@ -198,10 +203,8 @@ network_management() {
     while true; do
         clear
         echo -e "${BLUE}\n===== Docker网络管理 =====${NC}"
-        echo "1. 列出网络"
-        echo "2. 创建网络"
-        echo "3. 删除网络"
-        echo "0. 返回主菜单"
+        echo "1. 列出网络          2. 创建网络"
+        echo "3. 删除网络          0. 返回主菜单"
         
         read -p "请选择操作: " network_choice
         
@@ -227,14 +230,10 @@ main_menu() {
     while true; do
         clear
         echo -e "${GREEN}\n===== Docker管理脚本 =====${NC}"
-        echo "1. 安装Docker"
-        echo "2. 卸载Docker"
-        echo "3. 容器管理"
-        echo "4. 镜像管理"
-        echo "5. Docker网络管理"
-        echo "6. Docker系统信息"
-        echo "7. 更换Docker源"
-        echo "0. 退出脚本"
+        echo "1. 安装Docker        2. 卸载Docker"
+        echo "3. 容器管理          4. 镜像管理"
+        echo "5. Docker网络管理    6. Docker系统信息"
+        echo "7. 更换Docker源      0. 退出脚本"
         
         read -p "请选择操作: " choice
         
@@ -244,7 +243,11 @@ main_menu() {
             3) container_management ;;
             4) image_management ;;
             5) network_management ;;
-            6) docker info ;;
+            6) 
+                echo -e "${BLUE}Docker系统信息：${NC}"
+                docker info
+                read -n 1 -s -r -p "按任意键返回主菜单..."
+                ;;
             7) change_docker_source ;;
             0) 
                 echo -e "${YELLOW}感谢使用Docker管理脚本！${NC}"
