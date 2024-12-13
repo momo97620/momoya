@@ -2,15 +2,19 @@
 
 # 检查是否安装 curl 和 jq
 check_dependencies() {
-    for cmd in curl jq; do
-        if ! command -v $cmd &>/dev/null; then
-            echo "$cmd 未安装，正在自动安装..."
-            sudo apt update -y > /dev/null 2>&1
-            sudo apt install -y $cmd > /dev/null 2>&1
-        else
-            echo "$cmd 已安装，跳过安装..."
-        fi
-    done
+    # 如果 curl 没有安装，则自动安装
+    if ! command -v curl &>/dev/null; then
+        echo "curl 未安装，正在自动安装..."
+        sudo apt update -y > /dev/null 2>&1
+        sudo apt install -y curl > /dev/null 2>&1
+    fi
+
+    # 如果 jq 没有安装，则自动安装
+    if ! command -v jq &>/dev/null; then
+        echo "jq 未安装，正在自动安装..."
+        sudo apt update -y > /dev/null 2>&1
+        sudo apt install -y jq > /dev/null 2>&1
+    fi
 }
 
 # 获取地理位置
