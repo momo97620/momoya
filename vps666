@@ -24,10 +24,11 @@ show_main_menu() {
         echo -e "3. 配置密钥登录"
         echo -e "4. 修改登录端口号"
         echo -e "5. 卸载主脚本"
+        echo -e "6. 一键WARP"
         echo -e "0. 退出"
         echo -e "${BLUE}============================================================${NC}"
 
-        read -p "请输入选项 (0-5): " choice
+        read -p "请输入选项 (0-6): " choice
         case $choice in
             1)
                 echo -e "${YELLOW}正在执行：搭建 Hysteria 节点...${NC}"
@@ -48,6 +49,10 @@ show_main_menu() {
             5)
                 echo -e "${YELLOW}正在执行：卸载主脚本...${NC}"
                 uninstall_script
+                ;;
+            6)
+                echo -e "${YELLOW}正在执行：一键WARP...${NC}"
+                wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
