@@ -10,7 +10,7 @@ LIGHTCYAN='\033[1;36m'  # 亮青色
 LIGHTGREEN='\033[1;32m' # 亮绿色
 NC='\033[0m' # No Color
 
-# 显示主机信息
+# 显示系统信息
 show_system_info() {
     # 获取主机名和系统信息
     hostname=$(hostname)
@@ -38,9 +38,9 @@ show_system_info() {
     # 获取地理位置
     location=$(curl -s https://ipinfo.io | jq -r '.city, .region, .country')
 
-    # 获取IPv6地址
-    ipv6_address=$(ip -6 addr show | grep inet6 | grep -v "fe80" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
-    
+    # 获取IPv6地址，排除掉回环地址 (::1)
+    ipv6_address=$(ip -6 addr show | grep inet6 | grep -v "fe80" | grep -v "::1" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
+
     # 获取IPv4地址
     ipv4_address=$(ip -4 addr show | grep inet | grep -v "127.0.0.1" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
     
@@ -58,7 +58,7 @@ show_system_info() {
         firewall_status="未启用"
     fi
 
-    # 输出系统信息
+    # 输出系统信息，调整排版
     echo -e "${LIGHTCYAN}主机名:${NC} $hostname"
     echo -e "${LIGHTCYAN}系统版本:${NC} $os_info"
     echo -e "${LIGHTCYAN}内核版本:${NC} $kernel_version"
