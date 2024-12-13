@@ -31,6 +31,9 @@ show_main_menu() {
         # 插入快捷键提示
         echo -e "${YELLOW}使用快捷键 ${LIGHTCYAN}n${NC} 可以快速打开脚本 ${LIGHTBLUE}😊${NC}"
         
+        # 添加作者信息
+        echo -e "${LIGHTCYAN}作者：emo的小默默${NC}"
+        
         echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
         echo -e "${GREEN}请选择要执行的任务：${NC}"
 
@@ -38,11 +41,12 @@ show_main_menu() {
         echo -e "1. 搭建 Hysteria 节点           5. 卸载主脚本"
         echo -e "2. 安装并配置 UFW 防火墙       6. 一键WARP"
         echo -e "3. 配置密钥登录               7. BBR加速"
-        echo -e "4. 修改登录端口号             0. 退出"
+        echo -e "4. 修改登录端口号             8. Docker管理"
+        echo -e "0. 退出"
 
         echo -e "${BLUE}============================================================${NC}"
 
-        read -p "请输入选项 (0-7): " choice
+        read -p "请输入选项 (0-8): " choice
         case $choice in
             1)
                 echo -e "${YELLOW}正在执行：搭建 Hysteria 节点...${NC}"
@@ -71,6 +75,10 @@ show_main_menu() {
             7)
                 echo -e "${YELLOW}正在执行：BBR加速...${NC}"
                 wget -O tcp.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
+                ;;
+            8)
+                echo -e "${YELLOW}正在执行：Docker管理...${NC}"
+                curl -fsSL "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" -o docker_script && chmod +x docker_script && ./docker_script
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
