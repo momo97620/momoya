@@ -5,6 +5,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+LIGHTBLUE='\033[1;34m'  # 亮蓝色
+LIGHTCYAN='\033[1;36m'  # 亮青色
 NC='\033[0m' # No Color
 
 # 检查脚本是否被直接运行
@@ -17,6 +19,15 @@ fi
 show_main_menu() {
     while true; do
         clear  # 清屏，使菜单界面更加清晰
+        
+        # 在顶部显示超大绿色 "M"
+        echo -e "${GREEN}███████╗██╗  ██╗██╗██╗      ${NC}"
+        echo -e "${GREEN}╚══██╔══╝██║  ██║██║██║      ${NC}"
+        echo -e "${GREEN}   ██║   ███████║██║██║██████╗${NC}"
+        echo -e "${GREEN}   ██║   ██╔══██║██║██║╚════╝${NC}"
+        echo -e "${GREEN}   ██║   ██║  ██║██║██║██████╗${NC}"
+        echo -e "${GREEN}   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝${NC}"
+        
         echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
         echo -e "${GREEN}请选择要执行的任务：${NC}"
         echo -e "1. 搭建 Hysteria 节点"
