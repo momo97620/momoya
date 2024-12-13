@@ -177,8 +177,7 @@ fi
 fix_hostname_issue
 
 # 下载并执行主脚本
-echo -e "${YELLOW}正在通过 curl 执行脚本，并同时下载脚本到本地...${NC}"
-sudo wget -P "$INSTALL_DIR" https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666
+echo -e "${YELLOW}正在通过 curl 执行脚本...${NC}"
 bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666)
 
 show_main_menu
