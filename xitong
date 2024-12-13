@@ -7,6 +7,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 LIGHTBLUE='\033[1;34m'  # 亮蓝色
 LIGHTCYAN='\033[1;36m'  # 亮青色
+LIGHTGREEN='\033[1;32m' # 亮绿色
 NC='\033[0m' # No Color
 
 # 显示主机信息
@@ -38,26 +39,37 @@ show_system_info() {
     location=$(curl -s https://ipinfo.io | jq -r '.city, .region, .country')
 
     # 获取IPv6地址
-    ipv6_address=$(ip -6 addr show dev eth0 | grep inet6 | awk '{print $2}' | cut -d/ -f1)
+    ipv6_address=$(ip -6 addr show | grep inet6 | grep -v "fe80" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
     
     # 获取系统运行时长
-    uptime_days=$(uptime -p | sed -E 's/up\s+([0-9]+)\s+day.*$/\1 day/')
+    uptime_seconds=$(cat /proc/uptime | awk '{print $1}')
+    uptime_days=$((uptime_seconds / 86400))
+    uptime_hours=$(( (uptime_seconds % 86400) / 3600 ))
     
+    # 获取防火墙状态并转换为中文
+    firewall_status=$(ufw status | grep -o 'active' || echo 'inactive')
+    if [[ $firewall_status == "active" ]]; then
+        firewall_status="已启用"
+    else
+        firewall_status="未启用"
+    fi
+
     # 输出系统信息
-    echo -e "${GREEN}主机名: ${NC}$hostname"
-    echo -e "${GREEN}系统版本: ${NC}$os_info"
-    echo -e "${GREEN}内核版本: ${NC}$kernel_version"
-    echo -e "${GREEN}CPU架构: ${NC}$cpu_arch"
-    echo -e "${GREEN}CPU型号: ${NC}$cpu_info"
-    echo -e "${GREEN}CPU核心数: ${NC}$cpu_cores"
-    echo -e "${GREEN}CPU频率: ${NC}$cpu_speed MHz"
-    echo -e "${GREEN}内存: ${NC}$mem_used/$mem_total MB"
-    echo -e "${GREEN}硬盘使用: ${NC}$disk_used/$disk_total"
-    echo -e "${GREEN}网络接收: ${NC}$network_in KB"
-    echo -e "${GREEN}网络发送: ${NC}$network_out KB"
-    echo -e "${GREEN}地理位置: ${NC}$location"
-    echo -e "${GREEN}IPv6地址: ${NC}$ipv6_address"
-    echo -e "${GREEN}系统运行时长: ${NC}$uptime_days"
+    echo -e "${LIGHTCYAN}主机名:${NC} $hostname"
+    echo -e "${LIGHTCYAN}系统版本:${NC} $os_info"
+    echo -e "${LIGHTCYAN}内核版本:${NC} $kernel_version"
+    echo -e "${LIGHTGREEN}CPU架构:${NC} $cpu_arch"
+    echo -e "${LIGHTGREEN}CPU型号:${NC} $cpu_info"
+    echo -e "${LIGHTGREEN}CPU核心数:${NC} $cpu_cores"
+    echo -e "${LIGHTGREEN}CPU频率:${NC} $cpu_speed MHz"
+    echo -e "${LIGHTGREEN}内存:${NC} $mem_used/$mem_total MB"
+    echo -e "${LIGHTGREEN}硬盘使用:${NC} $disk_used/$disk_total"
+    echo -e "${LIGHTGREEN}网络接收:${NC} $network_in KB"
+    echo -e "${LIGHTGREEN}网络发送:${NC} $network_out KB"
+    echo -e "${LIGHTGREEN}地理位置:${NC} $location"
+    echo -e "${LIGHTGREEN}IPv6地址:${NC} $ipv6_address"
+    echo -e "${LIGHTGREEN}防火墙状态:${NC} $firewall_status"
+    echo -e "${LIGHTGREEN}系统运行时长:${NC} ${uptime_days}天 ${uptime_hours}小时"
 }
 
 # 执行显示系统信息函数
