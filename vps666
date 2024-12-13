@@ -35,31 +35,73 @@ uninstall_script() {
     fi
 
     # 删除脚本文件
-    sudo rm -f "$SCRIPT_PATH"
-    echo -e "${GREEN}主脚本已卸载。${NC}"
+    if [ -f "$SCRIPT_PATH" ]; then
+        sudo rm -f "$SCRIPT_PATH"
+        echo -e "${GREEN}主脚本已卸载。${NC}"
+    else
+        echo -e "${RED}未找到主脚本文件，可能已被删除。${NC}"
+    fi
 
     # 删除脚本所在的文件夹
     if [ -d "$SCRIPT_DIR" ]; then
         sudo rm -rf "$SCRIPT_DIR"
         echo -e "${GREEN}脚本所在的文件夹已删除。${NC}"
+    else
+        echo -e "${RED}未找到脚本所在的文件夹，可能已被删除。${NC}"
     fi
 
+    # 清理 shell 配置文件中的 alias
+    clean_aliases
+
+    echo -e "${GREEN}卸载完成。${NC}"
     exit 0
+}
+
+# 清理 shell 配置文件中的 alias
+clean_aliases() {
+    echo -e "${YELLOW}正在清理 shell 配置文件中的 alias...${NC}"
+    local shell_configs=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.profile")
+    for config in "${shell_configs[@]}"; do
+        if [ -f "$config" ]; then
+            sed -i "/alias n='bash $SCRIPT_PATH'/d" "$config"
+            echo -e "${GREEN}已清理 $config 中的 alias。${NC}"
+        fi
+    done
 }
 
 # 添加 n 快捷指令
 setup_n_alias() {
     echo -e "${YELLOW}正在配置快捷指令 'n'...${NC}"
-    
-    # 打开 .bashrc 文件并在末尾添加 alias
-    echo "alias n='bash $SCRIPT_PATH'" >> ~/.bashrc
-    
-    # 检查是否已成功添加 alias
-    echo -e "${YELLOW}正在检查 .bashrc 文件是否已成功添加 alias...${NC}"
-    tail -n 10 ~/.bashrc
 
-    # 重新加载 .bashrc 文件
-    source ~/.bashrc
+    # 检测当前 shell 类型
+    local shell_type=$(basename "$SHELL")
+    local shell_config=""
+
+    # 根据 shell 类型选择配置文件
+    case "$shell_type" in
+        bash)
+            shell_config="$HOME/.bashrc"
+            ;;
+        zsh)
+            shell_config="$HOME/.zshrc"
+            ;;
+        *)
+            shell_config="$HOME/.bashrc" # 默认使用 .bashrc
+            ;;
+    esac
+
+    # 检查是否已经存在 alias
+    if grep -q "alias n='bash $SCRIPT_PATH'" "$shell_config"; then
+        echo -e "${YELLOW}快捷指令 'n' 已存在，无需重复添加。${NC}"
+        return
+    fi
+
+    # 添加 alias
+    echo "alias n='bash $SCRIPT_PATH'" >> "$shell_config"
+
+    # 立即生效
+    source "$shell_config"
+
     echo -e "${GREEN}快捷指令 'n' 已配置！现在你可以通过输入 'n' 来启动该脚本。${NC}"
 }
 
