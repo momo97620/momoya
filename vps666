@@ -21,6 +21,34 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+# 自动修复主机名解析问题
+fix_hostname_resolution() {
+    HOSTNAME="momo"
+
+    # 检查并修复 /etc/hostname
+    if ! grep -q "$HOSTNAME" /etc/hostname; then
+        echo -e "${YELLOW}/etc/hostname 中未找到主机名，正在修复...${NC}"
+        echo "$HOSTNAME" > /etc/hostname
+        echo -e "${GREEN}/etc/hostname 已修复为 '$HOSTNAME'${NC}"
+    else
+        echo -e "${GREEN}/etc/hostname 中已存在正确的主机名。${NC}"
+    fi
+
+    # 检查并修复 /etc/hosts
+    if ! grep -q "$HOSTNAME" /etc/hosts; then
+        echo -e "${YELLOW}/etc/hosts 中未找到主机名映射，正在修复...${NC}"
+        sed -i "/127.0.0.1/c\127.0.0.1   localhost $HOSTNAME" /etc/hosts
+        echo -e "${GREEN}/etc/hosts 已修复为映射 '$HOSTNAME'${NC}"
+    else
+        echo -e "${GREEN}/etc/hosts 中已存在正确的主机名映射。${NC}"
+    fi
+
+    # 重新加载主机名配置
+    hostnamectl set-hostname "$HOSTNAME"
+    systemctl restart systemd-hostnamed
+    echo -e "${GREEN}主机名解析修复完成！${NC}"
+}
+
 # 获取当前脚本的绝对路径
 SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || realpath "$0")
 
@@ -135,6 +163,9 @@ show_main_menu() {
         esac
     done
 }
+
+# 自动修复主机名解析问题
+fix_hostname_resolution
 
 # 自动配置 n 快捷指令
 setup_n_alias
