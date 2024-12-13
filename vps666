@@ -15,6 +15,9 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     exit 1
 fi
 
+# 获取当前主机名
+CURRENT_HOSTNAME=$(hostname)
+
 # 显示主菜单
 show_main_menu() {
     while true; do
