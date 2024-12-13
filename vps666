@@ -7,9 +7,6 @@ SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 # 定义固定安装路径（例如：/usr/local/my_script）
 INSTALL_DIR="/usr/local/my_script"
 
-# 定义脚本的下载链接
-SCRIPT_URL="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666"
-
 # 定义颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -30,6 +27,29 @@ if [ "$(id -u)" != "0" ]; then
     echo -e "${RED}请以 root 用户运行脚本。${NC}"
     exit 1
 fi
+
+# 修复主机名解析问题
+fix_hostname_issue() {
+    echo -e "${YELLOW}正在修复主机名解析问题...${NC}"
+    
+    # 获取当前的主机名
+    HOSTNAME=$(cat /etc/hostname)
+    
+    # 如果主机名为空，设置默认的主机名
+    if [ -z "$HOSTNAME" ]; then
+        echo -e "${RED}主机名为空，正在设置为默认主机名...${NC}"
+        echo "momo" > /etc/hostname
+        HOSTNAME="momo"
+    fi
+    
+    # 编辑 /etc/hosts 配置，确保主机名能够解析
+    if ! grep -q "$HOSTNAME" /etc/hosts; then
+        echo -e "${YELLOW}正在修改 /etc/hosts 配置文件...${NC}"
+        sed -i "s/127.0.0.1\s*localhost/127.0.0.1 localhost $HOSTNAME/" /etc/hosts
+    fi
+    
+    echo -e "${GREEN}主机名解析修复完成。${NC}"
+}
 
 # 显示主菜单
 show_main_menu() {
@@ -142,21 +162,6 @@ install_script() {
     echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
 }
 
-# 使用 curl 执行脚本并下载
-echo -e "${YELLOW}正在通过 curl 执行脚本，并同时下载脚本到本地...${NC}"
-
-# 通过 curl 执行脚本
-bash <(curl -sSL "$SCRIPT_URL") &
-
-# 使用 wget 下载脚本并保存到指定目录（重定向输出）
-sudo mkdir -p "$INSTALL_DIR"  # 确保目录存在
-sudo wget -q -P "$INSTALL_DIR" "$SCRIPT_URL" &
-
-# 等待后台下载完成
-wait
-
-echo -e "${GREEN}脚本已下载并保存到 $INSTALL_DIR，同时通过 curl 执行了脚本。${NC}"
-
 # 调试输出脚本路径
 echo -e "${YELLOW}脚本路径: $SCRIPT_PATH${NC}"
 echo -e "${YELLOW}安装路径: $INSTALL_DIR${NC}"
@@ -167,5 +172,13 @@ if [ ! -d "$INSTALL_DIR" ]; then
 else
     echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
 fi
+
+# 修复主机名解析问题
+fix_hostname_issue
+
+# 下载并执行主脚本
+echo -e "${YELLOW}正在通过 curl 执行脚本，并同时下载脚本到本地...${NC}"
+sudo wget -P "$INSTALL_DIR" https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666
+bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666)
 
 show_main_menu
