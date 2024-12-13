@@ -124,7 +124,7 @@ uninstall_script() {
 # 更新脚本
 update_script() {
     echo -e "${YELLOW}正在更新脚本...${NC}"
-    SCRIPT_URL="https://raw.githubusercontent.com/momo97620/momoya/main/vps_script.sh"  # 替换为你的脚本 URL
+    SCRIPT_URL="https://emoxiaomomo.9762006.xyz/vps666"  # 替换为你的脚本 URL
     SCRIPT_PATH="$(realpath "$0")"
 
     # 下载最新脚本并替换当前脚本
