@@ -4,6 +4,23 @@
 ALIAS_SET_FLAG="$HOME/.script_alias_set.log"
 SCRIPT_NAME="vps_script.sh"  # 设定脚本名称，用于后续引用
 
+# 自动设置主机名
+setup_hostname() {
+    CURRENT_HOSTNAME=$(hostname)
+    echo "当前主机名是：$CURRENT_HOSTNAME"
+
+    # 确保 /etc/hostname 和 /etc/hosts 中的配置一致
+    if ! grep -q "$CURRENT_HOSTNAME" /etc/hostname; then
+        echo "$CURRENT_HOSTNAME" | sudo tee /etc/hostname > /dev/null
+        echo "主机名已更新到 /etc/hostname 文件。"
+    fi
+
+    if ! grep -q "$CURRENT_HOSTNAME" /etc/hosts; then
+        sudo sed -i "/127.0.1.1/c\127.0.1.1   $CURRENT_HOSTNAME" /etc/hosts
+        echo "主机名已更新到 /etc/hosts 文件。"
+    fi
+}
+
 # 显示主菜单
 show_main_menu() {
     echo -e "请选择要执行的任务："
@@ -77,15 +94,9 @@ setup_alias() {
     fi
 }
 
-# 自动设置主机名
-setup_hostname() {
-    CURRENT_HOSTNAME=$(hostname)
-    echo "当前主机名是：$CURRENT_HOSTNAME"
-}
-
 # 脚本入口逻辑
-setup_alias  # 设置快捷命令
 setup_hostname  # 设置主机名
+setup_alias  # 设置快捷命令
 show_main_menu  # 显示主菜单
 
 # 重新加载 .bashrc 文件
