@@ -69,6 +69,9 @@ show_main_menu() {
             3)
                 echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)
+                
+                # 等待用户按下回车键再返回主菜单
+                read -p "密钥配置完成，请按回车键返回主菜单..."
                 ;;
             4)
                 echo -e "${YELLOW}正在执行：修改登录端口号...${NC}"
