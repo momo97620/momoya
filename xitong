@@ -1,22 +1,16 @@
 #!/bin/bash
 
-# 检查并安装所需工具
+# 检查是否安装 curl 和 jq
 check_dependencies() {
     for cmd in curl jq; do
         if ! command -v $cmd &>/dev/null; then
-            # 使用非交互模式安装，并且不显示任何输出
+            echo "$cmd 未安装，正在自动安装..."
             sudo apt update -y > /dev/null 2>&1
             sudo apt install -y $cmd > /dev/null 2>&1
+        else
+            echo "$cmd 已安装，跳过安装..."
         fi
     done
-}
-
-# 卸载功能
-uninstall() {
-    echo "正在卸载..."
-    sudo apt-get remove --purge jq curl -y > /dev/null 2>&1
-    sudo apt autoremove -y > /dev/null 2>&1
-    echo "卸载完成，相关数据已删除。"
 }
 
 # 获取地理位置
@@ -56,17 +50,6 @@ get_firewall_status() {
 
 # 主程序
 main() {
-    clear
-    echo "请选择操作:"
-    echo "1. 查询系统信息"
-    echo "2. 卸载工具和清理数据"
-    read -p "请输入选择（1或2）: " choice
-
-    if [ "$choice" == "2" ]; then
-        uninstall
-        exit 0
-    fi
-
     check_dependencies
 
     HOSTNAME=$(hostname)
@@ -97,34 +80,34 @@ main() {
 
     clear
     echo -e "系统信息查询\n"
-    echo -e "主机名:         $HOSTNAME"
-    echo -e "系统版本:       $OS_VERSION"
-    echo -e "Linux版本:      $KERNEL_VERSION"
+    echo -e "主机名:       $HOSTNAME"
+    echo -e "系统版本:     $OS_VERSION"
+    echo -e "Linux版本:    $KERNEL_VERSION"
     echo -e "-------------"
-    echo -e "CPU架构:        $ARCH"
-    echo -e "CPU型号:        $CPU_MODEL"
-    echo -e "CPU核心数:      $CPU_CORES"
-    echo -e "CPU频率:        $CPU_FREQ"
+    echo -e "CPU架构:      $ARCH"
+    echo -e "CPU型号:      $CPU_MODEL"
+    echo -e "CPU核心数:    $CPU_CORES"
+    echo -e "CPU频率:      $CPU_FREQ"
     echo -e "-------------"
-    echo -e "CPU占用:        $(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5); printf "%.0f%%", usage}')"
-    echo -e "系统负载:       $LOAD_AVG"
-    echo -e "物理内存:       ${MEM_USED}/${MEM_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $MEM_USED/$MEM_TOTAL*100}")%)"
-    echo -e "虚拟内存:       ${SWAP_USED}/${SWAP_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $SWAP_USED/$SWAP_TOTAL*100}")%)"
-    echo -e "硬盘占用:       $DISK_USAGE"
+    echo -e "CPU占用:      $(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5); printf "%.0f%%", usage}')"
+    echo -e "系统负载:     $LOAD_AVG"
+    echo -e "物理内存:     ${MEM_USED}/${MEM_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $MEM_USED/$MEM_TOTAL*100}")%)"
+    echo -e "虚拟内存:     ${SWAP_USED}/${SWAP_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $SWAP_USED/$SWAP_TOTAL*100}")%)"
+    echo -e "硬盘占用:     $DISK_USAGE"
     echo -e "-------------"
-    echo -e "总接收:         $RX_BYTES"
-    echo -e "总发送:         $TX_BYTES"
+    echo -e "总接收:       $RX_BYTES"
+    echo -e "总发送:       $TX_BYTES"
     echo -e "-------------"
-    echo -e "网络算法:       $NETWORK_ALGO"
-    echo -e "防火墙状态:     $FIREWALL_STATUS"
+    echo -e "网络算法:     $NETWORK_ALGO"
+    echo -e "防火墙状态:   $FIREWALL_STATUS"
     echo -e "-------------"
-    echo -e "运营商:         $ISP"
-    echo -e "IPv4地址:       $IPV4"
-    echo -e "IPv6地址:       $IPV6"
-    echo -e "DNS地址:        $DNS"
-    echo -e "地理位置:       $LOCATION"
-    echo -e "系统时间:       $TIMEZONE $SYSTEM_TIME"
-    echo -e "运行时长:       $UPTIME"
+    echo -e "运营商:       $ISP"
+    echo -e "IPv4地址:     $IPV4"
+    echo -e "IPv6地址:     $IPV6"
+    echo -e "DNS地址:      $DNS"
+    echo -e "地理位置:     $LOCATION"
+    echo -e "系统时间:     $TIMEZONE $SYSTEM_TIME"
+    echo -e "运行时长:     $UPTIME"
     echo -e "-------------"
     echo -e "操作完成"
     echo -e "按任意键继续..."
