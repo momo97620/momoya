@@ -3,12 +3,18 @@
 # 快捷启动脚本
 
 # 主脚本路径
-SCRIPT_PATH="/usr/local/my_script"
+SCRIPT_PATH="/usr/local/my_script/zhiling"  # 确保这是主脚本的完整路径
+
+# 检查主脚本是否存在
+if [[ ! -f "$SCRIPT_PATH" ]]; then
+    echo -e "\033[1;31m错误: 主脚本不存在，请检查路径：$SCRIPT_PATH。\033[0m"
+    exit 1
+fi
 
 # 自动赋予主脚本执行权限
 if [[ ! -x "$SCRIPT_PATH" ]]; then
     echo -e "\033[1;33m主脚本没有执行权限，正在自动赋予执行权限...\033[0m"
-    chmod +x "$SCRIPT_PATH"
+    sudo chmod +x "$SCRIPT_PATH"
     if [[ $? -eq 0 ]]; then
         echo -e "\033[1;32m主脚本执行权限已成功设置！\033[0m"
     else
@@ -18,7 +24,7 @@ if [[ ! -x "$SCRIPT_PATH" ]]; then
 fi
 
 # 提示信息
-echo -e "\033[1;32m快捷启动脚本：按 'n' 启动主脚本，按 'q' 退出。\033[0m"
+echo -e "\033[1;32m快捷启动脚本：按 'n' 启动主脚本菜单，按 'q' 退出。\033[0m"
 
 # 无限循环，等待用户按键
 while true; do
@@ -27,7 +33,7 @@ while true; do
 
     case $choice in
         n|N)
-            echo -e "\033[1;34m正在启动主脚本...\033[0m"
+            echo -e "\033[1;34m正在启动主脚本菜单...\033[0m"
             # 执行主脚本
             "$SCRIPT_PATH"  # 执行主脚本
             ;;
