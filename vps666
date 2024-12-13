@@ -4,6 +4,9 @@
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
+# 定义固定安装路径（例如：/usr/local/my_script）
+INSTALL_DIR="/usr/local/my_script"
+
 # 定义颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -104,5 +107,47 @@ show_main_menu() {
     done
 }
 
+# 卸载主脚本
+uninstall_script() {
+    echo -e "${YELLOW}开始卸载主脚本并清除相关数据...${NC}"
+    read -p "确定要卸载主脚本并清除相关数据吗？(y/n): " confirm
+    if [ "$confirm" != "y" ]; then
+        echo -e "${RED}卸载已取消。${NC}"
+        return  # 返回主菜单
+    fi
+
+    # 使用固定路径卸载
+    echo -e "${YELLOW}正在卸载：卸载主脚本及所有相关文件...${NC}"
+    sudo rm -rf "$INSTALL_DIR"
+    echo -e "${GREEN}主脚本及相关文件已卸载。${NC}"
+    exit 0
+}
+
+# 安装主脚本
+install_script() {
+    echo -e "${YELLOW}正在安装：将脚本安装到 $INSTALL_DIR...${NC}"
+    
+    # 创建安装目录
+    sudo mkdir -p "$INSTALL_DIR"
+    
+    # 将脚本复制到安装目录
+    sudo cp "$SCRIPT_PATH" "$INSTALL_DIR"
+    
+    # 设置执行权限
+    sudo chmod +x "$INSTALL_DIR/$(basename "$SCRIPT_PATH")"
+    
+    echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
+}
+
+# 调试输出脚本路径
+echo -e "${YELLOW}脚本路径: $SCRIPT_PATH${NC}"
+echo -e "${YELLOW}安装路径: $INSTALL_DIR${NC}"
+
 # 脚本入口
+if [ ! -d "$INSTALL_DIR" ]; then
+    install_script  # 如果脚本未安装，自动安装
+else
+    echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
+fi
+
 show_main_menu
