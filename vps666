@@ -24,33 +24,6 @@ fi
 # 获取当前脚本的绝对路径
 SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || realpath "$0")
 
-# 更新脚本函数
-update_script() {
-    echo -e "${YELLOW}正在更新脚本...${NC}"
-    SCRIPT_URL="https://emoxiaomomo.9762006.xyz/vps666"  # 确保这是正确的脚本地址
-    echo "SCRIPT_URL: $SCRIPT_URL"
-    echo "SCRIPT_PATH: $SCRIPT_PATH"
-    
-    # 尝试用 curl 下载脚本
-    if ! curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_PATH.tmp"; then
-        # 如果 curl 失败，尝试用 wget 下载
-        if ! wget -qO "$SCRIPT_PATH.tmp" "$SCRIPT_URL"; then
-            echo -e "${RED}下载脚本失败，请检查网络连接或脚本 URL。${NC}"
-            rm -f "$SCRIPT_PATH.tmp"
-            return
-        fi
-    fi
-    
-    if [ -f "$SCRIPT_PATH.tmp" ]; then
-        mv "$SCRIPT_PATH.tmp" "$SCRIPT_PATH"
-        chmod +x "$SCRIPT_PATH"
-        echo -e "${GREEN}脚本更新成功！请重新运行脚本。${NC}"
-        exit 0
-    else
-        echo -e "${RED}脚本更新失败。${NC}"
-    fi
-}
-
 # 卸载主脚本
 uninstall_script() {
     echo -e "${YELLOW}开始卸载主脚本并清除相关数据...${NC}"
@@ -92,7 +65,6 @@ show_main_menu() {
         echo -e "2. 安装并配置 UFW 防火墙       6. 一键WARP"
         echo -e "3. 配置密钥登录               7. BBR加速"
         echo -e "4. 修改登录端口号             8. Docker管理"
-        echo -e "9. 更新脚本"
         echo -e "0. 退出"
         
         echo -e "${BLUE}============================================================${NC}"
@@ -130,9 +102,6 @@ show_main_menu() {
                 echo -e "${YELLOW}正在执行：Docker管理...${NC}"
                 curl -fsSL "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" -o docker_script && chmod +x docker_script && ./docker_script
                 ;;
-            9)
-                update_script
-                ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
                 exit 0
@@ -140,6 +109,7 @@ show_main_menu() {
             n)
                 echo -e "${YELLOW}正在执行快捷指令 n...${NC}"
                 echo "快捷指令 n 的逻辑正在执行..."
+                # 在这里添加快捷指令 n 的逻辑
                 echo -e "${GREEN}快捷指令 n 已执行！${NC}"
                 ;;
             *)
