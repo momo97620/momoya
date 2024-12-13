@@ -29,26 +29,21 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # 修复主机名解析问题
-fix_hostname_issue() {
+fix_hostname_resolution() {
     echo -e "${YELLOW}正在修复主机名解析问题...${NC}"
+    HOSTNAME=$(hostname)
     
-    # 获取当前的主机名
-    HOSTNAME=$(cat /etc/hostname)
-    
-    # 如果主机名为空，设置默认的主机名
-    if [ -z "$HOSTNAME" ]; then
-        echo -e "${RED}主机名为空，正在设置为默认主机名...${NC}"
-        echo "momo" > /etc/hostname
-        HOSTNAME="momo"
+    # 检查并修复 /etc/hosts 文件
+    if ! grep -q "127.0.0.1 $HOSTNAME" /etc/hosts; then
+        echo -e "${YELLOW}修复 /etc/hosts 中的主机名解析...${NC}"
+        echo "127.0.0.1 $HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
     fi
-    
-    # 编辑 /etc/hosts 配置，确保主机名能够解析
-    if ! grep -q "$HOSTNAME" /etc/hosts; then
-        echo -e "${YELLOW}正在修改 /etc/hosts 配置文件...${NC}"
-        sed -i "s/127.0.0.1\s*localhost/127.0.0.1 localhost $HOSTNAME/" /etc/hosts
+
+    # 修复主机名
+    if [ -n "$HOSTNAME" ]; then
+        echo -e "${YELLOW}正在设置主机名：$HOSTNAME...${NC}"
+        sudo hostnamectl set-hostname $HOSTNAME
     fi
-    
-    echo -e "${GREEN}主机名解析修复完成。${NC}"
 }
 
 # 显示主菜单
@@ -174,10 +169,7 @@ else
 fi
 
 # 修复主机名解析问题
-fix_hostname_issue
+fix_hostname_resolution
 
-# 下载并执行主脚本
-echo -e "${YELLOW}正在通过 curl 执行脚本...${NC}"
-bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666)
-
+# 运行主菜单
 show_main_menu
