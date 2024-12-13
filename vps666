@@ -50,6 +50,7 @@ show_main_menu() {
         echo -e "${BLUE}============================================================${NC}"
 
         read -p "请输入选项 (0-8): " choice
+        echo "用户输入的选项是: $choice"  # 调试信息
         case $choice in
             1)
                 echo -e "${YELLOW}正在执行：搭建 Hysteria 节点...${NC}"
@@ -89,6 +90,7 @@ show_main_menu() {
                 ;;
             n)
                 echo -e "${YELLOW}正在执行快捷指令 n...${NC}"
+                echo "快捷指令 n 的逻辑正在执行..."  # 调试信息
                 # 在这里添加快捷指令 n 的逻辑
                 echo -e "${GREEN}快捷指令 n 已执行！${NC}"
                 ;;
