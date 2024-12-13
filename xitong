@@ -4,8 +4,8 @@
 check_dependencies() {
     for cmd in curl jq; do
         if ! command -v $cmd &>/dev/null; then
-            echo "正在安装 $cmd..."
-            sudo apt update -y && sudo apt install -y $cmd > /dev/null 2>&1
+            sudo apt update -y > /dev/null 2>&1
+            sudo apt install -y $cmd > /dev/null 2>&1
         fi
     done
 }
