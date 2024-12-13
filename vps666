@@ -1,12 +1,23 @@
 #!/bin/bash
 
+# 获取脚本路径
+SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+
 # 定义颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
 NC='\033[0m' # No Color
+
+# 检查脚本是否被直接运行
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    echo -e "${RED}This script must be run directly, not sourced.${NC}"
+    exit 1
+fi
 
 # 检查是否以 root 用户运行
 if [ "$(id -u)" != "0" ]; then
@@ -14,103 +25,165 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# 获取当前脚本的绝对路径
-SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || realpath "$0")
+# 卸载主脚本
+uninstall_script() {
+    echo -e "${YELLOW}开始卸载主脚本并清除相关数据...${NC}"
+    read -p "确定要卸载主脚本并清除相关数据吗？(y/n): " confirm
+    if [ "$confirm" != "y" ]; then
+        echo -e "${RED}卸载已取消。${NC}"
+        return
+    fi
 
-# 添加快捷键 n
+    # 删除脚本文件
+    if [ -f "$SCRIPT_PATH" ]; then
+        sudo rm -f "$SCRIPT_PATH"
+        echo -e "${GREEN}主脚本已卸载。${NC}"
+    else
+        echo -e "${RED}未找到主脚本文件，可能已被删除。${NC}"
+    fi
+
+    # 删除脚本所在的文件夹
+    if [ -d "$SCRIPT_DIR" ]; then
+        sudo rm -rf "$SCRIPT_DIR"
+        echo -e "${GREEN}脚本所在的文件夹已删除。${NC}"
+    else
+        echo -e "${RED}未找到脚本所在的文件夹，可能已被删除。${NC}"
+    fi
+
+    # 清理 shell 配置文件中的 alias
+    clean_aliases
+
+    echo -e "${GREEN}卸载完成。${NC}"
+    exit 0
+}
+
+# 清理 shell 配置文件中的 alias
+clean_aliases() {
+    echo -e "${YELLOW}正在清理 shell 配置文件中的 alias...${NC}"
+    local shell_configs=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.profile")
+    for config in "${shell_configs[@]}"; do
+        if [ -f "$config" ]; then
+            sed -i "/alias n='bash $SCRIPT_PATH'/d" "$config"
+            echo -e "${GREEN}已清理 $config 中的 alias。${NC}"
+        fi
+    done
+}
+
+# 添加 n 快捷指令
 setup_n_alias() {
     echo -e "${YELLOW}正在配置快捷指令 'n'...${NC}"
 
-    local shell_config="$HOME/.bashrc"  # 默认是 bash
-    if [[ "$SHELL" == *zsh ]]; then
-        shell_config="$HOME/.zshrc"  # 如果是 zsh，修改为 zshrc
-    fi
+    # 检测当前 shell 类型
+    local shell_type=$(basename "$SHELL")
+    local shell_config=""
+
+    # 根据 shell 类型选择配置文件
+    case "$shell_type" in
+        bash)
+            shell_config="$HOME/.bashrc"
+            ;;
+        zsh)
+            shell_config="$HOME/.zshrc"
+            ;;
+        *)
+            shell_config="$HOME/.bashrc" # 默认使用 .bashrc
+            ;;
+    esac
 
     # 检查是否已经存在 alias
     if grep -q "alias n='bash $SCRIPT_PATH'" "$shell_config"; then
         echo -e "${YELLOW}快捷指令 'n' 已存在，无需重复添加。${NC}"
-    else
-        echo "alias n='bash $SCRIPT_PATH'" >> "$shell_config"
-        source "$shell_config"  # 立即生效
-        echo -e "${GREEN}快捷指令 'n' 已配置！现在可以使用 'n' 快速启动脚本。${NC}"
+        return
     fi
+
+    # 添加 alias
+    echo "alias n='bash $SCRIPT_PATH'" >> "$shell_config"
+
+    # 立即生效
+    source "$shell_config"
+
+    echo -e "${GREEN}快捷指令 'n' 已配置！现在你可以通过输入 'n' 来启动该脚本。${NC}"
 }
 
-# 子菜单逻辑
-execute_task() {
-    clear
-    echo -e "${BLUE}====================== 任务页面 ======================${NC}"
-    echo -e "${YELLOW}任务：$1${NC}"
-    echo -e "${BLUE}=====================================================${NC}"
-    eval "$2"  # 执行传入的任务命令
-    echo -e "${GREEN}任务完成！按任意键返回主菜单...${NC}"
-    read -n 1  # 等待用户按键
-}
-
-# 主菜单逻辑
+# 显示主菜单
 show_main_menu() {
     while true; do
-        clear  # 清屏显示主菜单
+        clear  # 清屏，使菜单界面更加清晰
+        
+        # 在顶部显示超大绿色 "M"
         echo -e "${GREEN}███████╗██╗  ██╗██╗██╗      ${NC}"
         echo -e "${GREEN}╚══██╔══╝██║  ██║██║██║      ${NC}"
         echo -e "${GREEN}   ██║   ███████║██║██║██████╗${NC}"
         echo -e "${GREEN}   ██║   ██╔══██║██║██║╚════╝${NC}"
         echo -e "${GREEN}   ██║   ██║  ██║██║██║██████╗${NC}"
         echo -e "${GREEN}   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝${NC}"
-        echo -e "${YELLOW}作者：emo的小默默${NC}"
-
+        
+        # 插入快捷键提示
+        echo -e "${YELLOW}使用快捷键 ${LIGHTCYAN}n${NC} 可以快速打开脚本 ${LIGHTBLUE}😊${NC}"
+        
+        # 添加作者信息
+        echo -e "${LIGHTCYAN}作者：emo的小默默${NC}"
+        
         echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
+        echo -e "${GREEN}请选择要执行的任务：${NC}"
+        
+        # 调整后的两排菜单选项，确保上下对齐
         echo -e "1. 搭建 Hysteria 节点           5. 卸载主脚本"
         echo -e "2. 安装并配置 UFW 防火墙       6. 一键WARP"
         echo -e "3. 配置密钥登录               7. BBR加速"
         echo -e "4. 修改登录端口号             8. Docker管理"
         echo -e "9. 系统信息查询               0. 退出"
-        echo -e "${BLUE}=================================================================${NC}"
-
+        
+        echo -e "${BLUE}============================================================${NC}"
+        
         read -p "请输入选项 (0-9): " choice
         case $choice in
             1)
-                execute_task "搭建 Hysteria 节点" \
-                    "bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)"
+                echo -e "${YELLOW}正在执行：搭建 Hysteria 节点...${NC}"
+                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)
                 ;;
             2)
-                execute_task "安装并配置 UFW 防火墙" \
-                    "bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/e7d1e2ad49decc464f0a814c436ca4b6151986e7/ufw_install.sh)"
+                echo -e "${YELLOW}正在执行：安装并配置 UFW 防火墙...${NC}"
+                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/e7d1e2ad49decc464f0a814c436ca4b6151986e7/ufw_install.sh)
                 ;;
             3)
-                execute_task "配置密钥登录" \
-                    "bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)"
+                echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
+                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)
                 ;;
             4)
-                execute_task "修改登录端口号" \
-                    "bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)"
+                echo -e "${YELLOW}正在执行：修改登录端口号...${NC}"
+                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
                 ;;
             5)
-                execute_task "卸载主脚本" "uninstall_script"
+                uninstall_script
                 ;;
             6)
-                execute_task "一键WARP" \
-                    "wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh"
+                echo -e "${YELLOW}正在执行：一键WARP...${NC}"
+                wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
                 ;;
             7)
-                execute_task "BBR加速" \
-                    "wget -O tcp.sh \"https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh\" && chmod +x tcp.sh && ./tcp.sh"
+                echo -e "${YELLOW}正在执行：BBR加速...${NC}"
+                wget -O tcp.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
                 ;;
             8)
-                execute_task "Docker管理" \
-                    "curl -fsSL \"https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker\" -o docker_script && chmod +x docker_script && ./docker_script"
+                echo -e "${YELLOW}正在执行：Docker管理...${NC}"
+                curl -fsSL "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" -o docker_script && chmod +x docker_script && ./docker_script
                 ;;
             9)
-                execute_task "系统信息查询" \
-                    "bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/main/xitong)"
+                echo -e "${YELLOW}正在执行：系统信息查询...${NC}"
+                bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/main/xitong)
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
                 exit 0
                 ;;
+            n)
+                echo -e "${YELLOW}正在执行快捷指令 n...${NC}"
+                echo "快捷指令 n 的逻辑正在执行..."
+                echo -e "${GREEN}快捷指令 n 已执行！${NC}"
+                ;;
             *)
                 echo -e "${RED}无效的选择，请重新输入！${NC}"
-                read -n 1 -p "按任意键返回主菜单..."
                 ;;
         esac
     done
