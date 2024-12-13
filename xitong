@@ -69,7 +69,9 @@ UPTIME_MINUTES=$(( (UPTIME_SECONDS % 3600) / 60 ))
 UPTIME="${UPTIME_DAYS}天 ${UPTIME_HOURS}小时 ${UPTIME_MINUTES}分钟"
 
 # 输出结果
-echo -e "${BLUE}------------- 系统信息 -------------${NC}"
+clear
+echo -e "${BLUE}系统信息查询${NC}"
+echo -e "------------------------------------"
 echo -e "主机名:       $HOSTNAME"
 echo -e "系统版本:     $OS_VERSION"
 echo -e "Linux版本:    $KERNEL_VERSION"
