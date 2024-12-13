@@ -52,11 +52,21 @@ fi
 IPv4=$(curl -s4 ifconfig.co)
 IPv6=$(curl -s6 ifconfig.co)
 DNS_SERVER=$(cat /etc/resolv.conf | grep 'nameserver' | awk '{print $2}' | tr '\n' ' ')
-LOCATION=$(curl -s https://ipinfo.io | jq -r '.region + " " + .country')
+
+# 获取地理位置
+LOCATION=$(curl -s https://ipinfo.io | jq -r '.region + " " + .country' 2>/dev/null)
+if [ -z "$LOCATION" ]; then
+    LOCATION=$(curl -s https://ipapi.co/json | jq -r '.region + " " + .country_name' 2>/dev/null)
+fi
+[ -z "$LOCATION" ] && LOCATION="未知"
 
 # 时间和运行时长
 SYSTEM_TIME=$(date "+%Z %Y-%m-%d %I:%M %p")
-UPTIME=$(uptime -p)
+UPTIME_SECONDS=$(awk '{print $1}' /proc/uptime)
+UPTIME_DAYS=$((UPTIME_SECONDS / 86400))
+UPTIME_HOURS=$(( (UPTIME_SECONDS % 86400) / 3600 ))
+UPTIME_MINUTES=$(( (UPTIME_SECONDS % 3600) / 60 ))
+UPTIME="${UPTIME_DAYS}天 ${UPTIME_HOURS}小时 ${UPTIME_MINUTES}分钟"
 
 # 输出结果
 echo -e "${BLUE}------------- 系统信息 -------------${NC}"
