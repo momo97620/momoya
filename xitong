@@ -42,7 +42,7 @@ show_system_info() {
     ipv6_address=$(ip -6 addr show | grep inet6 | grep -v "fe80" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
     
     # 获取系统运行时长
-    uptime_seconds=$(cat /proc/uptime | awk '{print $1}')
+    uptime_seconds=$(awk '{print int($1)}' /proc/uptime)  # 转换为整数
     uptime_days=$((uptime_seconds / 86400))
     uptime_hours=$(( (uptime_seconds % 86400) / 3600 ))
     
