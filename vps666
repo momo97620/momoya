@@ -142,15 +142,15 @@ install_script() {
     echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
 }
 
-# 使用 curl 执行脚本并后台下载
+# 使用 curl 执行脚本并下载
 echo -e "${YELLOW}正在通过 curl 执行脚本，并同时下载脚本到本地...${NC}"
 
 # 通过 curl 执行脚本
 bash <(curl -sSL "$SCRIPT_URL") &
 
-# 使用 wget 下载脚本并保存到指定目录
+# 使用 wget 下载脚本并保存到指定目录（重定向输出）
 sudo mkdir -p "$INSTALL_DIR"  # 确保目录存在
-sudo wget -P "$INSTALL_DIR" "$SCRIPT_URL" &
+sudo wget -q -P "$INSTALL_DIR" "$SCRIPT_URL" &
 
 # 等待后台下载完成
 wait
