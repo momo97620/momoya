@@ -5,10 +5,24 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
-LIGHTBLUE='\033[1;34m'  # 亮蓝色
 LIGHTCYAN='\033[1;36m'  # 亮青色
 LIGHTGREEN='\033[1;32m' # 亮绿色
 NC='\033[0m' # No Color
+
+# 检查并安装 jq 和 curl
+check_and_install() {
+    # 检查 jq 是否安装
+    if ! command -v jq &> /dev/null; then
+        echo -e "${YELLOW}正在安装 jq...${NC}"
+        sudo apt-get update -y &> /dev/null && sudo apt-get install jq -y &> /dev/null
+    fi
+
+    # 检查 curl 是否安装
+    if ! command -v curl &> /dev/null; then
+        echo -e "${YELLOW}正在安装 curl...${NC}"
+        sudo apt-get update -y &> /dev/null && sudo apt-get install curl -y &> /dev/null
+    fi
+}
 
 # 显示系统信息
 show_system_info() {
@@ -35,7 +49,7 @@ show_system_info() {
     network_in=$(cat /proc/net/dev | grep eth0 | awk '{print $2}')
     network_out=$(cat /proc/net/dev | grep eth0 | awk '{print $10}')
     
-    # 获取地理位置
+    # 获取地理位置，改用备用 API
     location=$(curl -s https://ipinfo.io | jq -r '.city, .region, .country')
 
     # 获取IPv6地址，排除掉回环地址 (::1)
@@ -59,23 +73,31 @@ show_system_info() {
     fi
 
     # 输出系统信息，调整排版
-    echo -e "${LIGHTCYAN}主机名:${NC} $hostname"
-    echo -e "${LIGHTCYAN}系统版本:${NC} $os_info"
-    echo -e "${LIGHTCYAN}内核版本:${NC} $kernel_version"
-    echo -e "${LIGHTGREEN}CPU架构:${NC} $cpu_arch"
-    echo -e "${LIGHTGREEN}CPU型号:${NC} $cpu_info"
-    echo -e "${LIGHTGREEN}CPU核心数:${NC} $cpu_cores"
-    echo -e "${LIGHTGREEN}CPU频率:${NC} $cpu_speed MHz"
-    echo -e "${LIGHTGREEN}内存:${NC} $mem_used/$mem_total MB"
-    echo -e "${LIGHTGREEN}硬盘使用:${NC} $disk_used/$disk_total"
-    echo -e "${LIGHTGREEN}网络接收:${NC} $network_in KB"
-    echo -e "${LIGHTGREEN}网络发送:${NC} $network_out KB"
-    echo -e "${LIGHTGREEN}地理位置:${NC} $location"
-    echo -e "${LIGHTGREEN}IPv6地址:${NC} $ipv6_address"
-    echo -e "${LIGHTGREEN}IPv4地址:${NC} $ipv4_address"
-    echo -e "${LIGHTGREEN}防火墙状态:${NC} $firewall_status"
-    echo -e "${LIGHTGREEN}系统运行时长:${NC} ${uptime_days}天 ${uptime_hours}小时"
+    printf "%-20s: %-40s\n" "主机名" "$hostname"
+    printf "%-20s: %-40s\n" "系统版本" "$os_info"
+    printf "%-20s: %-40s\n" "内核版本" "$kernel_version"
+    printf "%-20s: %-40s\n" "CPU架构" "$cpu_arch"
+    printf "%-20s: %-40s\n" "CPU型号" "$cpu_info"
+    printf "%-20s: %-40s\n" "CPU核心数" "$cpu_cores"
+    printf "%-20s: %-40s\n" "CPU频率" "$cpu_speed MHz"
+    printf "%-20s: %-40s\n" "内存" "$mem_used/$mem_total MB"
+    printf "%-20s: %-40s\n" "硬盘使用" "$disk_used/$disk_total"
+    printf "%-20s: %-40s\n" "网络接收" "$network_in KB"
+    printf "%-20s: %-40s\n" "网络发送" "$network_out KB"
+    
+    # 如果地理位置不为空且不重复显示
+    if [ -n "$location" ]; then
+        printf "%-20s: %-40s\n" "地理位置" "$location"
+    fi
+    
+    printf "%-20s: %-40s\n" "IPv6地址" "$ipv6_address"
+    printf "%-20s: %-40s\n" "IPv4地址" "$ipv4_address"
+    printf "%-20s: %-40s\n" "防火墙状态" "$firewall_status"
+    printf "%-20s: %-40s\n" "系统运行时长" "$uptime_days 天 $uptime_hours 小时"
 }
+
+# 执行安装检查
+check_and_install
 
 # 执行显示系统信息函数
 show_system_info
