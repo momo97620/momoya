@@ -2,7 +2,7 @@
 
 # Docker管理脚本
 # 版本：1.1
-# 作者：Assistant
+# 作者：emo小默默
 # 描述：提供Docker安装、管理和卸载的一站式脚本
 
 # 颜色定义
@@ -112,6 +112,7 @@ uninstall_docker() {
 # 容器管理
 container_management() {
     while true; do
+        clear
         echo -e "${BLUE}\n===== 容器管理 =====${NC}"
         echo "1. 列出所有容器"
         echo "2. 启动容器"
@@ -148,12 +149,14 @@ container_management() {
             0) break ;;
             *) echo -e "${RED}无效选择！${NC}" ;;
         esac
+        read -n 1 -s -r -p "按任意键继续..."
     done
 }
 
 # 镜像管理
 image_management() {
     while true; do
+        clear
         echo -e "${BLUE}\n===== 镜像管理 =====${NC}"
         echo "1. 列出本地镜像"
         echo "2. 拉取镜像"
@@ -186,12 +189,14 @@ image_management() {
             0) break ;;
             *) echo -e "${RED}无效选择！${NC}" ;;
         esac
+        read -n 1 -s -r -p "按任意键继续..."
     done
 }
 
 # Docker网络管理
 network_management() {
     while true; do
+        clear
         echo -e "${BLUE}\n===== Docker网络管理 =====${NC}"
         echo "1. 列出网络"
         echo "2. 创建网络"
@@ -213,12 +218,14 @@ network_management() {
             0) break ;;
             *) echo -e "${RED}无效选择！${NC}" ;;
         esac
+        read -n 1 -s -r -p "按任意键继续..."
     done
 }
 
 # 主菜单
 main_menu() {
     while true; do
+        clear
         echo -e "${GREEN}\n===== Docker管理脚本 =====${NC}"
         echo "1. 安装Docker"
         echo "2. 卸载Docker"
