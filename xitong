@@ -41,10 +41,14 @@ show_system_info() {
     # 获取IPv6地址
     ipv6_address=$(ip -6 addr show | grep inet6 | grep -v "fe80" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
     
+    # 获取IPv4地址
+    ipv4_address=$(ip -4 addr show | grep inet | grep -v "127.0.0.1" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
+    
     # 获取系统运行时长
-    uptime_seconds=$(awk '{print int($1)}' /proc/uptime)  # 转换为整数
-    uptime_days=$((uptime_seconds / 86400))
-    uptime_hours=$(( (uptime_seconds % 86400) / 3600 ))
+    uptime_seconds=$(awk '{print $1}' /proc/uptime)
+    uptime_seconds_int=$(printf "%.0f" $uptime_seconds)  # 将浮点数转换为整数
+    uptime_days=$((uptime_seconds_int / 86400))
+    uptime_hours=$(( (uptime_seconds_int % 86400) / 3600 ))
     
     # 获取防火墙状态并转换为中文
     firewall_status=$(ufw status | grep -o 'active' || echo 'inactive')
@@ -68,6 +72,7 @@ show_system_info() {
     echo -e "${LIGHTGREEN}网络发送:${NC} $network_out KB"
     echo -e "${LIGHTGREEN}地理位置:${NC} $location"
     echo -e "${LIGHTGREEN}IPv6地址:${NC} $ipv6_address"
+    echo -e "${LIGHTGREEN}IPv4地址:${NC} $ipv4_address"
     echo -e "${LIGHTGREEN}防火墙状态:${NC} $firewall_status"
     echo -e "${LIGHTGREEN}系统运行时长:${NC} ${uptime_days}天 ${uptime_hours}小时"
 }
