@@ -14,13 +14,13 @@ check_and_install() {
     # 检查 jq 是否安装
     if ! command -v jq &> /dev/null; then
         echo -e "${YELLOW}正在安装 jq...${NC}"
-        sudo apt-get update -y &> /dev/null && sudo apt-get install jq -y &> /dev/null
+        sudo apt-get update -y -qq &> /dev/null && sudo apt-get install jq -y -qq &> /dev/null
     fi
 
     # 检查 curl 是否安装
     if ! command -v curl &> /dev/null; then
         echo -e "${YELLOW}正在安装 curl...${NC}"
-        sudo apt-get update -y &> /dev/null && sudo apt-get install curl -y &> /dev/null
+        sudo apt-get update -y -qq &> /dev/null && sudo apt-get install curl -y -qq &> /dev/null
     fi
 }
 
@@ -52,6 +52,11 @@ show_system_info() {
     # 获取地理位置，改用备用 API
     location=$(curl -s https://ipinfo.io | jq -r '.city, .region, .country')
 
+    # 如果没有获取到地理位置，显示 "未知"
+    if [ -z "$location" ]; then
+        location="未知"
+    fi
+
     # 获取IPv6地址，排除掉回环地址 (::1)
     ipv6_address=$(ip -6 addr show | grep inet6 | grep -v "fe80" | grep -v "::1" | awk '{print $2}' | cut -d/ -f1 | head -n 1)
 
@@ -65,35 +70,34 @@ show_system_info() {
     uptime_hours=$(( (uptime_seconds_int % 86400) / 3600 ))
 
     # 获取防火墙状态并转换为中文
-    firewall_status=$(ufw status | grep -o 'active' || echo 'inactive')
-    if [[ $firewall_status == "active" ]]; then
-        firewall_status="已启用"
-    else
-        firewall_status="未启用"
+    firewall_status="未启用"
+    if command -v ufw &> /dev/null; then
+        firewall_status=$(ufw status | grep -o 'active' || echo 'inactive')
+        if [[ $firewall_status == "active" ]]; then
+            firewall_status="已启用"
+        fi
     fi
 
     # 输出系统信息，调整排版
-    printf "%-20s: %-40s\n" "主机名" "$hostname"
-    printf "%-20s: %-40s\n" "系统版本" "$os_info"
-    printf "%-20s: %-40s\n" "内核版本" "$kernel_version"
-    printf "%-20s: %-40s\n" "CPU架构" "$cpu_arch"
-    printf "%-20s: %-40s\n" "CPU型号" "$cpu_info"
-    printf "%-20s: %-40s\n" "CPU核心数" "$cpu_cores"
-    printf "%-20s: %-40s\n" "CPU频率" "$cpu_speed MHz"
-    printf "%-20s: %-40s\n" "内存" "$mem_used/$mem_total MB"
-    printf "%-20s: %-40s\n" "硬盘使用" "$disk_used/$disk_total"
-    printf "%-20s: %-40s\n" "网络接收" "$network_in KB"
-    printf "%-20s: %-40s\n" "网络发送" "$network_out KB"
+    printf "%-20s: %-50s\n" "主机名" "$hostname"
+    printf "%-20s: %-50s\n" "系统版本" "$os_info"
+    printf "%-20s: %-50s\n" "内核版本" "$kernel_version"
+    printf "%-20s: %-50s\n" "CPU架构" "$cpu_arch"
+    printf "%-20s: %-50s\n" "CPU型号" "$cpu_info"
+    printf "%-20s: %-50s\n" "CPU核心数" "$cpu_cores"
+    printf "%-20s: %-50s\n" "CPU频率" "$cpu_speed MHz"
+    printf "%-20s: %-50s\n" "内存" "$mem_used/$mem_total MB"
+    printf "%-20s: %-50s\n" "硬盘使用" "$disk_used/$disk_total"
+    printf "%-20s: %-50s\n" "网络接收" "$network_in KB"
+    printf "%-20s: %-50s\n" "网络发送" "$network_out KB"
     
     # 如果地理位置不为空且不重复显示
-    if [ -n "$location" ]; then
-        printf "%-20s: %-40s\n" "地理位置" "$location"
-    fi
+    printf "%-20s: %-50s\n" "地理位置" "$location"
     
-    printf "%-20s: %-40s\n" "IPv6地址" "$ipv6_address"
-    printf "%-20s: %-40s\n" "IPv4地址" "$ipv4_address"
-    printf "%-20s: %-40s\n" "防火墙状态" "$firewall_status"
-    printf "%-20s: %-40s\n" "系统运行时长" "$uptime_days 天 $uptime_hours 小时"
+    printf "%-20s: %-50s\n" "IPv6地址" "$ipv6_address"
+    printf "%-20s: %-50s\n" "IPv4地址" "$ipv4_address"
+    printf "%-20s: %-50s\n" "防火墙状态" "$firewall_status"
+    printf "%-20s: %-50s\n" "系统运行时长" "$uptime_days 天 $uptime_hours 小时"
 }
 
 # 执行安装检查
