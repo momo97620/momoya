@@ -91,50 +91,34 @@ show_main_menu() {
             1)
                 echo -e "${YELLOW}正在执行：搭建 Hysteria 节点...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)
-                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
-                read
                 ;;
             2)
                 echo -e "${YELLOW}正在执行：安装并配置 UFW 防火墙...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh)
-                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
-                read
                 ;;
             3)
                 echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao)
-                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
-                read
                 ;;
             4)
                 echo -e "${YELLOW}正在执行：修改登录端口号...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
-                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
-                read
                 ;;
             6)
                 echo -e "${YELLOW}正在执行：一键WARP...${NC}"
                 wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
-                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
-                read
                 ;;
             7)
                 echo -e "${YELLOW}正在执行：BBR加速...${NC}"
                 wget -O tcp.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
-                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
-                read
                 ;;
             8)
                 echo -e "${YELLOW}正在执行：Docker管理...${NC}"
                 curl -fsSL "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" -o docker_script && chmod +x docker_script && ./docker_script
-                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
-                read
                 ;;
             9)
                 echo -e "${YELLOW}正在执行：系统信息查询...${NC}"
                 bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/main/xitong)
-                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
-                read
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
