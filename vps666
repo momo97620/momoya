@@ -13,6 +13,14 @@ NC='\033[0m' # No Color
 auto_install() {
     # 目标脚本路径
     TARGET_SCRIPT=/root/vps666
+    INSTALL_DIR="/usr/local/my_script"
+    INSTALL_SCRIPT="$INSTALL_DIR/vps666"
+
+    # 确保安装目录存在
+    if [ ! -d "$INSTALL_DIR" ]; then
+        echo -e "${YELLOW}警告：安装目录 $INSTALL_DIR 不存在，正在创建...${NC}"
+        mkdir -p "$INSTALL_DIR"
+    fi
 
     # 检查 /root/vps666 文件是否存在
     if [ -f "$TARGET_SCRIPT" ]; then
@@ -21,6 +29,13 @@ auto_install() {
         echo -e "${RED}/root/vps666 文件不存在，请确保文件已下载到该路径。${NC}"
         exit 1
     fi
+
+    # 复制或替换脚本到安装目录
+    if [ -f "$INSTALL_SCRIPT" ]; then
+        echo -e "${YELLOW}已存在脚本文件，正在替换...${NC}"
+    fi
+    cp "$TARGET_SCRIPT" "$INSTALL_SCRIPT"
+    echo -e "${GREEN}已将脚本复制到 $INSTALL_SCRIPT${NC}"
 
     # 确保 ~/.bashrc 文件存在且可写
     if [ ! -f ~/.bashrc ]; then
@@ -35,8 +50,8 @@ auto_install() {
     fi
 
     # 添加别名到 .bashrc（如果不存在）
-    if ! grep -q "alias m='sudo /root/vps666'" ~/.bashrc; then
-        echo "alias m='sudo /root/vps666'" >> ~/.bashrc
+    if ! grep -q "alias m='sudo $INSTALL_SCRIPT'" ~/.bashrc; then
+        echo "alias m='sudo $INSTALL_SCRIPT'" >> ~/.bashrc
         echo -e "${GREEN}已将快捷命令 'm' 添加到 ~/.bashrc${NC}"
     else
         echo -e "${YELLOW}快捷命令 'm' 已存在，无需重复添加${NC}"
@@ -62,162 +77,5 @@ auto_install() {
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
-# 定义固定安装路径
-INSTALL_DIR="/usr/local/my_script"
-
-# 检查脚本是否被直接运行
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-    echo -e "${RED}此脚本必须直接运行，而不是被引用。${NC}"
-    exit 1
-fi
-
-# 检查是否以 root 用户运行
-if [ "$(id -u)" != "0" ]; then
-    echo -e "${RED}请以 root 用户运行脚本。${NC}"
-    exit 1
-fi
-
-# 安装主脚本
-install_script() {
-    echo -e "${YELLOW}正在安装：将脚本安装到 $INSTALL_DIR...${NC}"
-    
-    # 创建安装目录
-    if [ ! -d "$INSTALL_DIR" ]; then
-        mkdir -p "$INSTALL_DIR"
-    fi
-    
-    # 将脚本复制到安装目录
-    cp "$SCRIPT_PATH" "$INSTALL_DIR"
-    
-    # 设置执行权限
-    chmod +x "$INSTALL_DIR/$(basename "$SCRIPT_PATH")"
-    
-    echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
-}
-
-# 卸载主脚本
-uninstall_script() {
-    echo -e "${YELLOW}开始卸载主脚本并清除相关数据...${NC}"
-    read -p "确定要卸载主脚本并清除相关数据吗？(y/n): " confirm
-    if [ "$confirm" != "y" ]; then
-        echo -e "${RED}卸载已取消。${NC}"
-        return  # 返回主菜单
-    fi
-
-    echo -e "${YELLOW}正在卸载：卸载主脚本及所有相关文件...${NC}"
-    rm -rf "$INSTALL_DIR"
-    
-    # 删除 .bashrc 中的别名
-    sed -i '/alias m='\''sudo \/root\/vps666'\''/d' ~/.bashrc
-    source ~/.bashrc
-    
-    echo -e "${GREEN}主脚本及相关文件已卸载。${NC}"
-    exit 0
-}
-
-# 显示主菜单
-show_main_menu() {
-    while true; do
-        clear  # 清屏，使菜单界面更加清晰
-        
-        # 在顶部显示超大绿色 "M"
-        echo -e "${GREEN}███████╗██╗  ██╗██╗██╗      ${NC}"
-        echo -e "${GREEN}╚══██╔══╝██║  ██║██║██║      ${NC}"
-        echo -e "${GREEN}   ██║   ███████║██║██║██████╗${NC}"
-        echo -e "${GREEN}   ██║   ██╔══██║██║██║╚════╝${NC}"
-        echo -e "${GREEN}   ██║   ██║  ██║██║██║██████╗${NC}"
-        echo -e "${GREEN}   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝${NC}"
-        
-        # 插入作者信息
-        echo -e "${LIGHTCYAN}作者：emo的小默默${NC}"
-        
-        echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
-        echo -e "${GREEN}请选择要执行的任务：${NC}"
-        
-        echo -e "1. 搭建 Hysteria 节点           6. 一键WARP"
-        echo -e "2. 安装并配置 UFW 防火墙       7. BBR加速"
-        echo -e "3. 配置密钥登录               8. Docker管理"
-        echo -e "4. 修改登录端口号             9. 系统信息查询"
-        echo -e "0. 退出"
-        
-        echo -e "${BLUE}============================================================${NC}"
-        
-        read -p "请输入选项 (0-9): " choice
-        case $choice in
-            1)
-                echo -e "${YELLOW}正在执行：搭建 Hysteria 节点...${NC}"
-                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)
-                read -p "按回车键返回主菜单..."
-                ;;
-            2)
-                echo -e "${YELLOW}正在执行：安装并配置 UFW 防火墙...${NC}"
-                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh)
-                read -p "按回车键返回主菜单..."
-                ;;
-            3)
-                echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
-                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao)
-                read -p "按回车键返回主菜单..."
-                ;;
-            4)
-                echo -e "${YELLOW}正在执行：修改登录端口号...${NC}"
-                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
-                read -p "按回车键返回主菜单..."
-                ;;
-            6)
-                echo -e "${YELLOW}正在执行：一键WARP...${NC}"
-                wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
-                read -p "按回车键返回主菜单..."
-                ;;
-            7)
-                echo -e "${YELLOW}正在执行：BBR加速...${NC}"
-                wget -O tcp.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
-                read -p "按回车键返回主菜单..."
-                ;;
-            8)
-                echo -e "${YELLOW}正在执行：Docker管理...${NC}"
-                curl -fsSL "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" -o docker_script && chmod +x docker_script && ./docker_script
-                read -p "按回车键返回主菜单..."
-                ;;
-            9)
-                echo -e "${YELLOW}正在执行：系统信息查询...${NC}"
-                bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/main/xitong)
-                read -p "按回车键返回主菜单..."
-                ;;
-            0)
-                echo -e "${GREEN}退出程序...${NC}"
-                exit 0
-                ;;
-            *)
-                echo -e "${RED}无效的选择，请重新输入！${NC}"
-                read -p "按回车键返回主菜单..."
-                ;;
-        esac
-    done
-}
-
-# 主执行逻辑
-main() {
-    # 检查是否是第一次运行
-    if [[ "$1" == "install" ]]; then
-        auto_install
-        exit 0
-    fi
-
-    # 调试输出脚本路径
-    echo -e "${YELLOW}脚本路径: $SCRIPT_PATH${NC}"
-    echo -e "${YELLOW}安装路径: $INSTALL_DIR${NC}"
-
-    # 安装主脚本（如果未安装）
-    if [ ! -d "$INSTALL_DIR" ]; then
-        install_script
-    else
-        echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
-    fi
-
-    # 显示主菜单
-    show_main_menu
-}
-
-# 执行主逻辑
-main "$@"
+# 调用自动安装函数
+auto_install
