@@ -1,31 +1,28 @@
 #!/bin/bash
 
-# 定义要卸载的文件夹路径
-DIR1="/root/vps666"
-DIR2="/usr/local/my_script"
+# 定义要删除的目录
+DIR="/root/vps666"
 
-# 卸载函数
-uninstall() {
-    echo "正在卸载..."
-
-    # 检查并强制删除第一个文件夹
-    if [ -d "$DIR1" ]; then
-        echo "尝试删除 $DIR1 ..."
-        rm -rf "$DIR1" && echo "$DIR1 已成功删除。" || echo "删除 $DIR1 失败。"
+# 检查并删除目录的函数
+force_delete() {
+    if [ -d "$DIR" ]; then
+        echo "检测到目录 $DIR，尝试强制删除..."
+        
+        # 尝试删除目录
+        rm -rf "$DIR" 2>/tmp/delete_error.log
+        
+        # 检查删除是否成功
+        if [ $? -eq 0 ]; then
+            echo "目录 $DIR 已成功删除。"
+        else
+            echo "删除目录 $DIR 失败。"
+            echo "错误信息:"
+            cat /tmp/delete_error.log
+        fi
     else
-        echo "$DIR1 不存在，无法删除。"
+        echo "目录 $DIR 不存在，无法删除。"
     fi
-
-    # 检查并删除第二个文件夹
-    if [ -d "$DIR2" ]; then
-        echo "尝试删除 $DIR2 ..."
-        rm -rf "$DIR2" && echo "$DIR2 已成功删除。" || echo "删除 $DIR2 失败。"
-    else
-        echo "$DIR2 不存在，无法删除。"
-    fi
-
-    echo "卸载完成。"
 }
 
-# 调用卸载函数
-uninstall
+# 调用删除函数
+force_delete
