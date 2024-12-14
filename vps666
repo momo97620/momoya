@@ -37,7 +37,7 @@ auto_install() {
     if grep -q "alias m='sudo /root/vps666'" ~/.bashrc; then
         echo -e "${YELLOW}快捷命令 'm' 已存在，无需重复添加${NC}"
     else
-        echo "alias m='sudo /root/vps666'" | tee -a ~/.bashrc > /dev/null
+        echo "alias m='sudo /root/vps666'" >> ~/.bashrc
         echo -e "${GREEN}已将快捷命令 'm' 添加到 ~/.bashrc${NC}"
     fi
 
