@@ -6,7 +6,6 @@ SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
 # 定义固定安装路径
 INSTALL_DIR="/usr/local/my_script"
-SHORTCUT_SCRIPT="/usr/local/my_script/quick_start.sh"
 
 # 定义颜色
 RED='\033[0;31m'
@@ -28,32 +27,6 @@ if [ "$(id -u)" != "0" ]; then
     echo -e "${RED}请以 root 用户运行脚本。${NC}"
     exit 1
 fi
-
-# 设置快捷启动脚本
-setup_quick_start() {
-    # 检查目录是否存在，如果不存在则创建它
-    if [ ! -d "$INSTALL_DIR" ]; then
-        mkdir -p "$INSTALL_DIR"
-    fi
-    
-    # 创建快捷启动脚本
-    if [ ! -f "$SHORTCUT_SCRIPT" ]; then
-        echo -e "${GREEN}正在创建快捷启动脚本...${NC}"
-        echo -e "#!/bin/bash" > "$SHORTCUT_SCRIPT"
-        echo -e "bash $SCRIPT_PATH" >> "$SHORTCUT_SCRIPT"
-        
-        # 设置执行权限
-        chmod +x "$SHORTCUT_SCRIPT"
-        echo -e "${GREEN}快捷启动脚本创建成功：$SHORTCUT_SCRIPT${NC}"
-    fi
-
-    # 创建 'n' 命令来触发快速启动脚本
-    if [ ! -f "/usr/local/bin/n" ]; then
-        echo -e "${GREEN}正在创建快捷启动命令 'n' ...${NC}"
-        ln -sf "$SHORTCUT_SCRIPT" /usr/local/bin/n
-        echo -e "${GREEN}快捷命令 'n' 创建成功！${NC}"
-    fi
-}
 
 # 安装主脚本
 install_script() {
@@ -84,7 +57,6 @@ uninstall_script() {
 
     echo -e "${YELLOW}正在卸载：卸载主脚本及所有相关文件...${NC}"
     sudo rm -rf "$INSTALL_DIR"
-    sudo rm -f /usr/local/bin/n
     echo -e "${GREEN}主脚本及相关文件已卸载。${NC}"
     exit 0
 }
@@ -102,10 +74,7 @@ show_main_menu() {
         echo -e "${GREEN}   ██║   ██║  ██║██║██║██████╗${NC}"
         echo -e "${GREEN}   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝${NC}"
         
-        # 插入快捷键提示
-        echo -e "${YELLOW}使用快捷键 ${LIGHTCYAN}n${NC} 可以快速打开脚本 ${LIGHTBLUE}😊${NC}"
-        
-        # 添加作者信息
+        # 插入作者信息
         echo -e "${LIGHTCYAN}作者：emo的小默默${NC}"
         
         echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
@@ -177,8 +146,26 @@ else
     echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
 fi
 
-# 设置快捷启动脚本
-setup_quick_start
-
 # 显示主菜单
 show_main_menu
+
+# 启动主菜单
+main_menu
+EOF
+
+# 使脚本可执行
+chmod +x ~/tools/ufw_port.sh
+
+# 自动添加 alias 到 .bashrc
+if ! grep -q "alias m='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
+    echo "alias m='sudo ~/tools/ufw_port.sh'" >> ~/.bashrc
+    echo -e "${GREEN}快捷命令 'm' 已成功添加到 .bashrc${NC}"
+else
+    echo -e "${YELLOW}快捷命令 'm' 已存在，无需重复添加${NC}"
+fi
+
+# 重新加载 .bashrc 文件
+source ~/.bashrc
+
+# 提示安装完成
+echo -e "如果快捷命令 'm' 无法立即使用，请重新登录您的会话。"
