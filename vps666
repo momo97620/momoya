@@ -130,7 +130,7 @@ show_main_menu() {
                 ;;
             3)
                 echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
-                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)
+                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao)
                 read -p "按回车键返回主菜单..."
                 ;;
             4)
