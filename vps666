@@ -4,8 +4,9 @@
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
-# 定义固定安装路径（例如：/usr/local/my_script）
+# 定义固定安装路径
 INSTALL_DIR="/usr/local/my_script"
+SHORTCUT_SCRIPT="/usr/local/my_script/quick_start.sh"
 
 # 定义颜色
 RED='\033[0;31m'
@@ -30,29 +31,26 @@ fi
 
 # 设置快捷启动脚本
 setup_quick_start() {
-    # 确保固定路径
-    local shortcut_script="/usr/local/my_script/quick_start.sh"
-    
     # 检查目录是否存在，如果不存在则创建它
-    if [ ! -d "/usr/local/my_script" ]; then
-        mkdir -p /usr/local/my_script
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR"
     fi
     
     # 创建快捷启动脚本
-    if [ ! -f "$shortcut_script" ]; then
+    if [ ! -f "$SHORTCUT_SCRIPT" ]; then
         echo -e "${GREEN}正在创建快捷启动脚本...${NC}"
-        echo -e "#!/bin/bash" > "$shortcut_script"
-        echo -e "bash $SCRIPT_PATH" >> "$shortcut_script"
+        echo -e "#!/bin/bash" > "$SHORTCUT_SCRIPT"
+        echo -e "bash $SCRIPT_PATH" >> "$SHORTCUT_SCRIPT"
         
         # 设置执行权限
-        chmod +x "$shortcut_script"
-        echo -e "${GREEN}快捷启动脚本创建成功：$shortcut_script${NC}"
+        chmod +x "$SHORTCUT_SCRIPT"
+        echo -e "${GREEN}快捷启动脚本创建成功：$SHORTCUT_SCRIPT${NC}"
     fi
 
     # 创建 'n' 命令来触发快速启动脚本
     if [ ! -f "/usr/local/bin/n" ]; then
         echo -e "${GREEN}正在创建快捷启动命令 'n' ...${NC}"
-        ln -s "/usr/local/my_script/quick_start.sh" /usr/local/bin/n
+        ln -sf "$SHORTCUT_SCRIPT" /usr/local/bin/n
         echo -e "${GREEN}快捷命令 'n' 创建成功！${NC}"
     fi
 }
@@ -84,9 +82,9 @@ uninstall_script() {
         return  # 返回主菜单
     fi
 
-    # 使用固定路径卸载
     echo -e "${YELLOW}正在卸载：卸载主脚本及所有相关文件...${NC}"
     sudo rm -rf "$INSTALL_DIR"
+    sudo rm -f /usr/local/bin/n
     echo -e "${GREEN}主脚本及相关文件已卸载。${NC}"
     exit 0
 }
@@ -113,7 +111,6 @@ show_main_menu() {
         echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
         echo -e "${GREEN}请选择要执行的任务：${NC}"
         
-        # 调整后的两排菜单选项，确保上下对齐
         echo -e "1. 搭建 Hysteria 节点           6. 一键WARP"
         echo -e "2. 安装并配置 UFW 防火墙       7. BBR加速"
         echo -e "3. 配置密钥登录               8. Docker管理"
@@ -136,7 +133,6 @@ show_main_menu() {
                 echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/a843704765ad3e600461693379fd6b2fa0cecd66/miyao)
                 
-                # 等待用户按下回车键再返回主菜单
                 read -p "密钥配置完成，请按回车键返回主菜单..."
                 ;;
             4)
@@ -176,7 +172,7 @@ echo -e "${YELLOW}安装路径: $INSTALL_DIR${NC}"
 
 # 安装主脚本（如果未安装）
 if [ ! -d "$INSTALL_DIR" ]; then
-    install_script  # 如果脚本未安装，自动安装
+    install_script
 else
     echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
 fi
