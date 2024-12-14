@@ -52,6 +52,11 @@ auto_install() {
 
     echo -e "${LIGHTCYAN}安装完成！现在你可以使用 'm' 命令直接启动脚本。${NC}"
     echo -e "${YELLOW}提示：如需在其他终端生效，请重新登录或手动执行 source ~/.bashrc${NC}"
+
+    # 调试信息
+    echo -e "${YELLOW}当前用户: $(whoami)${NC}"
+    echo -e "${YELLOW}~/.bashrc 文件权限: $(ls -l ~/.bashrc)${NC}"
+    echo -e "${YELLOW}~/.bashrc 内容: $(cat ~/.bashrc)${NC}"
 }
 
 # 获取脚本路径
