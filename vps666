@@ -7,6 +7,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
+WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
 # 定义符号链接的目标和链接名称
@@ -15,11 +16,10 @@ SCRIPT_PATH="/root/vps666"
 
 # 检查符号链接是否已经存在
 if [ ! -L "$LINK_NAME" ]; then
-    # 创建符号链接
     ln -s "$SCRIPT_PATH" "$LINK_NAME"
-    echo "符号链接 $LINK_NAME 已创建。"
+    echo -e "${GREEN}符号链接 $LINK_NAME 已创建。${NC}"
 else
-    echo "符号链接 $LINK_NAME 已存在。"
+    echo -e "${YELLOW}符号链接 $LINK_NAME 已存在。${NC}"
 fi
 
 # 获取脚本路径
@@ -45,15 +45,11 @@ fi
 install_script() {
     echo -e "${YELLOW}正在安装：将脚本安装到 $INSTALL_DIR...${NC}"
     
-    # 创建安装目录
     if [ ! -d "$INSTALL_DIR" ]; then
         mkdir -p "$INSTALL_DIR"
     fi
     
-    # 将脚本复制到安装目录
     cp "$SCRIPT_PATH" "$INSTALL_DIR"
-    
-    # 设置执行权限
     chmod +x "$INSTALL_DIR/$(basename "$SCRIPT_PATH")"
     
     echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
@@ -67,37 +63,37 @@ execute_script() {
     bash <(curl -sSL "$script_url")
     echo -e "${GREEN}$success_message${NC}"
     
-    # 提示用户按任意键返回
     read -p "按任意键返回主菜单..."
 }
 
 # 显示主菜单
 show_main_menu() {
     while true; do
-        clear  # 清屏，使菜单界面更加清晰
+        clear
+        # ASCII 艺术展示 "emoMomo"
+        echo -e "${LIGHTCYAN}"
+        echo "  ______ _   __  __   __  __          "
+        echo " |  ____| | |  \/  | |  \/  |         "
+        echo " | |__  | | | \  / | | \  / | ___ _ __ "
+        echo " |  __| | | | |\/| | | |\/| |/ _ \ '__|"
+        echo " | |    | | | |  | | | |  | |  __/ |   "
+        echo " |_|    |_| |_|  |_| |_|  |_|\___|_|   "
+        echo -e "${NC}"
+
+        echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
+        echo -e "${GREEN}                     欢迎使用 VPS 管理脚本！${NC}"
+        echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
+        echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
+        echo -e "${LIGHTCYAN}=====================================================================${NC}"
         
-        # 在顶部显示超大绿色 "M"
-        echo -e "${GREEN}███████╗██╗  ██╗██╗██╗      ${NC}"
-        echo -e "${GREEN}╚══██╔══╝██║  ██║██║██║      ${NC}"
-        echo -e "${GREEN}   ██║   ███████║██║██║██████╗${NC}"
-        echo -e "${GREEN}   ██║   ██╔══██║██║██║╚════╝${NC}"
-        echo -e "${GREEN}   ██║   ██║  ██║██║██║██████╗${NC}"
-        echo -e "${GREEN}   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝${NC}"
+        echo -e "${YELLOW}请选择要执行的任务：${NC}"
+        echo -e "  ${WHITE}1. 搭建 Hysteria 节点         ${NC}  ${WHITE}6. 一键WARP${NC}"
+        echo -e "  ${WHITE}2. 安装并配置 UFW 防火墙        ${NC}  ${WHITE}7. BBR加速${NC}"
+        echo -e "  ${WHITE}3. 配置密钥登录                ${NC}  ${WHITE}8. Docker管理${NC}"
+        echo -e "  ${WHITE}4. 修改登录端口号              ${NC}  ${WHITE}9. 系统信息查询${NC}"
+        echo -e "  ${WHITE}5. 一键搭建节点               ${NC}  ${WHITE}0. 退出${NC}"
         
-        # 温馨提示
-        echo -e "${LIGHTCYAN}使用快捷指令 m 可快速打开脚本😊${NC}"
-        echo -e "${LIGHTCYAN}作者：emo的小默默${NC}"
-        
-        echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
-        echo -e "${GREEN}请选择要执行的任务：${NC}"
-        
-        echo -e "1. 搭建 Hysteria 节点         6. 一键WARP"
-        echo -e "2. 安装并配置 UFW 防火墙        7. BBR加速"
-        echo -e "3. 配置密钥登录                8. Docker管理"
-        echo -e "4. 修改登录端口号              9. 系统信息查询"
-        echo -e "5. 一键搭建节点               0. 退出"
-        
-        echo -e "${BLUE}============================================================${NC}"
+        echo -e "${LIGHTCYAN}=====================================================================${NC}"
         
         read -p "请输入选项 (0-9): " choice
         case $choice in
@@ -142,24 +138,20 @@ show_main_menu() {
 
 # 主执行逻辑
 main() {
-    # 检查是否是第一次运行
     if [[ "$1" == "install" ]]; then
         install_script
         exit 0
     fi
 
-    # 调试输出脚本路径
     echo -e "${YELLOW}脚本路径: $SCRIPT_PATH${NC}"
     echo -e "${YELLOW}安装路径: $INSTALL_DIR${NC}"
 
-    # 安装主脚本（如果未安装）
     if [ ! -d "$INSTALL_DIR" ]; then
         install_script
     else
         echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
     fi
 
-    # 显示主菜单
     show_main_menu
 }
 
