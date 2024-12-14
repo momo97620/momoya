@@ -29,7 +29,6 @@ auto_install() {
         chmod 644 ~/.bashrc  # 确保文件可写
     fi
 
-    # 检查 ~/.bashrc 文件的权限
     if [ ! -w ~/.bashrc ]; then
         echo -e "${RED}错误：~/.bashrc 文件不可写，请检查文件权限。${NC}"
         exit 1
