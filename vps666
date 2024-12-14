@@ -50,6 +50,14 @@ auto_install() {
         echo -e "${YELLOW}提示：当前 shell 不是 bash，请手动执行 source ~/.bashrc 以生效。${NC}"
     fi
 
+    # 检查别名是否生效
+    if alias m &>/dev/null; then
+        echo -e "${GREEN}别名 'm' 成功生效！${NC}"
+    else
+        echo -e "${RED}别名 'm' 未生效，请检查 ~/.bashrc 文件。${NC}"
+        cat ~/.bashrc | tail -n 10  # 显示 .bashrc 的最后10行
+    fi
+
     echo -e "${LIGHTCYAN}安装完成！现在你可以使用 'm' 命令直接启动脚本。${NC}"
     echo -e "${YELLOW}提示：如需在其他终端生效，请重新登录或手动执行 source ~/.bashrc${NC}"
 }
