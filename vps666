@@ -47,6 +47,13 @@ setup_quick_start() {
         chmod +x "$shortcut_script"
         echo -e "${GREEN}快捷启动脚本创建成功：$shortcut_script${NC}"
     fi
+
+    # 创建 'n' 命令来触发快速启动脚本
+    if [ ! -f "/usr/local/bin/n" ]; then
+        echo -e "${GREEN}正在创建快捷启动命令 'n' ...${NC}"
+        ln -s "$shortcut_script" /usr/local/bin/n
+        echo -e "${GREEN}快捷命令 'n' 创建成功！${NC}"
+    fi
 }
 
 # 安装主脚本
