@@ -9,7 +9,6 @@ LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
-# 修改这部分代码
 auto_install() {
     # 目标脚本路径
     TARGET_SCRIPT=/root/vps666
@@ -22,16 +21,18 @@ auto_install() {
         exit 1
     fi
 
-    # 直接将别名写入 .bashrc
-    if ! grep -q "alias m='sudo /root/vps666'" ~/.bashrc; then
-        echo "alias m='sudo /root/vps666'" >> ~/.bashrc
-        echo -e "${GREEN}已成功将别名 'm' 添加到 ~/.bashrc${NC}"
-    else
-        echo -e "${YELLOW}别名 'm' 已存在于 ~/.bashrc${NC}"
-    fi
+    # 强制写入，即使已存在也覆盖
+    echo "alias m='sudo /root/vps666'" > ~/.bashrc
 
-    # 立即生效
+    # 立即生效并验证
     source ~/.bashrc
+    
+    # 验证是否写入成功
+    if grep -q "alias m='sudo /root/vps666'" ~/.bashrc; then
+        echo -e "${GREEN}成功将别名 'm' 写入 ~/.bashrc${NC}"
+    else
+        echo -e "${RED}写入 ~/.bashrc 失败，请手动检查${NC}"
+    fi
 
     echo -e "${LIGHTCYAN}安装完成！现在你可以使用 'm' 命令直接启动脚本。${NC}"
 }
