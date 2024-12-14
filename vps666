@@ -125,7 +125,7 @@ show_main_menu() {
                 ;;
             2)
                 echo -e "${YELLOW}正在执行：安装并配置 UFW 防火墙...${NC}"
-                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/e7d1e2ad49decc464f0a814c436ca4b6151986e7/ufw_install.sh)
+                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh)
                 read -p "按回车键返回主菜单..."
                 ;;
             3)
