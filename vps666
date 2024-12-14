@@ -72,16 +72,18 @@ show_main_menu() {
         echo -e "${GREEN}   ██║   ██║  ██║██║██║██████╗${NC}"
         echo -e "${GREEN}   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝${NC}"
         
+        # 温馨提示
+        echo -e "${LIGHTCYAN}使用快捷指令 m 可快速打开脚本😊${NC}"
         # 插入作者信息
         echo -e "${LIGHTCYAN}作者：emo的小默默${NC}"
         
         echo -e "${BLUE}========================== VPS 脚本菜单 ========================== ${NC}"
         echo -e "${GREEN}请选择要执行的任务：${NC}"
         
-        echo -e "1. 搭建 Hysteria 节点           6. 一键WARP"
-        echo -e "2. 安装并配置 UFW 防火墙       7. BBR加速"
-        echo -e "3. 配置密钥登录               8. Docker管理"
-        echo -e "4. 修改登录端口号             9. 系统信息查询"
+        echo -e "1. 搭建 Hysteria 节点         5. 一键WARP"
+        echo -e "2. 安装并配置 UFW 防火墙        6. BBR加速"
+        echo -e "3. 配置密钥登录                7. Docker管理"
+        echo -e "4. 修改登录端口号              8. 系统信息查询"
         echo -e "0. 退出"
         
         echo -e "${BLUE}============================================================${NC}"
