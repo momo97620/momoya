@@ -63,14 +63,12 @@ install_script() {
 execute_script() {
     local script_url="$1"
     local success_message="$2"
-    local prompt_return="$3"
-
+    
     bash <(curl -sSL "$script_url")
     echo -e "${GREEN}$success_message${NC}"
     
-    if [ "$prompt_return" == "true" ]; then
-        read -p "按任意键返回上一页..."
-    fi
+    # 提示用户按任意键返回
+    read -p "按任意键返回主菜单..."
 }
 
 # 显示主菜单
@@ -104,31 +102,31 @@ show_main_menu() {
         read -p "请输入选项 (0-9): " choice
         case $choice in
             1)
-                execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。" "false"
+                execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
                 ;;
             2)
-                execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。" "false"
+                execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
                 ;;
             3)
-                execute_script "https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao" "配置密钥登录完成。" "true"
+                execute_script "https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao" "配置密钥登录完成。"
                 ;;
             4)
-                execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。" "false"
+                execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
                 ;;
             5)
-                execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。" "true"
+                execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
                 ;;
             6)
-                execute_script "https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh" "一键WARP完成。" "false"
+                execute_script "https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh" "一键WARP完成。"
                 ;;
             7)
-                execute_script "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" "BBR加速完成。" "false"
+                execute_script "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" "BBR加速完成。"
                 ;;
             8)
-                execute_script "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" "Docker管理完成。" "false"
+                execute_script "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" "Docker管理完成。"
                 ;;
             9)
-                execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。" "false"
+                execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
