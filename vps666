@@ -22,10 +22,12 @@ auto_install() {
         exit 1
     fi
 
-    # 直接在当前 shell 中定义别名
-    alias m='sudo /root/vps666'
-    echo -e "${GREEN}快捷命令 'm' 已定义，现在你可以使用 'm' 命令直接启动脚本。${NC}"
+    # 将别名写入当前 shell 的环境
+    echo -e "${GREEN}正在定义快捷命令 'm'...${NC}"
+    export -f m
+    eval "m() { sudo /root/vps666 \"\$@\"; }"
 
+    echo -e "${GREEN}快捷命令 'm' 已定义，现在你可以使用 'm' 命令直接启动脚本。${NC}"
     echo -e "${LIGHTCYAN}安装完成！${NC}"
     echo -e "${YELLOW}提示：如需在其他终端生效，请重新登录或手动执行 source ~/.bashrc${NC}"
 }
