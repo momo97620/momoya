@@ -9,8 +9,6 @@ LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
-#!/bin/bash
-
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
 SCRIPT_PATH="/root/vps666"
@@ -23,10 +21,6 @@ if [ ! -L "$LINK_NAME" ]; then
 else
     echo "符号链接 $LINK_NAME 已存在。"
 fi
-
-# 在这里添加您脚本的其他逻辑
-echo "欢迎使用 emo小默默的 脚本！"
-# ... 其他脚本内容 ...
 
 # 获取脚本路径
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
@@ -97,42 +91,50 @@ show_main_menu() {
             1)
                 echo -e "${YELLOW}正在执行：搭建 Hysteria 节点...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2)
-                read -p "按回车键返回主菜单..."
+                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
+                read
                 ;;
             2)
                 echo -e "${YELLOW}正在执行：安装并配置 UFW 防火墙...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh)
-                read -p "按回车键返回主菜单..."
+                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
+                read
                 ;;
             3)
                 echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao)
-                read -p "按回车键返回主菜单..."
+                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
+                read
                 ;;
             4)
                 echo -e "${YELLOW}正在执行：修改登录端口号...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
-                read -p "按回车键返回主菜单..."
+                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
+                read
                 ;;
             6)
                 echo -e "${YELLOW}正在执行：一键WARP...${NC}"
                 wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
-                read -p "按回车键返回主菜单..."
+                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
+                read
                 ;;
             7)
                 echo -e "${YELLOW}正在执行：BBR加速...${NC}"
                 wget -O tcp.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
-                read -p "按回车键返回主菜单..."
+                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
+                read
                 ;;
             8)
                 echo -e "${YELLOW}正在执行：Docker管理...${NC}"
                 curl -fsSL "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" -o docker_script && chmod +x docker_script && ./docker_script
-                read -p "按回车键返回主菜单..."
+                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
+                read
                 ;;
             9)
                 echo -e "${YELLOW}正在执行：系统信息查询...${NC}"
                 bash <(curl -sSL https://raw.githubusercontent.com/momo97620/momoya/main/xitong)
-                read -p "按回车键返回主菜单..."
+                echo -e "${YELLOW}任务已完成，按回车键继续...${NC}"
+                read
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
@@ -150,7 +152,7 @@ show_main_menu() {
 main() {
     # 检查是否是第一次运行
     if [[ "$1" == "install" ]]; then
-        auto_install
+        install_script
         exit 0
     fi
 
