@@ -99,9 +99,12 @@ show_main_menu() {
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh)
                 ;;
             3)
-                echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
-                bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao)
-                ;;
+                 echo -e "${YELLOW}正在执行：配置密钥登录...${NC}"
+                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao)
+                 echo -e "${GREEN}配置密钥登录完成。按任意键继续...${NC}"
+                 read -n 1 -s  # 等待用户按任意键
+                 ;;
+
             4)
                 echo -e "${YELLOW}正在执行：修改登录端口号...${NC}"
                 bash <(curl -sSL https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank)
