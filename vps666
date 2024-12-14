@@ -19,9 +19,6 @@ ensure_tools_dir() {
 
 # 自动安装脚本
 auto_install() {
-    # 获取当前脚本的绝对路径
-    CURRENT_SCRIPT=$(readlink -f "$0")
-    
     # 目标脚本路径
     TARGET_SCRIPT=~/tools/ufw_port.sh
 
