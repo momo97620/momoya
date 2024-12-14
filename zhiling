@@ -3,7 +3,7 @@
 # 快捷启动脚本
 
 # 主脚本路径
-SCRIPT_PATH="/usr/local/my_script/zhiling"  # 确保这是主脚本的完整路径
+/proc/40433/fd/pipe:[144024]  # 确保这是主脚本的完整路径
 
 # 检查主脚本是否存在
 if [[ ! -f "$SCRIPT_PATH" ]]; then
