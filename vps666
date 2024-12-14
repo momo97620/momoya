@@ -9,33 +9,25 @@ LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
-auto_install() {
-    # 目标脚本路径
-    TARGET_SCRIPT=/root/vps666
+#!/bin/bash
 
-    # 检查 /root/vps666 文件是否存在
-    if [ -f "$TARGET_SCRIPT" ]; then
-        echo -e "${GREEN}/root/vps666 文件存在，正在设置快捷指令 'm'...${NC}"
-    else
-        echo -e "${RED}/root/vps666 文件不存在，请确保文件已下载到该路径。${NC}"
-        exit 1
-    fi
+# 定义符号链接的目标和链接名称
+LINK_NAME="/usr/local/bin/m"
+SCRIPT_PATH="/root/vps666"
 
-    # 强制写入，即使已存在也覆盖
-    echo "alias m='sudo /root/vps666'" > ~/.bashrc
+# 检查符号链接是否已经存在
+if [ ! -L "$LINK_NAME" ]; then
+    # 创建符号链接
+    ln -s "$SCRIPT_PATH" "$LINK_NAME"
+    echo "符号链接 $LINK_NAME 已创建。"
+else
+    echo "符号链接 $LINK_NAME 已存在。"
+fi
 
-    # 立即生效并验证
-    source ~/.bashrc
-    
-    # 验证是否写入成功
-    if grep -q "alias m='sudo /root/vps666'" ~/.bashrc; then
-        echo -e "${GREEN}成功将别名 'm' 写入 ~/.bashrc${NC}"
-    else
-        echo -e "${RED}写入 ~/.bashrc 失败，请手动检查${NC}"
-    fi
+# 在这里添加您脚本的其他逻辑
+echo "欢迎使用 emo小默默的 脚本！"
+# ... 其他脚本内容 ...
 
-    echo -e "${LIGHTCYAN}安装完成！现在你可以使用 'm' 命令直接启动脚本。${NC}"
-}
 # 获取脚本路径
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
@@ -71,26 +63,6 @@ install_script() {
     chmod +x "$INSTALL_DIR/$(basename "$SCRIPT_PATH")"
     
     echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
-}
-
-# 卸载主脚本
-uninstall_script() {
-    echo -e "${YELLOW}开始卸载主脚本并清除相关数据...${NC}"
-    read -p "确定要卸载主脚本并清除相关数据吗？(y/n): " confirm
-    if [ "$confirm" != "y" ]; then
-        echo -e "${RED}卸载已取消。${NC}"
-        return  # 返回主菜单
-    fi
-
-    echo -e "${YELLOW}正在卸载：卸载主脚本及所有相关文件...${NC}"
-    rm -rf "$INSTALL_DIR"
-    
-    # 删除 .bashrc 中的别名
-    sed -i '/alias m='\''sudo \/root\/vps666'\''/d' ~/.bashrc
-    source ~/.bashrc
-    
-    echo -e "${GREEN}主脚本及相关文件已卸载。${NC}"
-    exit 0
 }
 
 # 显示主菜单
