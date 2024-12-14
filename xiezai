@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义要卸载的文件夹路径
-DIR1="/root/vps666"
+rm -f /root/vps666
 DIR2="/usr/local/my_script"
 
 # 卸载函数
