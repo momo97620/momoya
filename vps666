@@ -1,67 +1,53 @@
+```bash
 #!/bin/bash
 
-# 获取脚本路径
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
-
-# 定义固定安装路径（例如：/usr/local/my_script）
 INSTALL_DIR="/usr/local/my_script"
 
-# 定义颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# 检查脚本是否被直接运行
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     echo -e "${RED}This script must be run directly, not sourced.${NC}"
     exit 1
 fi
 
-# 检查是否以 root 用户运行
 if [ "$(id -u)" != "0" ]; then
     echo -e "${RED}请以 root 用户运行脚本。${NC}"
     exit 1
 fi
 
-# 设置快捷启动脚本
 setup_quick_start() {
-    # 确保安装目录存在
     if [ ! -d "/usr/local/my_script" ]; then
         mkdir -p /usr/local/my_script
     fi
     
-    # 创建通用的快捷启动脚本
     local shortcut_script="/usr/local/my_script/quick_start.sh"
     cat > "$shortcut_script" << EOF
 #!/bin/bash
 
-# 获取脚本的完整路径
 SCRIPT_PATH="$SCRIPT_PATH"
 
-# 检查脚本是否存在
 if [ ! -f "\$SCRIPT_PATH" ]; then
     echo -e "\e[31m错误：脚本 \$SCRIPT_PATH 未找到！\e[0m"
     exit 1
 fi
 
-# 执行脚本
 bash "\$SCRIPT_PATH"
 EOF
 
-    # 设置脚本权限
     chmod +x "$shortcut_script"
 
-    # 创建 n 命令的软链接（针对不同的可能位置）
     ln -sf "$shortcut_script" /usr/local/bin/n 2>/dev/null
     ln -sf "$shortcut_script" /usr/bin/n 2>/dev/null
     ln -sf "$shortcut_script" /bin/n 2>/dev/null
 
-    # 为所有用户的 .bashrc 和 .bash_profile 添加 alias
     local shell_configs=(
         "$HOME/.bashrc"
         "$HOME/.bash_profile"
@@ -71,10 +57,7 @@ EOF
 
     for config in "${shell_configs[@]}"; do
         if [ -f "$config" ]; then
-            # 删除可能存在的旧 alias
             sed -i '/alias n=/d' "$config"
-            
-            # 添加新的 alias
             echo "alias n='bash $shortcut_script'" >> "$config"
         fi
     done
@@ -82,39 +65,31 @@ EOF
     echo -e "\e[32m快捷启动 n 命令配置完成！\e[0m"
 }
 
-# 安装主脚本
 install_script() {
     echo -e "${YELLOW}正在安装：将脚本安装到 $INSTALL_DIR...${NC}"
     
-    # 创建安装目录
     if [ ! -d "$INSTALL_DIR" ]; then
         sudo mkdir -p "$INSTALL_DIR"
     fi
     
-    # 将脚本复制到安装目录
     sudo cp "$SCRIPT_PATH" "$INSTALL_DIR"
-    
-    # 设置执行权限
     sudo chmod +x "$INSTALL_DIR/$(basename "$SCRIPT_PATH")"
     
     echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
 }
 
-# 卸载主脚本
 uninstall_script() {
     echo -e "${YELLOW}开始卸载主脚本并清除相关数据...${NC}"
     read -p "确定要卸载主脚本并清除相关数据吗？(y/n): " confirm
     if [ "$confirm" != "y" ]; then
         echo -e "${RED}卸载已取消。${NC}"
-        return  # 返回主菜单
+        return
     fi
 
-    # 清理软链接
     rm -f /usr/local/bin/n
     rm -f /usr/bin/n
     rm -f /bin/n
 
-    # 清理 shell 配置文件中的 alias
     local shell_configs=(
         "$HOME/.bashrc"
         "$HOME/.bash_profile"
@@ -128,54 +103,23 @@ uninstall_script() {
         fi
     done
 
-    # 使用固定路径卸载
     echo -e "${YELLOW}正在卸载：卸载主脚本及所有相关文件...${NC}"
     sudo rm -rf "$INSTALL_DIR"
     echo -e "${GREEN}主脚本及相关文件已卸载。${NC}"
     exit 0
 }
 
-# 显示主菜单（这部分保持原样）
-show_main_menu() {
-    while true; do
-        clear  # 清屏，使菜单界面更加清晰
-        
-        # ... (原有的菜单代码保持不变)
-        
-        read -p "请输入选项 (0-9): " choice
-        case $choice in
-            # ... (原有的菜单选项代码保持不变)
-        esac
-    done
-}
+[原有的 show_main_menu() 函数保持不变]
 
-# 调试输出脚本路径
 echo -e "${YELLOW}脚本路径: $SCRIPT_PATH${NC}"
 echo -e "${YELLOW}安装路径: $INSTALL_DIR${NC}"
 
-# 安装主脚本（如果未安装）
 if [ ! -d "$INSTALL_DIR" ]; then
-    install_script  # 如果脚本未安装，自动安装
+    install_script
 else
     echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
 fi
 
-# 设置快捷启动脚本
 setup_quick_start
-
-# 显示主菜单
 show_main_menu
-
-主要改进：
-1. 增强了 setup_quick_start() 函数，支持多种系统配置
-2. 在 uninstall_script()中添加了清理 n 命令的逻辑
-3. 支持多台服务器的快捷启动配置
-
-使用方法：
-1. 直接替换原脚本
-2. 运行脚本
-3. 之后可以在任何位置直接输入 n 启动脚本
-
-特别提示：
-- 如果仍有问题，建议重新登录或执行 source ~/.bashrc`
-- 脚本会尝试为多个用户和位置创建快捷方式​​​​​​​​​​​​​​​​
+```
