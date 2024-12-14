@@ -22,16 +22,33 @@ auto_install() {
         exit 1
     fi
 
+    # 确保 ~/.bashrc 文件存在且可写
+    if [ ! -f ~/.bashrc ]; then
+        echo -e "${RED}警告：~/.bashrc 文件不存在，正在创建...${NC}"
+        touch ~/.bashrc
+        chmod 644 ~/.bashrc  # 确保文件可写
+    fi
+
+    # 检查 ~/.bashrc 文件的权限
+    if [ ! -w ~/.bashrc ]; then
+        echo -e "${RED}错误：~/.bashrc 文件不可写，请检查文件权限。${NC}"
+        exit 1
+    fi
+
     # 添加别名到 .bashrc（如果不存在）
     if ! grep -q "alias m='sudo /root/vps666'" ~/.bashrc; then
         echo "alias m='sudo /root/vps666'" >> ~/.bashrc
         echo -e "${GREEN}已将快捷命令 'm' 添加到 ~/.bashrc${NC}"
-        
-        # 立即生效
-        source ~/.bashrc
-        echo -e "${GREEN}.bashrc 已重新加载${NC}"
     else
         echo -e "${YELLOW}快捷命令 'm' 已存在，无需重复添加${NC}"
+    fi
+
+    # 确保别名立即生效
+    if [ -n "$BASH_VERSION" ]; then
+        source ~/.bashrc
+        echo -e "${GREEN}.bashrc 已重新加载，别名 'm' 已生效。${NC}"
+    else
+        echo -e "${YELLOW}提示：当前 shell 不是 bash，请手动执行 source ~/.bashrc 以生效。${NC}"
     fi
 
     echo -e "${LIGHTCYAN}安装完成！现在你可以使用 'm' 命令直接启动脚本。${NC}"
