@@ -9,36 +9,22 @@ LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
-# 检查并创建 ~/tools 目录
-ensure_tools_dir() {
-    if [ ! -d ~/tools ]; then
-        mkdir -p ~/tools
-        echo -e "${GREEN}已创建 ~/tools 目录${NC}"
-    fi
-}
-
 # 自动安装脚本
 auto_install() {
     # 目标脚本路径
-    TARGET_SCRIPT=~/tools/ufw_port.sh
-
-    # 确保 tools 目录存在
-    ensure_tools_dir
+    TARGET_SCRIPT=/root/vps666
 
     # 检查 /root/vps666 文件是否存在
-    if [ -f /root/vps666 ]; then
-        echo -e "${GREEN}/root/vps666 文件存在，正在复制到 ~/tools/ufw_port.sh...${NC}"
-        cp /root/vps666 "$TARGET_SCRIPT"
-        chmod +x "$TARGET_SCRIPT"
-        echo -e "${GREEN}脚本已复制到 ~/tools/ufw_port.sh 并赋予执行权限${NC}"
+    if [ -f "$TARGET_SCRIPT" ]; then
+        echo -e "${GREEN}/root/vps666 文件存在，正在设置快捷指令 'm'...${NC}"
     else
         echo -e "${RED}/root/vps666 文件不存在，请确保文件已下载到该路径。${NC}"
         exit 1
     fi
 
     # 添加别名到 .bashrc（如果不存在）
-    if ! grep -q "alias m='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
-        echo "alias m='sudo ~/tools/ufw_port.sh'" >> ~/.bashrc
+    if ! grep -q "alias m='sudo /root/vps666'" ~/.bashrc; then
+        echo "alias m='sudo /root/vps666'" >> ~/.bashrc
         echo -e "${GREEN}已将快捷命令 'm' 添加到 ~/.bashrc${NC}"
         
         # 立即生效
@@ -100,10 +86,9 @@ uninstall_script() {
 
     echo -e "${YELLOW}正在卸载：卸载主脚本及所有相关文件...${NC}"
     rm -rf "$INSTALL_DIR"
-    rm -f ~/tools/ufw_port.sh
     
     # 删除 .bashrc 中的别名
-    sed -i '/alias m='\''sudo ~\/tools\/ufw_port.sh'\''/d' ~/.bashrc
+    sed -i '/alias m='\''sudo \/root\/vps666'\''/d' ~/.bashrc
     source ~/.bashrc
     
     echo -e "${GREEN}主脚本及相关文件已卸载。${NC}"
