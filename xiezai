@@ -10,16 +10,16 @@ uninstall() {
 
     # 检查并强制删除第一个文件夹
     if [ -d "$DIR1" ]; then
-        rm -rf "$DIR1"  # 强制删除
-        echo "$DIR1 已成功删除。"
+        echo "尝试删除 $DIR1 ..."
+        rm -rf "$DIR1" && echo "$DIR1 已成功删除。" || echo "删除 $DIR1 失败。"
     else
         echo "$DIR1 不存在，无法删除。"
     fi
 
     # 检查并删除第二个文件夹
     if [ -d "$DIR2" ]; then
-        rm -rf "$DIR2"  # 强制删除
-        echo "$DIR2 已成功删除。"
+        echo "尝试删除 $DIR2 ..."
+        rm -rf "$DIR2" && echo "$DIR2 已成功删除。" || echo "删除 $DIR2 失败。"
     else
         echo "$DIR2 不存在，无法删除。"
     fi
