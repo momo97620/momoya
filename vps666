@@ -59,14 +59,13 @@ install_script() {
     echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
 }
 
-# 执行子脚本并返回上一页
+# 执行子脚本
 execute_script() {
     local script_url="$1"
     local success_message="$2"
     
     bash <(curl -sSL "$script_url")
     echo -e "${GREEN}$success_message${NC}"
-    read -p "按任意键返回上一页..."
 }
 
 # 显示主菜单
@@ -107,6 +106,7 @@ show_main_menu() {
                 ;;
             3)
                 execute_script "https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao" "配置密钥登录完成。"
+                read -p "按任意键返回上一页..."
                 ;;
             4)
                 execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
@@ -115,7 +115,6 @@ show_main_menu() {
                 echo -e "${YELLOW}正在执行：一键搭建节点...${NC}"
                 bash <(wget -qO- -o- https://github.com/233boy/sing-box/raw/main/install.sh)
                 echo -e "${GREEN}一键搭建节点完成。${NC}"
-                read -p "按任意键返回上一页..."
                 ;;
             6)
                 execute_script "https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh" "一键WARP完成。"
