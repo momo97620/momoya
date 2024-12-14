@@ -87,11 +87,13 @@ show_main_menu() {
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         
         echo -e "${YELLOW}请选择要执行的任务：${NC}"
-        echo -e "  ${BRIGHT_MAGENTA}1. 搭建 Hysteria 节点         ${NC}  ${BRIGHT_MAGENTA}6. 一键WARP${NC}"
-        echo -e "  ${BRIGHT_MAGENTA}2. 安装并配置 UFW 防火墙        ${NC}  ${BRIGHT_MAGENTA}7. BBR加速${NC}"
-        echo -e "  ${BRIGHT_MAGENTA}3. 配置密钥登录                ${NC}  ${BRIGHT_MAGENTA}8. Docker管理${NC}"
-        echo -e "  ${BRIGHT_MAGENTA}4. 修改登录端口号              ${NC}  ${BRIGHT_MAGENTA}9. 系统信息查询${NC}"
-        echo -e "  ${BRIGHT_MAGENTA}5. 一键搭建节点               ${NC}  ${BRIGHT_MAGENTA}0. 退出${NC}"
+
+        # 使用 printf 格式化菜单选项，确保对齐
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "1. 搭建 Hysteria 节点" "6. 一键WARP"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "2. 安装并配置 UFW 防火墙" "7. BBR加速"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "3. 配置密钥登录" "8. Docker管理"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "4. 修改登录端口号" "9. 系统信息查询"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "5. 一键搭建节点" "0. 退出"
         
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         
