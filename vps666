@@ -7,6 +7,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
+BRIGHT_MAGENTA='\033[1;35m'  # 亮紫色
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
@@ -81,17 +82,16 @@ show_main_menu() {
         echo -e "${NC}"
 
         echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
-        echo -e "${GREEN}                     欢迎使用 VPS 管理脚本！${NC}"
         echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
         echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         
         echo -e "${YELLOW}请选择要执行的任务：${NC}"
-        echo -e "  ${WHITE}1. 搭建 Hysteria 节点         ${NC}  ${WHITE}6. 一键WARP${NC}"
-        echo -e "  ${WHITE}2. 安装并配置 UFW 防火墙        ${NC}  ${WHITE}7. BBR加速${NC}"
-        echo -e "  ${WHITE}3. 配置密钥登录                ${NC}  ${WHITE}8. Docker管理${NC}"
-        echo -e "  ${WHITE}4. 修改登录端口号              ${NC}  ${WHITE}9. 系统信息查询${NC}"
-        echo -e "  ${WHITE}5. 一键搭建节点               ${NC}  ${WHITE}0. 退出${NC}"
+        echo -e "  ${BRIGHT_MAGENTA}1. 搭建 Hysteria 节点         ${NC}  ${BRIGHT_MAGENTA}6. 一键WARP${NC}"
+        echo -e "  ${BRIGHT_MAGENTA}2. 安装并配置 UFW 防火墙        ${NC}  ${BRIGHT_MAGENTA}7. BBR加速${NC}"
+        echo -e "  ${BRIGHT_MAGENTA}3. 配置密钥登录                ${NC}  ${BRIGHT_MAGENTA}8. Docker管理${NC}"
+        echo -e "  ${BRIGHT_MAGENTA}4. 修改登录端口号              ${NC}  ${BRIGHT_MAGENTA}9. 系统信息查询${NC}"
+        echo -e "  ${BRIGHT_MAGENTA}5. 一键搭建节点               ${NC}  ${BRIGHT_MAGENTA}0. 退出${NC}"
         
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         
