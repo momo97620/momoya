@@ -22,10 +22,10 @@ auto_install() {
         exit 1
     fi
 
-    # 将别名写入当前 shell 的环境
+    # 定义函数 m，并立即生效
     echo -e "${GREEN}正在定义快捷命令 'm'...${NC}"
-    export -f m
     eval "m() { sudo /root/vps666 \"\$@\"; }"
+    export -f m  # 将函数导出到当前 shell 的环境中
 
     echo -e "${GREEN}快捷命令 'm' 已定义，现在你可以使用 'm' 命令直接启动脚本。${NC}"
     echo -e "${LIGHTCYAN}安装完成！${NC}"
