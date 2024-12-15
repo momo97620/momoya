@@ -134,7 +134,7 @@ set_ip_priority() {
 
 # 更新脚本
 update_script() {
-    local remote_url="https://example.com/path/to/latest_script.sh"  # 替换为实际的远程脚本 URL
+    local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666"  # 替换为实际的远程脚本 URL
     local local_path="/root/vps666"
 
     echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
