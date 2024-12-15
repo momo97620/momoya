@@ -150,6 +150,62 @@ update_script() {
     read -p "按任意键返回主菜单..."
 }
 
+# 封装函数：设置 SSH KeepAlive 配置
+set_ssh_keepalive() {
+    local config_file="/etc/ssh/sshd_config"
+    local interval=60    # 默认 ClientAliveInterval 值
+    local count=10       # 默认 ClientAliveCountMax 值
+
+    echo "正在配置 SSH 客户端保持连接参数..."
+
+    # 检查配置文件是否存在
+    if [[ ! -f "$config_file" ]]; then
+        echo "错误：SSH 配置文件 $config_file 不存在。" >&2
+        exit 1
+    fi
+
+    # 提示用户确认修改
+    read -p "是否确认修改 SSH 配置？(y/n): " confirm
+    if [[ "$confirm" != "y" ]]; then
+        echo "取消修改。"
+        exit 0
+    fi
+
+    # 允许用户自定义参数
+    read -p "请输入 ClientAliveInterval 值（默认 60）: " user_interval
+    if [[ -n "$user_interval" ]]; then
+        interval=$user_interval
+    fi
+
+    read -p "请输入 ClientAliveCountMax 值（默认 10）: " user_count
+    if [[ -n "$user_count" ]]; then
+        count=$user_count
+    fi
+
+    # 修改或添加 ClientAliveInterval
+    if grep -q '^#\?ClientAliveInterval' "$config_file"; then
+        sed -ri "s/^#?.*ClientAliveInterval.*/ClientAliveInterval $interval/" "$config_file"
+    else
+        echo "ClientAliveInterval $interval" >> "$config_file"
+    fi
+
+    # 修改或添加 ClientAliveCountMax
+    if grep -q '^#\?ClientAliveCountMax' "$config_file"; then
+        sed -ri "s/^#?.*ClientAliveCountMax.*/ClientAliveCountMax $count/" "$config_file"
+    else
+        echo "ClientAliveCountMax $count" >> "$config_file"
+    fi
+
+    # 重启 sshd 服务
+    echo "重启 SSH 服务以应用更改..."
+    sudo systemctl restart sshd
+    if [[ $? -eq 0 ]]; then
+        echo "SSH 配置已更新并成功应用！"
+    else
+        echo "SSH 服务重启失败，请检查配置。" >&2
+        exit 1
+    fi
+}
 # 显示主菜单
 show_main_menu() {
     while true; do
@@ -172,15 +228,14 @@ show_main_menu() {
         echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
         # 使用 printf 格式化菜单选项，确保对齐
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-40s${NC}\n" "1. 搭建 Hysteria 节点"   "6. 一键WARP"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-40s${NC}\n" "2. 安装并配置 UFW 防火墙" "7. BBR加速"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-40s${NC}\n" "1. 搭建 Hysteria 节点"   "6.  一键WARP"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-40s${NC}\n" "2. 安装并配置 UFW 防火墙" "7.  BBR加速"
         printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "3. 配置密钥登录"          "8. Docker管理"
         printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "4. 修改登录端口号"        "9. 系统信息查询"
         printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "5. 一键搭建节点"         "10. 设置 IPv4/6 优先级"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "11. 更新脚本"            "0. 退出"
-        
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "11. 更新脚本"           "12. 保持ssh链接"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "0. 退出"
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
-        
         read -p "请输入选项 (0-11): " choice
         case $choice in
             1)
@@ -216,6 +271,9 @@ show_main_menu() {
             11)
                 update_script
                 ;;
+            12) 
+                set_ssh_keepalive
+                ;;    
             0)
                 echo -e "${GREEN}退出程序...${NC}"
                 exit 0
