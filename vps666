@@ -205,6 +205,9 @@ set_ssh_keepalive() {
         echo "SSH 服务重启失败，请检查配置。" >&2
         exit 1
     fi
+   #提示用户按任意键返回
+    echo "按任意键返回主菜单..."
+    read -n 1 -s -r  # 等待用户按任意键
 }
 # 显示主菜单
 show_main_menu() {
