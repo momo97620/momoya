@@ -67,6 +67,89 @@ execute_script() {
     read -p "按任意键返回主菜单..."
 }
 
+# 设置 IPv4/6 优先级
+set_ip_priority() {
+    # 检查当前优先级
+    check_current_priority() {
+        if grep -q "net.ipv6.conf.all.disable_ipv6 = 1" /etc/sysctl.conf; then
+            echo "当前优先级：IPv4"
+        else
+            echo "当前优先级：IPv6"
+        fi
+    }
+
+    # 设置优先级
+    set_priority() {
+        case "$1" in
+            1)
+                echo "正在设置优先使用 IPv4..."
+                # 禁用 IPv6
+                echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+                echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+                # 应用更改
+                sysctl -p
+                echo "IPv4 优先设置完成！"
+                ;;
+            2)
+                echo "正在设置优先使用 IPv6..."
+                # 启用 IPv6
+                sed -i '/net.ipv6.conf.all.disable_ipv6/d' /etc/sysctl.conf
+                sed -i '/net.ipv6.conf.default.disable_ipv6/d' /etc/sysctl.conf
+                echo "net.ipv6.conf.all.disable_ipv6 = 0" >> /etc/sysctl.conf
+                echo "net.ipv6.conf.default.disable_ipv6 = 0" >> /etc/sysctl.conf
+                # 应用更改
+                sysctl -p
+                echo "IPv6 优先设置完成！"
+                ;;
+            *)
+                echo "无效的选项！请输入 '1' 或 '2'。"
+                exit 1
+                ;;
+        esac
+    }
+
+    # 主菜单
+    show_menu() {
+        clear
+        echo "==============================="
+        echo " 设置 IPv4 或 IPv6 优先级"
+        echo "==============================="
+        check_current_priority
+        echo "1. 优先使用 IPv4"
+        echo "2. 优先使用 IPv6"
+        echo "==============================="
+        read -p "请输入选项 [1/2]：" choice
+
+        # 根据用户选择设置优先级
+        set_priority "$choice"
+
+        # 提示用户按任意键退出
+        echo "设置完成！按任意键退出..."
+        read -n 1 -s -r
+    }
+
+    # 运行主菜单
+    show_menu
+}
+
+# 更新脚本
+update_script() {
+    local remote_url="https://example.com/path/to/latest_script.sh"  # 替换为实际的远程脚本 URL
+    local local_path="/root/vps666"
+
+    echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
+
+    # 下载最新脚本
+    if curl -sSL "$remote_url" -o "$local_path"; then
+        chmod +x "$local_path"
+        echo -e "${GREEN}脚本更新成功！最新版本已保存到 $local_path。${NC}"
+    else
+        echo -e "${RED}脚本更新失败，请检查远程 URL 是否正确。${NC}"
+    fi
+
+    read -p "按任意键返回主菜单..."
+}
+
 # 显示主菜单
 show_main_menu() {
     while true; do
@@ -93,11 +176,12 @@ show_main_menu() {
         printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "2. 安装并配置 UFW 防火墙"  "7. BBR加速"
         printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "3. 配置密钥登录"          "8. Docker管理"
         printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "4. 修改登录端口号"         "9. 系统信息查询"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "5. 一键搭建节点"           "0. 退出"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "5. 一键搭建节点"           "10. 设置 IPv4/6 优先级"
+        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "11. 更新脚本"              "0. 退出"
         
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         
-        read -p "请输入选项 (0-9): " choice
+        read -p "请输入选项 (0-11): " choice
         case $choice in
             1)
                 execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
@@ -125,6 +209,12 @@ show_main_menu() {
                 ;;
             9)
                 execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
+                ;;
+            10)
+                set_ip_priority
+                ;;
+            11)
+                update_script
                 ;;
             0)
                 echo -e "${GREEN}退出程序...${NC}"
