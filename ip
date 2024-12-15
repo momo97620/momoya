@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 脚本功能：设置 Debian 系统中 IPv4 或 IPv6 的优先级
-# 作者：AI助手
+# 作者：emo小默默
 # 用法：
 #   - 运行脚本时，输入 `1` 或 `2` 来选择优先级
 #   - 例如：`sudo ./set_ip_priority.sh`
