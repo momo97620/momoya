@@ -231,13 +231,13 @@ show_main_menu() {
         echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
         # 使用 printf 格式化菜单选项，确保对齐
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-40s${NC}\n" "1. 搭建 Hysteria 节点"   "6.  一键WARP"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-40s${NC}\n" "2. 安装并配置 UFW 防火墙" "7.  BBR加速"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "3. 配置密钥登录"          "8. Docker管理"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "4. 修改登录端口号"        "9. 系统信息查询"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "5. 一键搭建节点"         "10. 设置 IPv4/6 优先级"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "11. 更新脚本"           "12. 保持ssh链接"
-        printf "  ${BRIGHT_MAGENTA}%-30s${NC}  ${BRIGHT_MAGENTA}%-30s${NC}\n" "0. 退出"
+        printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "1." "搭建 Hysteria 节点" "6." "一键WARP"
+        printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "2." "安装并配置 UFW 防火墙" "7." "BBR加速"
+        printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "3." "配置密钥登录" "8." "Docker管理"
+        printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "4." "修改登录端口号" "9." "系统信息查询"
+        printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "5." "一键搭建节点" "10." "设置 IPv4/6 优先级"
+        printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "11." "更新脚本" "12." "保持ssh链接"
+        printf "${GREEN}%-3s %-25s${NC} \n" "0." "退出"
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         read -p "请输入选项 (0-11): " choice
         case $choice in
