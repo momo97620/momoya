@@ -234,12 +234,8 @@ show_main_menu() {
 
 # 第一组选项（前6个）
 printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "1." "搭建 Hysteria 节点"   "2." "安装并配置 UFW 防火墙"
-printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "3." "配置密钥登录"         "4." "修改登录端口号"
-printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "5." "一键搭建节点"         "6." "一键WARP"
-
-# 添加分割线
-printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "---" "---------------------" "---" "---------------------"
-
+printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "3." "配置密钥登录"         "4."  "修改登录端口号"
+printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "5." "一键搭建节点"         "6."  "一键WARP"
 # 第二组选项（后6个）
 printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "7." "BBR加速"             "8." "Docker管理"
 printf "${GREEN}%-3s %-25s${NC} ${MAGENTA}%-3s %-25s${NC}\n" "9." "系统信息查询"         "10." "设置 IPv4/6 优先级"
