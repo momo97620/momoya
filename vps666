@@ -280,15 +280,6 @@ run_reinstall_script() {
     done
 }
 
-# 调用下载函数
-download_reinstall_script
-
-# 如果下载成功，调用执行函数
-run_reinstall_script
-
-# 继续执行其他操作
-# ...
-# 显示主菜单
 show_main_menu() {
     while true; do
         clear
