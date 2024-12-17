@@ -11,12 +11,9 @@ BRIGHT_MAGENTA='\033[1;35m'  # 亮紫色
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
-# 获取脚本路径
-SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
-SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
-
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
+SCRIPT_PATH="/root/vps666"
 
 # 检查符号链接是否已经存在
 if [ ! -L "$LINK_NAME" ]; then
@@ -25,6 +22,10 @@ if [ ! -L "$LINK_NAME" ]; then
 else
     echo -e "${YELLOW}符号链接 $LINK_NAME 已存在。${NC}"
 fi
+
+# 获取脚本路径
+SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
 # 定义固定安装路径
 INSTALL_DIR="/usr/local/my_script"
@@ -59,16 +60,10 @@ install_script() {
 execute_script() {
     local script_url="$1"
     local success_message="$2"
-
-    # 下载并执行子脚本
-    if curl -sSL "$script_url" -o /tmp/sub_script.sh; then
-        chmod +x /tmp/sub_script.sh
-        nohup /tmp/sub_script.sh > /dev/null 2>&1 &
-        echo -e "${GREEN}$success_message${NC}"
-    else
-        echo -e "${RED}下载子脚本失败。${NC}"
-    fi
-
+    
+    bash <(curl -sSL "$script_url")
+    echo -e "${GREEN}$success_message${NC}"
+    
     read -p "按任意键返回主菜单..."
 }
 
@@ -214,7 +209,39 @@ set_ssh_keepalive() {
     echo "按任意键返回主菜单..."
     read -n 1 -s -r  # 等待用户按任意键
 }
+#!/bin/bash
 
+download_script() {
+    local url=$1
+    curl -O $url || wget -O reinstall.sh $url
+}
+
+while true; do
+    echo "请选择服务器:"
+    echo "1) 国外服务器"
+    echo "2) 国内服务器"
+    echo "0) 退出"
+    read -p "输入选项 (0, 1 或 2): " choice
+
+    case $choice in
+        1)
+            echo "选择了国外服务器"
+            download_script "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
+            ;;
+        2)
+            echo "选择了国内服务器"
+            download_script "https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
+            ;;
+        0)
+            echo "退出程序"
+            exit 0
+            ;;
+        *)
+            echo "无效选项，请输入 0, 1 或 2"
+            ;;
+    esac
+done
+}
 # 显示主菜单
 show_main_menu() {
     while true; do
@@ -224,7 +251,7 @@ show_main_menu() {
         echo "  ______ _   __  __   __  __          "
         echo " |  ____| | |  \/  | |  \/  |         "
         echo " | |__  | | | \  / | | \  / | ___ _ __ "
-        echo " |  __| | | |\/| | | |\/| |/ _ \ '__|"
+        echo " |  __| | | | |\/| | | |\/| |/ _ \ '__|"
         echo " | |    | | | |  | | | |  | |  __/ |   "
         echo " |_|    |_| |_|  |_| |_|  |_|\___|_|   "
         echo -e "${NC}"
@@ -237,23 +264,24 @@ show_main_menu() {
         echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
         # 使用 printf 格式化菜单选项，确保对齐
-        printf "${GREEN}%-3s %-30s${NC}\n" "1." "搭建hy2节点"
-        printf "${GREEN}%-3s %-30s${NC}\n" "2." "UFW 防火墙"
-        printf "${GREEN}%-3s %-30s${NC}\n" "3." "配置密钥登录"
-        printf "${GREEN}%-3s %-30s${NC}\n" "4." "修改登录端口"
-        printf "${GREEN}%-3s %-30s${NC}\n" "5." "一键搭建节点"
-        printf "${GREEN}%-3s %-30s${NC}\n" "6." "一键WARP"
-        printf "${GREEN}%-3s %-30s${NC}\n" "7." "BBR加速"
-        printf "${GREEN}%-3s %-30s${NC}\n" "8." "Docker管理"
-        printf "${GREEN}%-3s %-30s${NC}\n" "9." "系统信息查询"
-        printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
-        printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
-        printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
-        printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
+printf "${GREEN}%-3s %-30s${NC}\n" "1." "搭建hy2节点"
+printf "${GREEN}%-3s %-30s${NC}\n" "2." "UFW 防火墙"
+printf "${GREEN}%-3s %-30s${NC}\n" "3." "配置密钥登录"
+printf "${GREEN}%-3s %-30s${NC}\n" "4." "修改登录端口"
+printf "${GREEN}%-3s %-30s${NC}\n" "5." "一键搭建节点"
+printf "${GREEN}%-3s %-30s${NC}\n" "6." "一键WARP"
+printf "${GREEN}%-3s %-30s${NC}\n" "7." "BBR加速"
+printf "${GREEN}%-3s %-30s${NC}\n" "8." "Docker管理"
+printf "${GREEN}%-3s %-30s${NC}\n" "9." "系统信息查询"
+printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
+printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
+printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
+printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
+printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
 
-        # 退出选项
+# 退出选项
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
-        read -p "请输入选项 (0-12): " choice
+        read -p "请输入选项 (0-13): " choice
         case $choice in
             1)
                 execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
@@ -291,6 +319,9 @@ show_main_menu() {
             12) 
                 set_ssh_keepalive
                 ;;    
+             13)
+                download_script
+                ;;     
             0)
                 echo -e "${GREEN}退出程序...${NC}"
                 exit 0
