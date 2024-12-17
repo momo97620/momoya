@@ -59,13 +59,16 @@ install_script() {
 execute_script() {
     local script_url="$1"
     local success_message="$2"
-    
-    if curl -sSL "$script_url" | bash; then
+
+    # 下载并执行子脚本
+    if curl -sSL "$script_url" -o /tmp/sub_script.sh; then
+        chmod +x /tmp/sub_script.sh
+        nohup /tmp/sub_script.sh > /dev/null 2>&1 &
         echo -e "${GREEN}$success_message${NC}"
     else
-        echo -e "${RED}执行脚本失败。${NC}"
+        echo -e "${RED}下载子脚本失败。${NC}"
     fi
-    
+
     read -p "按任意键返回主菜单..."
 }
 
