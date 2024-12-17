@@ -329,7 +329,9 @@ show_main_menu() {
         printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
         printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
         printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
-
+                                                                   printf "${GREEN}%-3s %-30s${NC}\n" "25." "退出"
+                                                                   printf "${GREEN}%-3s %-30s${NC}\n" "26." "退出"
+                                                                   printf "${GREEN}%-3s %-30s${NC}\n" "27." "退出"
         # 退出选项
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         read -p "请输入选项 (0-13): " choice
