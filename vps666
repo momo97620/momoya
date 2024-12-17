@@ -46,7 +46,7 @@ fi
 install_script() {
     echo -e "${YELLOW}正在安装：将脚本安装到 $INSTALL_DIR...${NC}"
     
-    if [ ! -d "$INSTALL_DIR" ]; then
+    if [ ! -d "$INSTALL_DIR" ];; then
         mkdir -p "$INSTALL_DIR"
     fi
     
@@ -210,10 +210,18 @@ set_ssh_keepalive() {
     read -n 1 -s -r  # 等待用户按任意键
 }
 
-# 下载脚本函数
-download_script() {
+# 下载并运行脚本函数
+download_and_run_script() {
     local url=$1
-    curl -O $url || wget -O reinstall.sh $url
+    local script_name="reinstall.sh"
+    curl -sSL $url -o $script_name || wget -q -O $script_name $url
+    
+    if [ -f $script_name ]; then
+        chmod +x $script_name
+        ./$script_name
+    else
+        echo -e "${RED}脚本下载失败。${NC}"
+    fi
 }
 
 # 显示主菜单
@@ -294,9 +302,32 @@ show_main_menu() {
                 set_ssh_keepalive
                 ;;    
             13)
-                # 调用下载脚本函数并传递URL
-                download_script "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
-                echo -e "${GREEN}脚本下载完成。${NC}"
+                # 嵌入子脚本
+                while true; do
+                    echo "请选择服务器:"
+                    echo "1) 国外服务器"
+                    echo "2) 国内服务器"
+                    echo "0) 退出"
+                    read -p "输入选项 (0, 1 或 2): " sub_choice
+
+                    case $sub_choice in
+                        1)
+                            echo "选择了国外服务器"
+                            download_and_run_script "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
+                            ;;
+                        2)
+                            echo "选择了国内服务器"
+                            download_and_run_script "https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
+                            ;;
+                        0)
+                            echo "退出子菜单"
+                            break
+                            ;;
+                        *)
+                            echo "无效选项，请输入 0, 1 或 2"
+                            ;;
+                    esac
+                done
                 read -p "按任意键返回主菜单..."
                 ;;     
             0)
