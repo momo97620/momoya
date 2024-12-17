@@ -209,7 +209,6 @@ set_ssh_keepalive() {
     echo "按任意键返回主菜单..."
     read -n 1 -s -r  # 等待用户按任意键
 }
-#!/bin/bash
 
 # 下载 reinstall.sh 脚本的函数
 download_reinstall_script() {
