@@ -46,7 +46,7 @@ fi
 install_script() {
     echo -e "${YELLOW}正在安装：将脚本安装到 $INSTALL_DIR...${NC}"
     
-    if [ ! -d "$INSTALL_DIR" ];; then
+    if [ ! -d "$INSTALL_DIR" ]; then
         mkdir -p "$INSTALL_DIR"
     fi
     
@@ -210,20 +210,6 @@ set_ssh_keepalive() {
     read -n 1 -s -r  # 等待用户按任意键
 }
 
-# 下载并运行脚本函数
-download_and_run_script() {
-    local url=$1
-    local script_name="reinstall.sh"
-    curl -sSL $url -o $script_name || wget -q -O $script_name $url
-    
-    if [ -f $script_name ]; then
-        chmod +x $script_name
-        ./$script_name
-    else
-        echo -e "${RED}脚本下载失败。${NC}"
-    fi
-}
-
 # 显示主菜单
 show_main_menu() {
     while true; do
@@ -233,7 +219,7 @@ show_main_menu() {
         echo "  ______ _   __  __   __  __          "
         echo " |  ____| | |  \/  | |  \/  |         "
         echo " | |__  | | | \  / | | \  / | ___ _ __ "
-        echo " |  __| | | |\/| | | |\/| |/ _ \ '__|"
+        echo " |  __| | | | |\/| | | |\/| |/ _ \ '__|"
         echo " | |    | | | |  | | | |  | |  __/ |   "
         echo " |_|    |_| |_|  |_| |_|  |_|\___|_|   "
         echo -e "${NC}"
@@ -246,22 +232,22 @@ show_main_menu() {
         echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
         # 使用 printf 格式化菜单选项，确保对齐
-        printf "${GREEN}%-3s %-30s${NC}\n" "1." "搭建hy2节点"
-        printf "${GREEN}%-3s %-30s${NC}\n" "2." "UFW 防火墙"
-        printf "${GREEN}%-3s %-30s${NC}\n" "3." "配置密钥登录"
-        printf "${GREEN}%-3s %-30s${NC}\n" "4." "修改登录端口"
-        printf "${GREEN}%-3s %-30s${NC}\n" "5." "一键搭建节点"
-        printf "${GREEN}%-3s %-30s${NC}\n" "6." "一键WARP"
-        printf "${GREEN}%-3s %-30s${NC}\n" "7." "BBR加速"
-        printf "${GREEN}%-3s %-30s${NC}\n" "8." "Docker管理"
-        printf "${GREEN}%-3s %-30s${NC}\n" "9." "系统信息查询"
-        printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
-        printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
-        printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
-        printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
-        printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
+printf "${GREEN}%-3s %-30s${NC}\n" "1." "搭建hy2节点"
+printf "${GREEN}%-3s %-30s${NC}\n" "2." "UFW 防火墙"
+printf "${GREEN}%-3s %-30s${NC}\n" "3." "配置密钥登录"
+printf "${GREEN}%-3s %-30s${NC}\n" "4." "修改登录端口"
+printf "${GREEN}%-3s %-30s${NC}\n" "5." "一键搭建节点"
+printf "${GREEN}%-3s %-30s${NC}\n" "6." "一键WARP"
+printf "${GREEN}%-3s %-30s${NC}\n" "7." "BBR加速"
+printf "${GREEN}%-3s %-30s${NC}\n" "8." "Docker管理"
+printf "${GREEN}%-3s %-30s${NC}\n" "9." "系统信息查询"
+printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
+printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
+printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
+printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
+printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
 
-        # 退出选项
+# 退出选项
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         read -p "请输入选项 (0-13): " choice
         case $choice in
@@ -301,34 +287,8 @@ show_main_menu() {
             12) 
                 set_ssh_keepalive
                 ;;    
-            13)
-                # 嵌入子脚本
-                while true; do
-                    echo "请选择服务器:"
-                    echo "1) 国外服务器"
-                    echo "2) 国内服务器"
-                    echo "0) 退出"
-                    read -p "输入选项 (0, 1 或 2): " sub_choice
-
-                    case $sub_choice in
-                        1)
-                            echo "选择了国外服务器"
-                            download_and_run_script "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
-                            ;;
-                        2)
-                            echo "选择了国内服务器"
-                            download_and_run_script "https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
-                            ;;
-                        0)
-                            echo "退出子菜单"
-                            break
-                            ;;
-                        *)
-                            echo "无效选项，请输入 0, 1 或 2"
-                            ;;
-                    esac
-                done
-                read -p "按任意键返回主菜单..."
+             13)
+                
                 ;;     
             0)
                 echo -e "${GREEN}退出程序...${NC}"
