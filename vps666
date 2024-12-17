@@ -232,6 +232,7 @@ download_and_execute_script() {
                 echo "选择了国外服务器"
                 if download_script "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"; then
                     echo "下载成功"
+                    bash reinstall.sh  # 下载后自动运行脚本
                 else
                     echo "下载失败"
                 fi
@@ -240,6 +241,7 @@ download_and_execute_script() {
                 echo "选择了国内服务器"
                 if download_script "https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"; then
                     echo "下载成功"
+                    bash reinstall.sh  # 下载后自动运行脚本
                 else
                     echo "下载失败"
                 fi
@@ -289,7 +291,7 @@ show_main_menu() {
         printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
         printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
         printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
-        printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
+        printf "${GREEN}%-3s %-30s${NC}\n" "13." "下载并执行脚本"
         printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
 
         # 退出选项
