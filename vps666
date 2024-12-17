@@ -209,7 +209,86 @@ set_ssh_keepalive() {
     echo "按任意键返回主菜单..."
     read -n 1 -s -r  # 等待用户按任意键
 }
+#!/bin/bash
 
+# 下载 reinstall.sh 脚本的函数
+download_reinstall_script() {
+    while true; do
+        echo "请选择下载方式："
+        echo "1. 国外服务器"
+        echo "2. 国内服务器"
+        echo "0. 退出"
+        read -p "请输入选项 (0, 1 或 2): " choice
+
+        case $choice in
+            1)
+                echo "从国外服务器下载..."
+                curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
+                if [ $? -eq 0 ]; then
+                    echo "下载成功。"
+                    break
+                else
+                    echo "下载失败，请重试。"
+                fi
+                ;;
+            2)
+                echo "从国内服务器下载..."
+                curl -O https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
+                if [ $? -eq 0 ]; then
+                    echo "下载成功。"
+                    break
+                else
+                    echo "下载失败，请重试。"
+                fi
+                ;;
+            0)
+                echo "退出脚本。"
+                exit 0
+                ;;
+            *)
+                echo "无效选项，请选择 0, 1 或 2。"
+                ;;
+        esac
+    done
+}
+
+# 执行 reinstall.sh 脚本的函数
+run_reinstall_script() {
+    while true; do
+        echo "请选择要执行的命令："
+        echo "1. bash reinstall.sh ubuntu 22.04"
+        echo "2. bash reinstall.sh Debian12"
+        echo "0. 退出"
+        read -p "请输入选项 (0, 1 或 2): " choice
+
+        case $choice in
+            1)
+                bash reinstall.sh ubuntu 22.04
+                break
+                ;;
+            2)
+                bash reinstall.sh Debian12
+                break
+                ;;
+            0)
+                echo "退出脚本。"
+                exit 0
+                ;;
+            *)
+                echo "无效选项，请选择 0, 1 或 2。"
+                ;;
+        esac
+    done
+}
+
+# 调用下载函数
+download_reinstall_script
+
+# 如果下载成功，调用执行函数
+run_reinstall_script
+
+# 继续执行其他操作
+# ...
 # 显示主菜单
 show_main_menu() {
     while true; do
@@ -244,6 +323,7 @@ show_main_menu() {
         printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
         printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
         printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
+        printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
         printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
 
         # 退出选项
@@ -286,6 +366,9 @@ show_main_menu() {
             12) 
                 set_ssh_keepalive
                 ;;
+            13) 
+                download_reinstall_script
+                ;;  
             0)
                 echo -e "${GREEN}退出程序...${NC}"
                 exit 0
