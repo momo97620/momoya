@@ -243,7 +243,6 @@ printf "${GREEN}%-3s %-30s${NC}\n" "9." "系统信息查询"
 printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
 printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
 printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
-printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
 printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
 
 # 退出选项
@@ -286,9 +285,6 @@ printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
             12) 
                 set_ssh_keepalive
                 ;;      
-            13)
-                download_and_execute_script
-                ;;    
             0)
                 echo -e "${GREEN}退出程序...${NC}"
                 exit 0
@@ -300,54 +296,6 @@ printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
         esac
     done
 }
-#!/bin/bash
-
-download_and_execute_script() {
-    download_script() {
-        local url="$1"
-        local filename="reinstall.sh"
-        if ! curl -o "$filename" "$url"; then
-            wget -O "$filename" "$url" || { echo "下载失败，请检查网络连接和 URL。"; return 1; }
-        fi
-    }
-
-    while true; do
-        echo "请选择服务器:"
-        echo "1) 国外服务器"
-        echo "2) 国内服务器"
-        echo "0) 退出"
-        read -p "输入选项 (0, 1 或 2): " choice
-
-        case $choice in
-            1)
-                echo "选择了国外服务器"
-                if download_script "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"; then
-                    echo "下载成功"
-                else
-                    echo "下载失败"
-                fi
-                ;;
-            2)
-                echo "选择了国内服务器"
-                if download_script "https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"; then
-                    echo "下载成功"
-                else
-                    echo "下载失败"
-                fi
-                ;;
-            0)
-                echo "退出程序"
-                return 0
-                ;;
-            *)
-                echo "无效选项，请输入 0, 1 或 2"
-                ;;
-        esac
-    done
-}
-
-# 在主脚本中调用这个函数
-download_and_execute_script
 
 # 主执行逻辑
 main() {
