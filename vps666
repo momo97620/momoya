@@ -209,39 +209,6 @@ set_ssh_keepalive() {
     echo "按任意键返回主菜单..."
     read -n 1 -s -r  # 等待用户按任意键
 }
-#!/bin/bash
-
-download_script() {
-    local url=$1
-    curl -O $url || wget -O reinstall.sh $url
-}
-
-while true; do
-    echo "请选择服务器:"
-    echo "1) 国外服务器"
-    echo "2) 国内服务器"
-    echo "0) 退出"
-    read -p "输入选项 (0, 1 或 2): " choice
-
-    case $choice in
-        1)
-            echo "选择了国外服务器"
-            download_script "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
-            ;;
-        2)
-            echo "选择了国内服务器"
-            download_script "https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh"
-            ;;
-        0)
-            echo "退出程序"
-            exit 0
-            ;;
-        *)
-            echo "无效选项，请输入 0, 1 或 2"
-            ;;
-    esac
-done
-}
 # 显示主菜单
 show_main_menu() {
     while true; do
@@ -318,10 +285,7 @@ printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
                 ;;
             12) 
                 set_ssh_keepalive
-                ;;    
-             13)
-                download_script
-                ;;     
+                ;;      
             0)
                 echo -e "${GREEN}退出程序...${NC}"
                 exit 0
