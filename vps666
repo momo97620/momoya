@@ -150,41 +150,6 @@ update_script() {
     read -p "按任意键返回主菜单..."
 }
 
-# 修改 SSH 登录端口
-modify_ssh_port() {
-    local config_file="/etc/ssh/sshd_config"
-    local new_port
-    local default_port=22
-
-    echo "当前 SSH 登录端口为：$default_port"
-    
-    # 提示用户输入新的 SSH 端口
-    read -p "请输入新的 SSH 登录端口 (默认 $default_port): " new_port
-    new_port=${new_port:-$default_port}  # 如果用户没有输入，使用默认端口
-
-    # 检查端口是否在有效范围内
-    if [[ "$new_port" -lt 1024 || "$new_port" -gt 65535 ]]; then
-        echo "无效的端口号，请输入 1024 到 65535 之间的端口。"
-        return
-    fi
-
-    # 修改 SSH 配置文件
-    echo "正在修改 SSH 配置文件..."
-    sed -i.bak "s/^#Port .*/Port $new_port/" "$config_file"  # 修改或添加新端口
-    sed -i.bak "/^Port $default_port/d" "$config_file"  # 删除默认端口行
-
-    # 重启 sshd 服务
-    echo "重启 SSH 服务以应用更改..."
-    if systemctl restart sshd; then
-        echo "SSH 登录端口已成功修改为 $new_port，并重启 SSH 服务。"
-    else
-        echo "重启 SSH 服务失败，请检查配置文件。"
-    fi
-
-    echo "按任意键返回主菜单..."
-    read -n 1 -s -r  # 等待用户按任意键
-}
-
 # 封装函数：设置 SSH KeepAlive 配置
 set_ssh_keepalive() {
     local config_file="/etc/ssh/sshd_config"
@@ -240,10 +205,19 @@ set_ssh_keepalive() {
         echo "SSH 服务重启失败，请检查配置。" >&2
         exit 1
     fi
-
+   #提示用户按任意键返回
     echo "按任意键返回主菜单..."
     read -n 1 -s -r  # 等待用户按任意键
 }
+
+# 定义颜色
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
 
 # 下载 reinstall.sh 脚本的函数
 download_reinstall_script() {
@@ -355,7 +329,7 @@ show_main_menu() {
         printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
         printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
         printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
-        
+        # 退出选项
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         read -p "请输入选项 (0-13): " choice
         case $choice in
@@ -369,7 +343,7 @@ show_main_menu() {
                 execute_script "https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao" "配置密钥登录完成。"
                 ;;
             4)
-                modify_ssh_port  # 调用修改 SSH 端口的函数
+                execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
                 ;;
             5)
                 execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
