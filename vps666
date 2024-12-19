@@ -462,8 +462,6 @@ change_ssh_port() {
     echo
 }
 
-# 调用函数
-change_ssh_port
 # 主执行逻辑
 main() {
     if [[ "$1" == "install" ]]; then
