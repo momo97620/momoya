@@ -56,63 +56,262 @@ install_script() {
     echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
 }
 
-# 执行子脚本的函数
+# 执行子脚本
 execute_script() {
     local script_url="$1"
     local success_message="$2"
-
-    echo -e "${YELLOW}正在执行：$script_url...${NC}"
-    curl -sSL "$script_url" | bash
+    
+    bash <(curl -sSL "$script_url")
     echo -e "${GREEN}$success_message${NC}"
+    
+    read -p "按任意键返回主菜单..."
 }
 
-# 修改登录端口的函数
-change_ssh_port() {
-    local current_port
-    local new_port
+# 设置 IPv4/6 优先级
+set_ip_priority() {
+    # 检查当前优先级
+    check_current_priority() {
+        if grep -q "net.ipv6.conf.all.disable_ipv6 = 1" /etc/sysctl.conf; then
+            echo "当前优先级：IPv4"
+        else
+            echo "当前优先级：IPv6"
+        fi
+    }
 
-    current_port=$(grep -E "^Port " /etc/ssh/sshd_config | awk '{print $2}' || echo "22")
+    # 设置优先级
+    set_priority() {
+        case "$1" in
+            1)
+                echo "正在设置优先使用 IPv4..."
+                # 禁用 IPv6
+                echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+                echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+                # 应用更改
+                sysctl -p
+                echo "IPv4 优先设置完成！"
+                ;;
+            2)
+                echo "正在设置优先使用 IPv6..."
+                # 启用 IPv6
+                sed -i '/net.ipv6.conf.all.disable_ipv6/d' /etc/sysctl.conf
+                sed -i '/net.ipv6.conf.default.disable_ipv6/d' /etc/sysctl.conf
+                echo "net.ipv6.conf.all.disable_ipv6 = 0" >> /etc/sysctl.conf
+                echo "net.ipv6.conf.default.disable_ipv6 = 0" >> /etc/sysctl.conf
+                # 应用更改
+                sysctl -p
+                echo "IPv6 优先设置完成！"
+                ;;
+            *)
+                echo "无效的选项！请输入 '1' 或 '2'。"
+                exit 1
+                ;;
+        esac
+    }
 
-    echo -e "${YELLOW}当前 SSH 登录端口是: $current_port${NC}"
-    read -p "请输入新的 SSH 登录端口号 (推荐 > 1024): " new_port
+    # 主菜单
+    show_menu() {
+        clear
+        echo "==============================="
+        echo " 设置 IPv4 或 IPv6 优先级"
+        echo "==============================="
+        check_current_priority
+        echo "1. 优先使用 IPv4"
+        echo "2. 优先使用 IPv6"
+        echo "==============================="
+        read -p "请输入选项 [1/2]：" choice
 
-    # 检查输入的端口号是否有效
-    if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -le 1024 ] || [ "$new_port" -ge 65535 ]; then
-        echo -e "${RED}无效的端口号，请输入一个有效的端口号（大于 1024 且小于 65535）。${NC}"
-        return
+        # 根据用户选择设置优先级
+        set_priority "$choice"
+
+        # 提示用户按任意键退出
+        echo "设置完成！按任意键退出..."
+        read -n 1 -s -r
+    }
+
+    # 运行主菜单
+    show_menu
+}
+
+# 更新脚本
+update_script() {
+    local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666"  # 替换为实际的远程脚本 URL
+    local local_path="/root/vps666"
+
+    echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
+
+    # 下载最新脚本
+    if curl -sSL "$remote_url" -o "$local_path"; then
+        chmod +x "$local_path"
+        echo -e "${GREEN}脚本更新成功！最新版本已保存到 $local_path。${NC}"
+    else
+        echo -e "${RED}脚本更新失败，请检查远程 URL 是否正确。${NC}"
     fi
 
-    # 修改 sshd_config 文件
-    sed -i "s/^Port .*/Port $new_port/" /etc/ssh/sshd_config
-
-    # 赋予权限
-    chmod 600 /etc/ssh/sshd_config
-    echo -e "${GREEN}SSH 登录端口已修改为 $new_port。${NC}"
-
-    # 禁用原来的 22 端口
-    if [ "$current_port" != "22" ]; then
-        ufw deny 22
-        echo -e "${GREEN}已禁用 22 端口。${NC}"
-    fi
-
-    # 识别并允许新端口
-    if command -v ufw &> /dev/null; then
-        ufw allow "$new_port"
-        echo -e "${GREEN}已放行新端口 $new_port。${NC}"
-    fi
-
-    # 重启 SSH 服务
-    systemctl restart sshd
-    echo -e "${GREEN}SSH 服务已重启，新的端口设置生效。${NC}"
-
-    # 提示用户按任意键返回主菜单
     read -p "按任意键返回主菜单..."
+}
+
+# 封装函数：设置 SSH KeepAlive 配置
+set_ssh_keepalive() {
+    local config_file="/etc/ssh/sshd_config"
+    local interval=60    # 默认 ClientAliveInterval 值
+    local count=10       # 默认 ClientAliveCountMax 值
+
+    echo "正在配置 SSH 客户端保持连接参数..."
+
+    # 检查配置文件是否存在
+    if [[ ! -f "$config_file" ]]; then
+        echo "错误：SSH 配置文件 $config_file 不存在。" >&2
+        exit 1
+    fi
+
+    # 提示用户确认修改
+    read -p "是否确认修改 SSH 配置？(y/n): " confirm
+    if [[ "$confirm" != "y" ]]; then
+        echo "取消修改。"
+        exit 0
+    fi
+
+    # 允许用户自定义参数
+    read -p "请输入 ClientAliveInterval 值（默认 60）: " user_interval
+    if [[ -n "$user_interval" ]]; then
+        interval=$user_interval
+    fi
+
+    read -p "请输入 ClientAliveCountMax 值（默认 10）: " user_count
+    if [[ -n "$user_count" ]]; then
+        count=$user_count
+    fi
+
+    # 修改或添加 ClientAliveInterval
+    if grep -q '^#\?ClientAliveInterval' "$config_file"; then
+        sed -ri "s/^#?.*ClientAliveInterval.*/ClientAliveInterval $interval/" "$config_file"
+    else
+        echo "ClientAliveInterval $interval" >> "$config_file"
+    fi
+
+    # 修改或添加 ClientAliveCountMax
+    if grep -q '^#\?ClientAliveCountMax' "$config_file"; then
+        sed -ri "s/^#?.*ClientAliveCountMax.*/ClientAliveCountMax $count/" "$config_file"
+    else
+        echo "ClientAliveCountMax $count" >> "$config_file"
+    fi
+
+    # 重启 sshd 服务
+    echo "重启 SSH 服务以应用更改..."
+    sudo systemctl restart sshd
+    if [[ $? -eq 0 ]]; then
+        echo "SSH 配置已更新并成功应用！"
+    else
+        echo "SSH 服务重启失败，请检查配置。" >&2
+        exit 1
+    fi
+   #提示用户按任意键返回
+    echo "按任意键返回主菜单..."
+    read -n 1 -s -r  # 等待用户按任意键
+}
+
+# 定义颜色
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# 下载 reinstall.sh 脚本的函数
+download_reinstall_script() {
+    while true; do
+        echo "请选择DD对应vps："
+        echo "1. 国外服务器"
+        echo "2. 国内服务器"
+        echo "0. 退出"
+        read -p "请输入选项 (0, 1 或 2): " choice
+
+        case $choice in
+            1)
+                echo "从国外服务器下载..."
+                curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
+                break
+                ;;
+            2)
+                echo "从国内服务器下载..."
+                curl -O https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
+                break
+                ;;
+            0)
+                echo "退出脚本。"
+                exit 0
+                ;;
+            *)
+                echo "无效选项，请选择 0, 1 或 2。"
+                ;;
+        esac
+    done
+}
+
+# 选择系统版本并执行 reinstall.sh 的函数
+run_reinstall_script() {
+    while true; do
+        echo -e "${GREEN}请选择要安装的系统版本：${NC}"
+        echo -e "${RED}1. Ubuntu 22.04${NC}"
+        echo -e "${YELLOW}2. Ubuntu 20.04${NC}"
+        echo -e "${BLUE}3. Ubuntu 24.04${NC}"
+        echo -e "${MAGENTA}4. Debian 11${NC}"
+        echo -e "${CYAN}5. Debian 12${NC}"
+        echo -e "${GREEN}0. 退出${NC}"
+        read -p "请输入选项 (0-5): " choice
+
+        case $choice in
+            1)
+                bash reinstall.sh ubuntu 22.04
+                break
+                ;;
+            2)
+                bash reinstall.sh ubuntu 20.04
+                break
+                ;;
+            3)
+                bash reinstall.sh ubuntu 24.04
+                break
+                ;;
+            4)
+                bash reinstall.sh debian 11
+                break
+                ;;
+            5)
+                bash reinstall.sh debian 12
+                break
+                ;;
+            0)
+                echo "退出脚本。"
+                exit 0
+                ;;
+            *)
+                echo "无效选项，请选择 0-5。"
+                ;;
+        esac
+    done
 }
 
 show_main_menu() {
     while true; do
         clear
+        # ASCII 艺术展示 "emoMomo"
+        echo -e "${LIGHTCYAN}"
+        echo "  ______ _   __  __   __  __          "
+        echo " |  ____| | |  \/  | |  \/  |         "
+        echo " | |__  | | | \  / | | \  / | ___ _ __ "
+        echo " |  __| | | |\/| | | |\/| |/ _ \ '__|"
+        echo " | |    | | | |  | | | |  | |  __/ |   "
+        echo " |_|    |_| |_|  |_| |_|  |_|\___|_|   "
+        echo -e "${NC}"
+
         echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
+        echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
+        echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
+        echo -e "${LIGHTCYAN}=====================================================================${NC}"
+        
         echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
         # 使用 printf 格式化菜单选项，确保对齐
@@ -130,7 +329,7 @@ show_main_menu() {
         printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
         printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
         printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
-        
+        # 退出选项
         echo -e "${LIGHTCYAN}=====================================================================${NC}"
         read -p "请输入选项 (0-13): " choice
         case $choice in
@@ -141,13 +340,10 @@ show_main_menu() {
                 execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
                 ;;
             3)
-                # 自动获取当前用户名并配置密钥登录
-                current_user=$(whoami)
-                echo "当前用户名是: $current_user"
-                # 这里可以添加配置密钥登录的逻辑
+                execute_script "https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao" "配置密钥登录完成。"
                 ;;
             4)
-                change_ssh_port
+                execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
                 ;;
             5)
                 execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
@@ -165,16 +361,17 @@ show_main_menu() {
                 execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
                 ;;
             10)
-                # 这里可以添加设置 IPv4/6 优先级的逻辑
+                set_ip_priority
                 ;;
             11)
-                # 这里可以添加更新脚本的逻辑
+                update_script
                 ;;
             12) 
-                # 这里可以添加保持 SSH 链接的逻辑
+                set_ssh_keepalive
                 ;;
             13) 
-                # 这里可以添加 DD 系统的逻辑
+                download_reinstall_script
+                run_reinstall_script
                 ;;  
             0)
                 echo -e "${GREEN}退出程序...${NC}"
