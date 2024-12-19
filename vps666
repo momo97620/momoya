@@ -56,13 +56,21 @@ install_script() {
     echo -e "${GREEN}脚本已安装到 $INSTALL_DIR。${NC}"
 }
 
+# 执行子脚本的函数
+execute_script() {
+    local script_url="$1"
+    local success_message="$2"
+
+    echo -e "${YELLOW}正在执行：$script_url...${NC}"
+    curl -sSL "$script_url" | bash
+    echo -e "${GREEN}$success_message${NC}"
+}
+
 # 修改登录端口的函数
 change_ssh_port() {
     local current_port
     local new_port
-    local user
 
-    user=$(whoami)
     current_port=$(grep -E "^Port " /etc/ssh/sshd_config | awk '{print $2}' || echo "22")
 
     echo -e "${YELLOW}当前 SSH 登录端口是: $current_port${NC}"
@@ -104,20 +112,7 @@ change_ssh_port() {
 show_main_menu() {
     while true; do
         clear
-        echo -e "${LIGHTCYAN}"
-        echo "  ______ _   __  __   __  __          "
-        echo " |  ____| | |  \/  | |  \/  |         "
-        echo " | |__  | | | \  / | | \  / | ___ _ __ "
-        echo " |  __| | | |\/| | | |\/| |/ _ \ '__|"
-        echo " | |    | | | |  | | | |  | |  __/ |   "
-        echo " |_|    |_| |_|  |_| |_|  |_|\___|_|   "
-        echo -e "${NC}"
-
         echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
-        echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
-        echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
-        echo -e "${LIGHTCYAN}=====================================================================${NC}"
-        
         echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
         # 使用 printf 格式化菜单选项，确保对齐
@@ -149,7 +144,7 @@ show_main_menu() {
                 # 自动获取当前用户名并配置密钥登录
                 current_user=$(whoami)
                 echo "当前用户名是: $current_user"
-                configure_key_login "$current_user"
+                # 这里可以添加配置密钥登录的逻辑
                 ;;
             4)
                 change_ssh_port
@@ -170,17 +165,16 @@ show_main_menu() {
                 execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
                 ;;
             10)
-                set_ip_priority
+                # 这里可以添加设置 IPv4/6 优先级的逻辑
                 ;;
             11)
-                update_script
+                # 这里可以添加更新脚本的逻辑
                 ;;
             12) 
-                set_ssh_keepalive
+                # 这里可以添加保持 SSH 链接的逻辑
                 ;;
             13) 
-                download_reinstall_script
-                run_reinstall_script
+                # 这里可以添加 DD 系统的逻辑
                 ;;  
             0)
                 echo -e "${GREEN}退出程序...${NC}"
