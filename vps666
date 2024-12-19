@@ -62,38 +62,33 @@ configure_key_login() {
     local ssh_dir="/home/$user/.ssh"
     local authorized_keys="$ssh_dir/authorized_keys"
 
-    # 检查用户是否存在
-    if id "$user" &>/dev/null; then
-        echo "为用户 $user 配置密钥登录..."
+    echo "为用户 $user 配置密钥登录..."
 
-        # 创建 .ssh 目录（如果不存在）
-        mkdir -p "$ssh_dir"
-        chmod 700 "$ssh_dir"
+    # 创建 .ssh 目录（如果不存在）
+    mkdir -p "$ssh_dir"
+    chmod 700 "$ssh_dir"
 
-        # 生成 SSH 密钥对（如果不存在）
-        if [ ! -f "$ssh_dir/id_rsa" ]; then
-            ssh-keygen -t rsa -b 2048 -f "$ssh_dir/id_rsa" -N ""
-            echo "SSH 密钥对已生成。"
-        else
-            echo "SSH 密钥对已存在。"
-        fi
-
-        # 将公钥复制到 authorized_keys
-        cat "$ssh_dir/id_rsa.pub" >> "$authorized_keys"
-        chmod 600 "$authorized_keys"
-        echo "公钥已添加到 authorized_keys。"
-
-        # 修改 SSH 配置以禁用密码登录
-        sed -i '/^PasswordAuthentication/s/yes/no/' /etc/ssh/sshd_config
-        sed -i '/^ChallengeResponseAuthentication/s/yes/no/' /etc/ssh/sshd_config
-
-        # 重启 SSH 服务
-        echo "重启 SSH 服务以应用更改..."
-        systemctl restart sshd
-        echo "密钥登录配置完成，密码登录已禁用。"
+    # 生成 SSH 密钥对（如果不存在）
+    if [ ! -f "$ssh_dir/id_rsa" ]; then
+        ssh-keygen -t rsa -b 2048 -f "$ssh_dir/id_rsa" -N ""
+        echo "SSH 密钥对已生成。"
     else
-        echo "用户 $user 不存在，请先创建用户。"
+        echo "SSH 密钥对已存在。"
     fi
+
+    # 将公钥复制到 authorized_keys
+    cat "$ssh_dir/id_rsa.pub" >> "$authorized_keys"
+    chmod 600 "$authorized_keys"
+    echo "公钥已添加到 authorized_keys。"
+
+    # 修改 SSH 配置以禁用密码登录
+    sed -i '/^PasswordAuthentication/s/yes/no/' /etc/ssh/sshd_config
+    sed -i '/^ChallengeResponseAuthentication/s/yes/no/' /etc/ssh/sshd_config
+
+    # 重启 SSH 服务
+    echo "重启 SSH 服务以应用更改..."
+    systemctl restart sshd
+    echo "密钥登录配置完成，密码登录已禁用。"
 }
 
 # 其他函数保持不变...
