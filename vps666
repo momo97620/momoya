@@ -210,15 +210,6 @@ set_ssh_keepalive() {
     read -n 1 -s -r  # 等待用户按任意键
 }
 
-# 定义颜色
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-MAGENTA='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
 # 下载 reinstall.sh 脚本的函数
 download_reinstall_script() {
     while true; do
@@ -343,7 +334,7 @@ show_main_menu() {
                 execute_script "https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao" "配置密钥登录完成。"
                 ;;
             4)
-                change_ssh_port
+                change_ssh_port  # 仅在用户选择此选项时调用
                 ;;
             5)
                 execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
@@ -478,7 +469,7 @@ main() {
         echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
     fi
 
-    show_main_menu
+    show_main_menu  # 仅调用主菜单
 }
 
 # 执行主逻辑
