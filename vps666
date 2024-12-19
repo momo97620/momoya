@@ -450,16 +450,16 @@ change_ssh_port() {
         fi
     fi
 
-    # 重启 SSH 服务
-    echo "正在重启 SSH 服务以使更改生效..."
-    if systemctl restart sshd || systemctl restart ssh; then
-        echo "SSH 服务已成功重启！"
-    else
-        echo "重启 SSH 服务失败。"
-        return 1
-    fi
+    # 提示用户手动重启 SSH 服务
+    echo "修改完成！请手动重启 SSH 服务以使更改生效。"
+    echo "可以使用以下命令重启 SSH 服务："
+    echo "systemctl restart sshd  # 如果使用的是 systemd"
+    echo "或者"
+    echo "service ssh restart      # 如果使用的是 service 命令"
 
-    echo "修改完成！请使用新端口连接 SSH。"
+    # 提示用户按任意键返回主菜单
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+    echo
 }
 
 # 调用函数
