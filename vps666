@@ -91,8 +91,6 @@ configure_key_login() {
     echo "密钥登录配置完成，密码登录已禁用。"
 }
 
-# 其他函数保持不变...
-
 show_main_menu() {
     while true; do
         clear
@@ -138,7 +136,7 @@ show_main_menu() {
                 execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
                 ;;
             3)
-                # 自动获取当前用户名
+                # 自动获取当前用户名并配置密钥登录
                 current_user=$(whoami)
                 echo "当前用户名是: $current_user"
                 configure_key_login "$current_user"
