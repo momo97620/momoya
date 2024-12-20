@@ -376,7 +376,6 @@ show_main_menu() {
     done
 }
 
-# 修改 SSH 端口号的函数
 change_ssh_port() {
     # 检查是否以 root 权限运行
     if [[ $EUID -ne 0 ]]; then
@@ -411,42 +410,63 @@ change_ssh_port() {
         return 1
     fi
 
-    # 修改 SSH 配置文件中的端口号
-    echo "正在修改 SSH 端口号为 $new_port..."
-    if ! sed -i.bak "s/^#\?Port .*/Port $new_port/" "$SSHD_CONFIG"; then
-        echo "修改 SSH 配置文件失败。"
-        return 1
-    fi
+    # 创建配置文件备份
+    cp "$SSHD_CONFIG" "${SSHD_CONFIG}.bak"
 
-    # 禁用默认的 22 端口
-    if ! grep -q "^Port 0" "$SSHD_CONFIG"; then
-        echo "正在禁用默认的 22 端口..."
-        sed -i.bak 's/^#\?Port 22/Port 0/' "$SSHD_CONFIG"
+    # 处理配置文件中的端口设置
+    # 1. 首先注释掉所有的 Port 行
+    sed -i 's/^Port/#Port/' "$SSHD_CONFIG"
+    
+    # 2. 添加新的端口设置
+    echo "Port $new_port" >> "$SSHD_CONFIG"
+    
+    # 3. 确保 22 端口被禁用
+    echo "Port 0" >> "$SSHD_CONFIG"
+
+    echo "正在修改 SSH 端口号为 $new_port..."
+
+    # 验证配置文件语法
+    if command -v sshd &> /dev/null; then
+        if ! sshd -t; then
+            echo "SSH 配置文件语法检查失败，正在恢复备份..."
+            cp "${SSHD_CONFIG}.bak" "$SSHD_CONFIG"
+            return 1
+        fi
     fi
 
     # 防火墙配置
     if command -v ufw &> /dev/null; then
-        # 检查并允许新的端口
         echo "更新防火墙设置，允许新的端口并禁用 22 端口..."
-        ufw allow $new_port/tcp
+        ufw allow "$new_port"/tcp
         ufw deny 22/tcp
-    else
-        echo "没有检测到 ufw 防火墙，检查 iptables..."
-        if command -v iptables &> /dev/null; then
-            iptables -A INPUT -p tcp --dport $new_port -j ACCEPT
-            iptables -A INPUT -p tcp --dport 22 -j DROP
-            echo "iptables 设置已更新。"
-        else
-            echo "没有检测到防火墙，防火墙设置跳过。"
+        ufw status | grep "$new_port"
+    elif command -v iptables &> /dev/null; then
+        echo "正在配置 iptables..."
+        # 删除可能存在的旧规则
+        iptables -D INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null
+        iptables -D INPUT -p tcp --dport "$new_port" -j ACCEPT 2>/dev/null
+        
+        # 添加新规则
+        iptables -A INPUT -p tcp --dport "$new_port" -j ACCEPT
+        iptables -A INPUT -p tcp --dport 22 -j DROP
+        
+        # 保存 iptables 规则（如果系统支持）
+        if command -v iptables-save &> /dev/null; then
+            iptables-save > /etc/iptables/rules.v4 2>/dev/null || true
         fi
+        echo "iptables 设置已更新。"
+    else
+        echo "警告：未检测到防火墙，请手动配置防火墙规则！"
     fi
 
-    # 提示用户手动重启 SSH 服务
-    echo "修改完成！请手动重启 SSH 服务以使更改生效。"
-    echo "可以使用以下命令重启 SSH 服务："
-    echo "systemctl restart sshd  # 如果使用的是 systemd"
-    echo "或者"
-    echo "service ssh restart      # 如果使用的是 service 命令"
+    echo "==== 重要提示 ===="
+    echo "1. SSH 端口已修改为: $new_port"
+    echo "2. 端口 22 已被禁用"
+    echo "3. 请在新终端测试新端口连接后，再重启 SSH 服务"
+    echo "4. 重启命令："
+    echo "   systemctl restart sshd  # 适用于 systemd 系统"
+    echo "   service sshd restart    # 适用于传统 init 系统"
+    echo "==================="
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
