@@ -387,7 +387,8 @@ change_ssh_port() {
     # 自动检测 SSH 配置文件路径
     local SSHD_CONFIG="/etc/ssh/sshd_config"
     if [[ ! -f "$SSHD_CONFIG" ]]; then
-        SSHD_CONFIG="/etc/ssh/ssh_config"
+        echo "未找到 SSH 配置文件，确保安装了 SSH。"
+        return 1
     fi
 
     # 检查 SSH 服务名称
@@ -429,33 +430,20 @@ change_ssh_port() {
 
     # 禁用默认的 22 端口
     echo "正在禁用默认的 22 端口..."
-    if grep -q "^Port 22" "$SSHD_CONFIG"; then
-        sed -i.bak '/^Port 22/d' "$SSHD_CONFIG"  # 删除 Port 22 行
+    if ufw status | grep -q "22/tcp"; then
+        ufw deny 22/tcp
     fi
 
-    # 防火墙配置
-    if command -v ufw &> /dev/null; then
-        # 检查并允许新的端口
-        echo "更新防火墙设置，允许新的端口并禁用 22 端口..."
-        ufw allow $new_port/tcp
-        ufw deny 22/tcp
-    else
-        echo "没有检测到 ufw 防火墙，检查 iptables..."
-        if command -v iptables &> /dev/null; then
-            iptables -A INPUT -p tcp --dport $new_port -j ACCEPT
-            iptables -A INPUT -p tcp --dport 22 -j DROP
-            echo "iptables 设置已更新。"
-        else
-            echo "没有检测到防火墙，防火墙设置跳过。"
-        fi
-    fi
+    # 允许新的端口
+    echo "允许新的 SSH 端口 $new_port..."
+    ufw allow $new_port/tcp
 
     # 提示用户手动重启 SSH 服务
     echo "修改完成！请手动重启 SSH 服务以使更改生效。"
     echo "可以使用以下命令重启 SSH 服务："
     echo "systemctl restart $ssh_service  # 如果使用的是 systemd"
     echo "或者"
-    echo "service $ssh_service restart      # 如果使用的是 service 命令"
+    echo "service $ssh_servicDe restart      # 如果使用的是 service 命令"
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
