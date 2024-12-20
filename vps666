@@ -297,16 +297,24 @@ run_reinstall_script() {
 show_main_menu() {
     while true; do
         clear
-        # ASCII 艺术展示 "emoMomo"
-        echo -e "${LIGHTCYAN}"
-        echo "  ______ _   __  __   __  __          "
-        echo " |  ____| | |  \/  | |  \/  |         "
-        echo " | |__  | | | \  / | | \  / | ___ _ __ "
-        echo " |  __| | | |\/| | | |\/| |/ _ \ '__|"
-        echo " | |    | | | |  | | | |  | |  __/ |   "
-        echo " |_|    |_| |_|  |_| |_|  |_|\___|_|   "
-        echo -e "${NC}"
+        # 定义颜色渐变
+        RED='\033[38;5;196m'   # 红色
+        GREEN='\033[38;5;46m'  # 绿色
+        YELLOW='\033[38;5;226m' # 黄色
+        BLUE='\033[38;5;33m'    # 蓝色
+        PURPLE='\033[38;5;201m' # 紫色
+        CYAN='\033[38;5;51m'    # 青色
+        NC='\033[0m'            # 重置颜色
 
+        # ASCII 艺术展示 "EMoMoMo" 使用渐变色
+        echo -e "${RED}  ███████╗${GREEN}███╗   ███╗${YELLOW}██████╗ ${BLUE}███╗   ███╗${PURPLE}██████╗ ${CYAN}███╗   ███╗${RED}██████╗"
+        echo -e "${GREEN}  ██╔════╝${YELLOW}████╗ ████║${BLUE}██╔═══██╗${PURPLE}████╗ ████║${CYAN}██╔═══██╗${RED}████╗ ████║${GREEN}██╔═══██╗"
+        echo -e "${YELLOW}  █████╗  ${BLUE}██╔████╔██║${PURPLE}██║   ██║${CYAN}██╔████╔██║${RED}██║   ██║${GREEN}██╔████╔██║${YELLOW}██║   ██║"
+        echo -e "${BLUE}  ██╔══╝  ${PURPLE}██║╚██╔╝██║${CYAN}██║   ██║${RED}██║╚██╔╝██║${GREEN}██║   ██║${YELLOW}██║╚██╔╝██║${BLUE}██║   ██║"
+        echo -e "${PURPLE}  ███████╗${CYAN}██║ ╚═╝ ██║${RED}╚██████╔╝${GREEN}██║ ╚═╝ ██║${YELLOW}╚██████╔╝${BLUE}██║ ╚═╝ ██║${PURPLE}╚██████╔╝"
+        echo -e "${CYAN}  ╚══════╝${RED}╚═╝     ╚═╝${GREEN}╚═════╝ ${YELLOW}╚═╝     ╚═╝${BLUE}╚═════╝ ${PURPLE}╚═╝     ╚═╝${CYAN}╚═════╝ ${NC}"
+    done
+}
         echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
         echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
         echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
