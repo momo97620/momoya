@@ -386,15 +386,9 @@ change_ssh_port() {
     # 设置 SSH 配置文件路径
     local SSHD_CONFIG="/etc/ssh/sshd_config"
 
-    # 获取当前 SSH 服务监听的端口号
-    local current_port=$(grep -i "^Port" "$SSHD_CONFIG" | awk '{print $2}')
-
-    if [[ -z "$current_port" ]]; then
-        current_port="22"
-    fi
-
-    # 显示当前端口号
-    echo "当前 SSH 登录端口号：$current_port"
+    # 显示当前端口配置
+    echo "当前 SSH 端口配置："
+    grep "^Port" "$SSHD_CONFIG" || echo "未找到端口配置（使用默认端口 22）"
 
     # 让用户输入新的端口号
     read -p "请输入新的端口号 (留空默认使用 2222): " new_port
@@ -413,70 +407,57 @@ change_ssh_port() {
     # 创建配置文件备份
     cp "$SSHD_CONFIG" "${SSHD_CONFIG}.bak"
 
-    # 创建临时文件
-    local temp_config=$(mktemp)
-    
-    # 处理配置文件
-    # 1. 删除所有现有的 Port 行
-    grep -v "^Port" "$SSHD_CONFIG" > "$temp_config"
-    
-    # 2. 在文件开头添加新的端口配置
-    echo -e "# SSH端口配置\nPort $new_port" > "$SSHD_CONFIG"
-    
-    # 3. 追加其他配置
-    cat "$temp_config" >> "$SSHD_CONFIG"
-    
-    # 清理临时文件
-    rm -f "$temp_config"
+    echo "正在修改 SSH 端口为 $new_port ..."
 
-    echo "正在修改 SSH 端口号为 $new_port..."
+    # 使用 sed 直接替换已存在的 Port 行，如果有的话
+    if grep -q "^Port" "$SSHD_CONFIG"; then
+        # 如果存在 Port 配置，直接替换
+        sed -i "s/^Port .*/Port $new_port/" "$SSHD_CONFIG"
+    else
+        # 如果不存在 Port 配置，在文件开头添加
+        sed -i "1i Port $new_port" "$SSHD_CONFIG"
+    fi
 
     # 验证配置文件语法
-    if command -v sshd &> /dev/null; then
-        if ! sshd -t; then
-            echo "SSH 配置文件语法检查失败，正在恢复备份..."
-            cp "${SSHD_CONFIG}.bak" "$SSHD_CONFIG"
-            return 1
-        fi
+    echo "验证 SSH 配置..."
+    if ! sshd -t; then
+        echo "SSH 配置验证失败，正在恢复备份..."
+        cp "${SSHD_CONFIG}.bak" "$SSHD_CONFIG"
+        return 1
     fi
 
-    # 防火墙配置
+    # 配置防火墙
+    echo "配置防火墙规则..."
     if command -v ufw &> /dev/null; then
-        echo "更新防火墙设置，允许新的端口并禁用 22 端口..."
         ufw allow "$new_port"/tcp
         ufw deny 22/tcp
-        ufw status | grep "$new_port"
+        echo "UFW 防火墙规则已更新"
+        ufw status | grep -E "(22|$new_port)"
     elif command -v iptables &> /dev/null; then
-        echo "正在配置 iptables..."
-        # 删除可能存在的旧规则
-        iptables -D INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null
-        iptables -D INPUT -p tcp --dport "$new_port" -j ACCEPT 2>/dev/null
-        
-        # 添加新规则
         iptables -A INPUT -p tcp --dport "$new_port" -j ACCEPT
         iptables -A INPUT -p tcp --dport 22 -j DROP
-        
-        # 保存 iptables 规则（如果系统支持）
-        if command -v iptables-save &> /dev/null; then
-            iptables-save > /etc/iptables/rules.v4 2>/dev/null || true
-        fi
-        echo "iptables 设置已更新。"
+        echo "iptables 规则已更新"
+        iptables -L INPUT -n | grep -E "(22|$new_port)"
     else
-        echo "警告：未检测到防火墙，请手动配置防火墙规则！"
+        echo "警告：未检测到防火墙"
     fi
 
-    echo "==== 重要提示 ===="
-    echo "1. SSH 端口已修改为: $new_port"
-    echo "2. 原端口 22 将在重启 SSH 服务后被禁用"
-    echo "3. 请在新终端测试新端口连接后，再重启 SSH 服务"
-    echo "4. 重启命令："
-    echo "   systemctl restart sshd  # 适用于 systemd 系统"
-    echo "   service sshd restart    # 适用于传统 init 系统"
+    echo "==== SSH 端口修改完成 ===="
+    echo "1. 新的 SSH 端口: $new_port"
+    echo "2. 配置文件已修改: $SSHD_CONFIG"
+    echo "3. 原配置已备份为: ${SSHD_CONFIG}.bak"
+    echo ""
+    echo "重要提示："
+    echo "1. 请保持当前终端会话不要关闭"
+    echo "2. 在新终端中测试新端口连接："
+    echo "   ssh -p $new_port 用户名@服务器IP"
+    echo "3. 确认新端口可以连接后，再重启 SSH 服务："
+    echo "   systemctl restart sshd"
     echo "==================="
 
-    # 提示用户按任意键返回主菜单
-    read -n 1 -s -r -p "按任意键返回主菜单..."
+    read -n 1 -s -r -p "按任意键继续..."
     echo
+}
 }
 
 # 主执行逻辑
