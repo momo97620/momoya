@@ -65,6 +65,54 @@ execute_script() {
     read -p "按任意键返回主菜单..."
 }
 
+# 一键修改
+vps_setup() {
+    # 检查是否以root身份运行
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "请以root身份运行此脚本。"
+        return 1
+    fi
+
+    # 步骤1：修改SSH端口号
+    read -p "请输入要修改的SSH端口号（1-65535）： " new_port
+
+    # 验证输入的端口号
+    if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -lt 1 ] || [ "$new_port" -gt 65535 ]; then
+        echo "无效的端口号。请确保输入一个有效的端口号（1-65535）。"
+        return 1
+    fi
+
+    # 修改SSH配置
+    sed -i "s/^#Port 22/Port $new_port/" /etc/ssh/sshd_config
+    sed -i "s/^Port 22/Port $new_port/" /etc/ssh/sshd_config
+
+    # 放行新端口并禁用22端口
+    ufw allow $new_port/tcp
+    ufw deny 22/tcp
+
+    echo "SSH端口已修改为 $new_port，22端口已被禁用。"
+    echo "请手动重启SSH服务以应用更改：sudo systemctl restart sshd"
+    read -p "按任意键继续..."
+
+    # 步骤2：申请密钥登录
+    echo "请生成SSH密钥对（如果尚未生成），并将公钥添加到 ~/.ssh/authorized_keys 文件中。"
+    ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N ""
+
+    # 提示用户手动添加公钥
+    echo "请将以下公钥添加到远程服务器的~/.ssh/authorized_keys中："
+    cat ~/.ssh/id_rsa.pub
+
+    read -p "按任意键继续..."
+
+    # 禁用密码登录
+    sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+
+    echo "请手动重启SSH服务以应用更改：sudo systemctl restart sshd"
+    read -p "按任意键返回主菜单..."
+}
+
+
 # 设置 IPv4/6 优先级
 set_ip_priority() {
     check_current_priority() {
@@ -297,6 +345,7 @@ show_main_menu() {
     printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
     printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
     printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
+    printf "${GREEN}%-3s %-30s${NC}\n" "14." "一键系统"
     printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
     
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
@@ -341,6 +390,9 @@ show_main_menu() {
         13) 
             download_reinstall_script
             run_reinstall_script
+            ;;  
+        14) 
+            vps_setup
             ;;  
         0)
             echo -e "${GREEN}退出程序...${NC}"
