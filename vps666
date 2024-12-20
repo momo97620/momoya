@@ -428,13 +428,16 @@ change_ssh_port() {
         return 1
     fi
 
-    # 禁用默认的 22 端口
-    echo "正在禁用默认的 22 端口..."
-    if ufw status | grep -q "22/tcp"; then
+    # 更新 ufw 防火墙规则
+    echo "更新防火墙设置..."
+    
+    # 先拒绝旧端口（如果是 22 端口）
+    if [[ "$current_port" -eq 22 ]]; then
+        echo "拒绝旧的 SSH 端口 22..."
         ufw deny 22/tcp
     fi
 
-    # 允许新的端口
+    # 允许新的 SSH 端口
     echo "允许新的 SSH 端口 $new_port..."
     ufw allow $new_port/tcp
 
@@ -443,12 +446,13 @@ change_ssh_port() {
     echo "可以使用以下命令重启 SSH 服务："
     echo "systemctl restart $ssh_service  # 如果使用的是 systemd"
     echo "或者"
-    echo "service $ssh_servicDe restart      # 如果使用的是 service 命令"
+    echo "service $ssh_service restart      # 如果使用的是 service 命令"
 
     # 提示用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
     echo
 }
+
 
 # 主执行逻辑
 main() {
