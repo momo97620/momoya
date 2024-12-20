@@ -297,9 +297,14 @@ run_reinstall_script() {
 show_main_menu() {
     while true; do
         clear
+        echo "Clearing screen and starting loop..."  # 添加调试信息
+
         # 定义颜色
         LIGHTCYAN='\033[1;36m'  # 明亮的青色
         NC='\033[0m'  # 重置颜色
+
+        # 输出调试信息
+        echo "Colors set, displaying ASCII art..." 
 
         # ASCII 艺术展示 "EMoMoMo"
         echo -e "${LIGHTCYAN}"
@@ -310,6 +315,8 @@ show_main_menu() {
         echo "  ███████╗██║ ╚═╝ ██║╚██████╔╝██║ ╚═╝ ██║╚██████╔╝██║ ╚═╝ ██║╚██████╔╝"
         echo "  ╚══════╝╚═╝     ╚═╝ ╚═════╝ ╚═╝     ╚═╝ ╚═════╝ ╚═╝     ╚═╝ ╚═════╝ "
         echo -e "${NC}"
+        
+        sleep 2  # 延时2秒，防止屏幕被清除得太快
     done
 }
         echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
