@@ -458,7 +458,6 @@ change_ssh_port() {
     read -n 1 -s -r -p "按任意键继续..."
     echo
 }
-}
 
 # 主执行逻辑
 main() {
