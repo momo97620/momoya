@@ -128,415 +128,45 @@ set_ip_priority() {
         read -n 1 -s -r
     }
 
-    # 运行主菜单
     show_menu
 }
 
-# 更新脚本
-update_script() {
-    local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666"  # 替换为实际的远程脚本 URL
-    local local_path="/root/vps666"
-
-    echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
-
-    # 下载最新脚本
-    if curl -sSL "$remote_url" -o "$local_path"; then
-        chmod +x "$local_path"
-        echo -e "${GREEN}脚本更新成功！最新版本已保存到 $local_path。${NC}"
-    else
-        echo -e "${RED}脚本更新失败，请检查远程 URL 是否正确。${NC}"
-    fi
-
-    read -p "按任意键返回主菜单..."
-}
-
-# 封装函数：设置 SSH KeepAlive 配置
-set_ssh_keepalive() {
-    local config_file="/etc/ssh/sshd_config"
-    local interval=60    # 默认 ClientAliveInterval 值
-    local count=10       # 默认 ClientAliveCountMax 值
-
-    echo "正在配置 SSH 客户端保持连接参数..."
-
-    # 检查配置文件是否存在
-    if [[ ! -f "$config_file" ]]; then
-        echo "错误：SSH 配置文件 $config_file 不存在。" >&2
-        exit 1
-    fi
-
-    # 提示用户确认修改
-    read -p "是否确认修改 SSH 配置？(y/n): " confirm
-    if [[ "$confirm" != "y" ]]; then
-        echo "取消修改。"
-        exit 0
-    fi
-
-    # 允许用户自定义参数
-    read -p "请输入 ClientAliveInterval 值（默认 60）: " user_interval
-    if [[ -n "$user_interval" ]]; then
-        interval=$user_interval
-    fi
-
-    read -p "请输入 ClientAliveCountMax 值（默认 10）: " user_count
-    if [[ -n "$user_count" ]]; then
-        count=$user_count
-    fi
-
-    # 修改或添加 ClientAliveInterval
-    if grep -q '^#\?ClientAliveInterval' "$config_file"; then
-        sed -ri "s/^#?.*ClientAliveInterval.*/ClientAliveInterval $interval/" "$config_file"
-    else
-        echo "ClientAliveInterval $interval" >> "$config_file"
-    fi
-
-    # 修改或添加 ClientAliveCountMax
-    if grep -q '^#\?ClientAliveCountMax' "$config_file"; then
-        sed -ri "s/^#?.*ClientAliveCountMax.*/ClientAliveCountMax $count/" "$config_file"
-    else
-        echo "ClientAliveCountMax $count" >> "$config_file"
-    fi
-
-    # 重启 sshd 服务
-    echo "重启 SSH 服务以应用更改..."
-    sudo systemctl restart sshd
-    if [[ $? -eq 0 ]]; then
-        echo "SSH 配置已更新并成功应用！"
-    else
-        echo "SSH 服务重启失败，请检查配置。" >&2
-        exit 1
-    fi
-   #提示用户按任意键返回
-    echo "按任意键返回主菜单..."
-    read -n 1 -s -r  # 等待用户按任意键
-}
-
-# 定义颜色
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-MAGENTA='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
-# 下载 reinstall.sh 脚本的函数
-download_reinstall_script() {
-    while true; do
-        echo "请选择DD对应vps："
-        echo "1. 国外服务器"
-        echo "2. 国内服务器"
-        echo "0. 退出"
-        read -p "请输入选项 (0, 1 或 2): " choice
-
-        case $choice in
-            1)
-                echo "从国外服务器下载..."
-                curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
-                break
-                ;;
-            2)
-                echo "从国内服务器下载..."
-                curl -O https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
-                break
-                ;;
-            0)
-                echo "退出脚本。"
-                exit 0
-                ;;
-            *)
-                echo "无效选项，请选择 0, 1 或 2。"
-                ;;
-        esac
-    done
-}
-
-# 选择系统版本并执行 reinstall.sh 的函数
-run_reinstall_script() {
-    while true; do
-        echo -e "${GREEN}请选择要安装的系统版本：${NC}"
-        echo -e "${RED}1. Ubuntu 22.04${NC}"
-        echo -e "${YELLOW}2. Ubuntu 20.04${NC}"
-        echo -e "${BLUE}3. Ubuntu 24.04${NC}"
-        echo -e "${MAGENTA}4. Debian 11${NC}"
-        echo -e "${CYAN}5. Debian 12${NC}"
-        echo -e "${GREEN}0. 退出${NC}"
-        read -p "请输入选项 (0-5): " choice
-
-        case $choice in
-            1)
-                bash reinstall.sh ubuntu 22.04
-                break
-                ;;
-            2)
-                bash reinstall.sh ubuntu 20.04
-                break
-                ;;
-            3)
-                bash reinstall.sh ubuntu 24.04
-                break
-                ;;
-            4)
-                bash reinstall.sh debian 11
-                break
-                ;;
-            5)
-                bash reinstall.sh debian 12
-                break
-                ;;
-            0)
-                echo "退出脚本。"
-                exit 0
-                ;;
-            *)
-                echo "无效选项，请选择 0-5。"
-                ;;
-        esac
-    done
-}
-
-show_main_menu() {
+# 主菜单
+main_menu() {
     while true; do
         clear
-        # ASCII 艺术展示 "emoMomo"
-        echo -e "${LIGHTCYAN}"
-        echo "  ______ _   __  __   __  __          "
-        echo " |  ____| | |  \/  | |  \/  |         "
-        echo " | |__  | | | \  / | | \  / | ___ _ __ "
-        echo " |  __| | | |\/| | | |\/| |/ _ \ '__|"
-        echo " | |    | | | |  | | | |  | |  __/ |   "
-        echo " |_|    |_| |_|  |_| |_|  |_|\___|_|   "
-        echo -e "${NC}"
-
-        echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
-        echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
-        echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
-        echo -e "${LIGHTCYAN}=====================================================================${NC}"
+        echo "==============================="
+        echo " 主菜单"
+        echo "==============================="
+        echo "1. 安装脚本"
+        echo "2. 设置 IPv4/6 优先级"
+        echo "3. 申请 SSH 密钥"
+        echo "4. 退出"
+        echo "==============================="
+        read -p "请选择一个选项 [1-4]：" choice
         
-        echo -e "${YELLOW}请选择要执行的任务：${NC}"
-
-        # 使用 printf 格式化菜单选项，确保对齐
-        printf "${GREEN}%-3s %-30s${NC}\n" "1." "搭建hy2节点"
-        printf "${GREEN}%-3s %-30s${NC}\n" "2." "UFW 防火墙"
-        printf "${GREEN}%-3s %-30s${NC}\n" "3." "配置密钥登录"
-        printf "${GREEN}%-3s %-30s${NC}\n" "4." "修改登录端口"
-        printf "${GREEN}%-3s %-30s${NC}\n" "5." "一键搭建节点"
-        printf "${GREEN}%-3s %-30s${NC}\n" "6." "一键WARP"
-        printf "${GREEN}%-3s %-30s${NC}\n" "7." "BBR加速"
-        printf "${GREEN}%-3s %-30s${NC}\n" "8." "Docker管理"
-        printf "${GREEN}%-3s %-30s${NC}\n" "9." "系统信息查询"
-        printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
-        printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
-        printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
-        printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
-        printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
-        # 退出选项
-        echo -e "${LIGHTCYAN}=====================================================================${NC}"
-        read -p "请输入选项 (0-13): " choice
-        case $choice in
+        case "$choice" in
             1)
-                execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
+                install_script
                 ;;
             2)
-                execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
-                ;;
-            3)
-                execute_script "https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao" "配置密钥登录完成。"
-                ;;
-            4)
-                execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
-                ;;
-            5)
-                execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
-                ;;
-            6)
-                execute_script "https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh" "一键WARP完成。"
-                ;;
-            7)
-                execute_script "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" "BBR加速完成。"
-                ;;
-            8)
-                execute_script "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" "Docker管理完成。"
-                ;;
-            9)
-                execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
-                ;;
-            10)
                 set_ip_priority
                 ;;
-            11)
-                update_script
+            3)
+                # 运行申请 SSH 密钥的子脚本
+                execute_script "https://example.com/path/to/ssh_key_script.sh" "SSH 密钥申请完成！"
                 ;;
-            12) 
-                set_ssh_keepalive
-                ;;
-            13) 
-                download_reinstall_script
-                run_reinstall_script
-                ;;  
-            0)
-                echo -e "${GREEN}退出程序...${NC}"
+            4)
+                echo -e "${GREEN}退出程序。${NC}"
                 exit 0
                 ;;
             *)
-                echo -e "${RED}无效的选择，请重新输入！${NC}"
-                read -p "按回车键返回主菜单..."
+                echo -e "${RED}无效的选项，请重试。${NC}"
+                read -p "按任意键继续..."
                 ;;
         esac
     done
 }
 
-# 默认密钥名称
-KEY_NAME="id_rsa"
-
-# 打印帮助信息
-print_usage() {
-    echo -e "\033[1;32m用法: $0 [选项]\033[0m"
-    echo -e "\033[1;32m选项:\033[0m"
-    echo -e "  -k, --key-name <name>   指定 SSH 密钥名称（默认：id_rsa）"
-    echo -e "  -h, --help              显示帮助信息"
-}
-
-# 检查是否以 root 权限运行
-if [[ $EUID -ne 0 ]]; then
-   echo -e "\033[0;31m[错误] 请以 root 权限运行此脚本。\033[0m"
-   exit 1
-fi
-
-# 解析命令行参数
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -k|--key-name)
-            KEY_NAME="$2"
-            shift 2
-            ;;
-        -h|--help)
-            print_usage
-            exit 0
-            ;;
-        *)
-            echo -e "\033[0;31m[错误] 无效的选项: $1\033[0m"
-            print_usage
-            exit 1
-            ;;
-    esac
-done
-
-# 自动获取当前用户名
-USERNAME=$(whoami)
-
-# 设置变量
-SSH_DIR="/home/$USERNAME/.ssh"
-AUTHORIZED_KEYS="$SSH_DIR/authorized_keys"
-SSHD_CONFIG="/etc/ssh/sshd_config"
-
-# 打印界面信息
-print_banner() {
-    echo -e "\033[1;32m=======================================\033[0m"
-    echo -e "\033[1;32m       SSH 密钥登录配置脚本         \033[0m"
-    echo -e "\033[1;32m=======================================\033[0m"
-}
-
-# 创建 SSH 密钥对
-generate_ssh_keys() {
-    echo -e "\033[1;34m正在生成 SSH 密钥对...\033[0m"
-    mkdir -p "$SSH_DIR"
-    chmod 700 "$SSH_DIR"
-
-    if [[ -f "$SSH_DIR/$KEY_NAME" ]]; then
-        echo -e "\033[1;33m密钥已存在：$SSH_DIR/$KEY_NAME\033[0m"
-    else
-        ssh-keygen -t rsa -b 2048 -f "$SSH_DIR/$KEY_NAME" -N ""  # 使用 2048 位密钥
-        if [[ $? -ne 0 ]]; then
-            echo -e "\033[0;31m[错误] 密钥生成失败。\033[0m"
-            exit 1
-        fi
-        echo -e "\033[1;32m密钥生成完成：\033[0m"
-        echo -e "\033[1;34m私钥路径：$SSH_DIR/$KEY_NAME\033[0m"
-        echo -e "\033[1;34m公钥路径：$SSH_DIR/$KEY_NAME.pub\033[0m"
-    fi
-}
-
-# 配置公钥登录
-setup_ssh_key_login() {
-    echo -e "\033[1;34m正在配置公钥登录...\033[0m"
-    cat "$SSH_DIR/$KEY_NAME.pub" >> "$AUTHORIZED_KEYS"
-    chmod 600 "$AUTHORIZED_KEYS"
-    echo -e "\033[1;32m公钥已添加到 $AUTHORIZED_KEYS\033[0m"
-}
-
-# 禁用密码登录
-disable_password_login() {
-    echo -e "\033[1;34m正在禁用密码登录...\033[0m"
-
-    # 确保配置文件中没有被注释的行
-    sed -i.bak -E 's/^#?PasswordAuthentication\s+.*/PasswordAuthentication no/' "$SSHD_CONFIG"
-    sed -i.bak -E 's/^#?PermitRootLogin\s+.*/PermitRootLogin prohibit-password/' "$SSHD_CONFIG"
-
-    # 如果配置文件中没有这些行，直接添加
-    if ! grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
-        echo "PasswordAuthentication no" >> "$SSHD_CONFIG"
-    fi
-    if ! grep -q "^PermitRootLogin" "$SSHD_CONFIG"; then
-        echo "PermitRootLogin prohibit-password" >> "$SSHD_CONFIG"
-    fi
-
-    echo -e "\033[1;32m已禁用密码登录。\033[0m"
-}
-
-# 显示私钥信息
-show_private_key() {
-    echo -e "\033[1;34m请妥善保存以下私钥内容用于登录 VPS：\033[0m"
-    echo -e "\033[1;32m-------------------------------------\033[0m"
-    cat "$SSH_DIR/$KEY_NAME"
-    echo -e "\033[1;32m-------------------------------------\033[0m"
-}
-
-# 设置脚本自身执行权限
-set_self_permission() {
-    SCRIPT_PATH=$(realpath "$0")
-    chmod +x "$SCRIPT_PATH"
-    echo -e "\033[1;32m脚本自身已赋予执行权限：$SCRIPT_PATH\033[0m"
-}
-
-# 等待用户确认
-wait_for_user() {
-    echo -e "\033[1;33m按任意键继续...\033[0m"
-    read -n 1 -s  # 等待用户按任意键
-}
-
-# 主脚本逻辑
-main() {
-    print_banner
-    generate_ssh_keys
-    setup_ssh_key_login
-    disable_password_login
-    restart_ssh_service
-    show_private_key
-    set_self_permission
-    wait_for_user
-    echo -e "\033[1;32m配置完成！\033[0m"
-}
-
-# 执行主逻辑
-main
-# 主执行逻辑
-main() {
-    if [[ "$1" == "install" ]]; then
-        install_script
-        exit 0
-    fi
-
-    echo -e "${YELLOW}脚本路径: $SCRIPT_PATH${NC}"
-    echo -e "${YELLOW}安装路径: $INSTALL_DIR${NC}"
-
-    if [ ! -d "$INSTALL_DIR" ]; then
-        install_script
-    else
-        echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
-    fi
-
-    show_main_menu
-}
-
-# 执行主逻辑
-main "$@"
+# 启动主菜单
+main_menu
