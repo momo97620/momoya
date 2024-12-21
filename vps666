@@ -427,12 +427,6 @@ human_readable() {
     fi
 }
 
-# 主脚本的其他功能
-# 这里可以添加其他代码
-
-# 调用网络流量检查函数
-liuliangcheck_network_usage
-
 # 完成后提示用户按键继续
 read -p "按任意键返回主脚本..."
 
