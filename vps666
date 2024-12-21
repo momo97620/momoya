@@ -66,8 +66,8 @@ execute_script() {
 }
 
 # 密钥修改
-# 定义 momoconfigure_ssh_pam 函数
-momoconfigure_ssh_pam() {
+# 定义 configure_ssh_pam 函数
+configure_ssh_pam() {
     # 检查是否以 root 权限运行
     if [[ $EUID -ne 0 ]]; then
         echo -e "\033[0;31m[错误] 请以 root 权限运行此脚本。\033[0m"
@@ -459,7 +459,7 @@ show_main_menu() {
             execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
             ;;
         3)
-          momoconfigure_ssh_pam
+            configure_ssh_pam
             ;;
         4)
             execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
