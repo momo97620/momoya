@@ -112,16 +112,17 @@ configure_ssh_pam() {
         fi
     }
 
-    # 禁用密码登录
+    # 禁用密码登录（配置不会立即生效，需重启 SSH 服务）
     disable_password_auth() {
         echo -e "\033[1;34m正在禁用密码登录...\033[0m"
         if grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
             sed -i '/^PasswordAuthentication/c\PasswordAuthentication no' "$SSHD_CONFIG"
-            echo -e "\033[1;32m已禁用密码登录。\033[0m"
+            echo -e "\033[1;32m已将 PasswordAuthentication 设置为 no。\033[0m"
         else
             echo "PasswordAuthentication no" >> "$SSHD_CONFIG"
             echo -e "\033[1;32m已添加 PasswordAuthentication no。\033[0m"
         fi
+        echo -e "\033[1;31m注意：禁用密码登录的配置将在重启 SSH 服务后生效！\033[0m"
     }
 
     # 自动生成 SSH 密钥并添加到本机
@@ -161,7 +162,7 @@ configure_ssh_pam() {
         print_banner
         disable_use_pam          # 禁用 UsePAM
         comment_out_lines        # 注释掉 PAM 模块指定行
-        disable_password_auth    # 禁用密码登录
+        disable_password_auth    # 禁用密码登录（配置不会立即生效）
         generate_ssh_key         # 自动生成 SSH 密钥对并添加到本机
         prompt_manual_restart    # 提示用户手动重启 SSH 服务
         echo -e "\033[1;32m配置完成！\033[0m"
