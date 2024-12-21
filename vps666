@@ -371,9 +371,10 @@ run_reinstall_script() {
     done
 }
 
-#!/bin/bash
 
-# 设置时区为上海时间
+# 定义函数以检查网络使用情况
+liuliangcheck_network_usage() {
+   # 设置时区为上海时间
 export TZ='Asia/Shanghai'
 
 # 自动赋予执行权限
@@ -381,12 +382,8 @@ chmod +x "$0"
 
 # 显示当前时间
 echo "当前时间: $(date '+%Y-%m-%d %H:%M:%S')"
-
-# 定义函数以检查网络使用情况
-liuliangcheck_network_usage() {
     # 获取所有网络接口
     INTERFACES=$(ls /sys/class/net)
-
     # 检查是否找到网络接口
     if [ -z "$INTERFACES" ]; then
         echo "未找到任何网络接口。"
