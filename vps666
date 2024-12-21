@@ -65,16 +65,13 @@ execute_script() {
     read -p "按任意键返回主菜单..."
 }
 
-
-# 定义命名空间
+# 密钥修改
 configure_ssh_pam() {
     # 检查是否以 root 权限运行
     if [[ $EUID -ne 0 ]]; then
         echo -e "\033[0;31m[错误] 请以 root 权限运行此脚本。\033[0m"
         exit 1
     fi
-    # 自动赋予执行权限
-    chmod +x "$0"
 
     # 设置变量
     local SSHD_CONFIG="/etc/ssh/sshd_config"
@@ -91,12 +88,10 @@ configure_ssh_pam() {
     disable_use_pam() {
         echo -e "\033[1;34m正在禁用 UsePAM...\033[0m"
 
-        if grep -q "^UsePAM yes" "$SSHD_CONFIG"; then
-            sed -i.bak 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
+        if grep -q "^UsePAM" "$SSHD_CONFIG"; then
+            sed -i.bak '/^UsePAM/c\UsePAM no' "$SSHD_CONFIG"
             echo -e "\033[1;32m已将 UsePAM 设置为 no。\033[0m"
-        fi
-
-        if ! grep -q "^UsePAM" "$SSHD_CONFIG"; then
+        else
             echo "UsePAM no" >> "$SSHD_CONFIG"
             echo -e "\033[1;32m已添加 UsePAM no。\033[0m"
         fi
@@ -106,12 +101,16 @@ configure_ssh_pam() {
     comment_out_lines() {
         echo -e "\033[1;34m正在注释掉指定行...\033[0m"
 
-        if grep -q "# here are the per-package modules (the \"Primary\" block)" "$COMMON_AUTH"; then
-            echo "已找到注释行，跳过注释操作。"
+        # 注释掉 "Primary block" 的注释
+        sed -i.bak '/^# here are the per-package modules (the "Primary" block)/s/^/# /' "$COMMON_AUTH"
+
+        # 注释掉 pam_unix.so
+        sed -i '/^auth\s\+\[success=1 default=ignore\]\s\+pam_unix.so nullok/s/^/# /' "$COMMON_AUTH"
+
+        if grep -q "^# auth\s\+\[success=1 default=ignore\]\s\+pam_unix.so nullok" "$COMMON_AUTH"; then
+            echo -e "\033[1;32m已成功注释指定的行。\033[0m"
         else
-            sed -i.bak 's/^# here are the per-package modules (the "Primary" block)/# &/' "$COMMON_AUTH"
-            sed -i.bak 's/^auth\s\+\[success=1 default=ignore\]\s\+pam_unix.so nullok/# &/' "$COMMON_AUTH"
-            echo -e "\033[1;32m已注释掉指定行。\033[0m"
+            echo -e "\033[0;31m[警告] 未成功注释指定的行，请手动检查。\033[0m"
         fi
     }
 
