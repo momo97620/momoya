@@ -132,6 +132,8 @@ configure_ssh_pam() {
             chmod 700 "$SSH_KEY_DIR"
             ssh-keygen -t rsa -b 4096 -f "$SSH_KEY_FILE" -N "" >/dev/null
             echo -e "\033[1;32m已成功生成 SSH 密钥对。\033[0m"
+            echo -e "\033[1;32m私钥文件：$SSH_KEY_FILE\033[0m"
+            echo -e "\033[1;32m公钥文件：$SSH_KEY_FILE.pub\033[0m"
 
             # 将公钥添加到 authorized_keys
             if [[ ! -f "$AUTHORIZED_KEYS" ]]; then
@@ -143,6 +145,8 @@ configure_ssh_pam() {
             echo -e "\033[1;32m已将公钥添加到本机的 authorized_keys 文件。\033[0m"
         else
             echo -e "\033[1;32mSSH 密钥已存在，跳过生成步骤。\033[0m"
+            echo -e "\033[1;32m私钥文件：$SSH_KEY_FILE\033[0m"
+            echo -e "\033[1;32m公钥文件：$SSH_KEY_FILE.pub\033[0m"
         fi
     }
 
@@ -170,72 +174,6 @@ configure_ssh_pam() {
     echo -e "\033[1;34m按任意键退出脚本...\033[0m"
     read -n 1 -s
 }
-
-# 直接调用 configure_ssh_pam 函数
-configure_ssh_pam
-
-vps_setup() {
-    # 检查是否以root身份运行
-    if [ "$(id -u)" -ne 0 ]; then
-        echo "请以root身份运行此脚本。"
-        return 1
-    fi
-
-    # 步骤1：修改SSH端口号
-    read -p "请输入要修改的SSH端口号（1-65535）： " new_port
-
-    # 验证输入的端口号
-    if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -lt 1 ] || [ "$new_port" -gt 65535 ]; then
-        echo "无效的端口号。请确保输入一个有效的端口号（1-65535）。"
-        return 1
-    fi
-
-    # 修改SSH配置
-    sed -i "s/^#Port 22/Port $new_port/" /etc/ssh/sshd_config
-    sed -i "s/^Port 22/Port $new_port/" /etc/ssh/sshd_config
-
-    # 放行新端口并禁用22端口
-    ufw allow $new_port/tcp
-    ufw deny 22/tcp
-
-    echo "SSH端口已修改为 $new_port，22端口已被禁用。"
-    echo "请手动重启SSH服务以应用更改：sudo systemctl restart sshd"
-    read -p "按任意键继续..."
-
-    # 步骤2：申请密钥登录
-    # 检查并创建 ~/.ssh 目录
-    if [ ! -d "$HOME/.ssh" ]; then
-        mkdir -p "$HOME/.ssh"
-        chmod 700 "$HOME/.ssh"
-        echo "~/.ssh 目录已创建。"
-    fi
-
-    # 生成SSH密钥对
-    if ! ssh-keygen -t rsa -b 2048 -f "$HOME/.ssh/id_rsa" -N ""; then
-        echo "密钥生成失败，请检查错误。"
-        return 1
-    fi
-
-    # 将公钥添加到 authorized_keys
-    cat "$HOME/.ssh/id_rsa.pub" >> "$HOME/.ssh/authorized_keys"
-    chmod 600 "$HOME/.ssh/authorized_keys"
-
-    echo "公钥已成功添加到本机的 ~/.ssh/authorized_keys。"
-
-    # 禁用密码登录
-    echo "正在准备禁用密码登录..."
-    sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-    sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-
-    echo "密码登录已设置为禁用，但更改将在您手动重启SSH服务后生效。"
-    echo "请确保您可以通过密钥登录，然后再重启SSH服务。"
-    echo "重启SSH服务的命令是：sudo systemctl restart sshd"
-    read -p "按任意键返回主菜单..."
-}
-
-# 赋予脚本执行权限
-chmod +x your_script.sh
-
 
 # 设置 IPv4/6 优先级
 set_ip_priority() {
@@ -375,7 +313,7 @@ download_reinstall_script() {
                 ;;
             2)
                 echo "从国内服务器下载..."
-                curl -O https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
+                curl -O https://www.ghproxy.com/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://www.ghproxy.com/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
                 break
                 ;;
             0)
