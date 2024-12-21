@@ -65,8 +65,6 @@ execute_script() {
     read -p "按任意键返回主菜单..."
 }
 
-# 自动赋予执行权限
-chmod +x "$0"
 
 # 定义命名空间
 configure_ssh_pam() {
@@ -75,6 +73,8 @@ configure_ssh_pam() {
         echo -e "\033[0;31m[错误] 请以 root 权限运行此脚本。\033[0m"
         exit 1
     fi
+    # 自动赋予执行权限
+    chmod +x "$0"
 
     # 设置变量
     local SSHD_CONFIG="/etc/ssh/sshd_config"
