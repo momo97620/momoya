@@ -372,20 +372,40 @@ run_reinstall_script() {
 }
 
 #!/bin/bash
+set -e  # 遇到错误立即退出
+set -u  # 使用未定义变量时报错
+
+# 网络流量监控函数库
 
 # 网络流量监控主函数
 network_traffic_monitor() {
-    # 内部函数定义开始 ...
-    
     # 依赖检查和安装函数
     _install_dependencies() {
+        local packages=(
+            "net-tools"      # ifconfig
+            "iproute2"       # ip命令
+            "jq"             # JSON处理
+            "bc"             # 数学计算
+            "sysstat"        # 系统统计工具
+        )
+
+        # 更新包列表
         sudo apt-get update
-        sudo apt-get install -y \
-            net-tools \      # ifconfig
-            iproute2 \       # ip命令
-            jq \             # JSON处理
-            bc \             # 数学计算
-            sysstat          # 系统统计工具
+
+        # 检查并安装缺失的包
+        local missing_packages=()
+        for pkg in "${packages[@]}"; do
+            if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+                missing_packages+=("$pkg")
+            fi
+        done
+
+        if [ ${#missing_packages[@]} -gt 0 ]; then
+            echo "正在安装缺失的包: ${missing_packages[*]}"
+            sudo apt-get install -y "${missing_packages[@]}"
+        else
+            echo "所有依赖包已安装"
+        fi
     }
 
     # 获取网络接口流量信息
@@ -443,8 +463,80 @@ network_traffic_monitor() {
         }'
     }
 
-    # 其他内部函数保持不变 ...
-    # 包括 get_total_data_limit, detect_network_provider 等
+    # 获取系统总流量限制
+    get_total_data_limit() {
+        # 这里需要根据不同的网络服务商和套餐自定义
+        local provider=$(_detect_network_provider)
+        
+        case "$provider" in
+            "china_mobile")
+                echo "200GB"  # 示例移动套餐
+                ;;
+            "china_telecom")
+                echo "300GB"  # 示例电信套餐
+                ;;
+            "china_unicom")
+                echo "150GB"  # 示例联通套餐
+                ;;
+            *)
+                echo "500GB"  # 默认大流量
+                ;;
+        esac
+    }
+
+    # 检测网络服务商
+    _detect_network_provider() {
+        # 这是一个简单的示例，实际需要更复杂的检测逻辑
+        local ip=$(hostname -I | awk '{print $1}')
+        
+        # 这里可以添加更复杂的IP段识别
+        if [[ "$ip" == 192.168* ]]; then
+            echo "china_mobile"
+        elif [[ "$ip" == 10.* ]]; then
+            echo "china_telecom"
+        else
+            echo "china_unicom"
+        fi
+    }
+
+    # 计算流量使用百分比
+    calculate_traffic_percentage() {
+        local used_bytes=$1
+        local total_limit=$2
+        
+        # 转换总限制为字节
+        local total_bytes=$(_convert_limit_to_bytes "$total_limit")
+        
+        # 计算百分比
+        awk -v used="$used_bytes" -v total="$total_bytes" 'BEGIN {
+            percentage = (used / total) * 100;
+            printf "%.2f", percentage;
+        }'
+    }
+
+    # 将流量限制转换为字节
+    _convert_limit_to_bytes() {
+        local limit=$1
+        
+        # 处理不同单位
+        case "${limit: -2}" in
+            "KB")
+                echo $((${limit%KB} * 1024))
+                ;;
+            "MB")
+                echo $((${limit%MB} * 1024 * 1024))
+                ;;
+            "GB")
+                echo $((${limit%GB} * 1024 * 1024 * 1024))
+                ;;
+            "TB")
+                echo $((${limit%TB} * 1024 * 1024 * 1024 * 1024))
+                ;;
+            *)
+                echo "$limit"  # 假设已经是字节
+                ;;
+        esac
+    }
 
     # 主监控逻辑
     _monitor_network_traffic() {
@@ -486,8 +578,6 @@ network_traffic_monitor() {
         # 输出结果
         printf '%s\n' "${results[@]}" | jq -s '.'
     }
-
-    # 内部函数定义结束
 
     # 执行监控
     _install_dependencies
