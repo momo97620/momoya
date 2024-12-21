@@ -373,50 +373,129 @@ run_reinstall_script() {
 
 #!/bin/bash
 
-# 确定库文件的正确路径
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$SCRIPT_DIR/traffic_monitor_lib.sh"  # 使用相对路径
-
-your_main_function() {
-    # 预检查
-    traffic_monitor_namespace "check_dependencies" || {
-        echo "依赖检查失败，请安装必要工具"
-        return 1
+# 网络流量监控主函数
+network_traffic_monitor() {
+    # 内部函数定义开始 ...
+    
+    # 依赖检查和安装函数
+    _install_dependencies() {
+        sudo apt-get update
+        sudo apt-get install -y \
+            net-tools \      # ifconfig
+            iproute2 \       # ip命令
+            jq \             # JSON处理
+            bc \             # 数学计算
+            sysstat          # 系统统计工具
     }
 
-    # 检查流量
-    local interfaces=()
-    traffic_monitor_namespace "get_interfaces" interfaces || {
-        echo "获取网络接口失败"
-        return 1
+    # 获取网络接口流量信息
+    _get_network_traffic() {
+        local interface=$1
+        
+        # 使用 /proc/net/dev 获取详细流量信息
+        local rx_bytes=$(cat /proc/net/dev | grep "$interface" | awk '{print $2}')
+        local tx_bytes=$(cat /proc/net/dev | grep "$interface" | awk '{print $10}')
+        
+        # 转换为可读格式
+        local rx_readable=$(_convert_bytes "$rx_bytes")
+        local tx_readable=$(_convert_bytes "$tx_bytes")
+        
+        # 计算总流量
+        local total_bytes=$((rx_bytes + tx_bytes))
+        local total_readable=$(_convert_bytes "$total_bytes")
+        
+        # 输出JSON格式
+        jq -n \
+            --arg interface "$interface" \
+            --arg rx_bytes "$rx_bytes" \
+            --arg tx_bytes "$tx_bytes" \
+            --arg rx_readable "$rx_readable" \
+            --arg tx_readable "$tx_readable" \
+            --arg total_bytes "$total_bytes" \
+            --arg total_readable "$total_readable" \
+            '{
+                interface: $interface,
+                rx_bytes: $rx_bytes,
+                tx_bytes: $tx_bytes,
+                rx_readable: $rx_readable,
+                tx_readable: $tx_readable,
+                total_bytes: $total_bytes,
+                total_readable: $total_readable
+            }'
     }
 
-    # 获取云服务商
-    local cloud_provider=""
-    traffic_monitor_namespace "detect_cloud_provider" cloud_provider
-
-    # 遍历接口并检查流量
-    for interface in "${interfaces[@]}"; do
-        local stats=""
-        stats=$(traffic_monitor_namespace "get_interface_stats" "$interface" "$cloud_provider")
-        
-        # 解析流量使用率
-        local usage=$(echo "$stats" | jq -r '.usage_percentage')
-        
-        # 自定义告警逻辑
-        if (( $(echo "$usage > 80" | bc -l) )); then
-            traffic_monitor_namespace "send_alert" "$interface" "$usage"
+    # 字节转换为可读格式
+    _convert_bytes() {
+        local bytes=$1
+        awk -v bytes="$bytes" 'BEGIN {
+            units[0] = "B"; 
+            units[1] = "KB"; 
+            units[2] = "MB"; 
+            units[3] = "GB"; 
+            units[4] = "TB";
             
-            # 可选：记录超限日志
-            traffic_monitor_namespace "save_log" "$stats"
-        fi
-    done
+            size = bytes;
+            for (i = 0; size > 1024 && i < 4; i++) {
+                size /= 1024;
+            }
+            
+            printf "%.2f %s", size, units[i];
+        }'
+    }
+
+    # 其他内部函数保持不变 ...
+    # 包括 get_total_data_limit, detect_network_provider 等
+
+    # 主监控逻辑
+    _monitor_network_traffic() {
+        # 获取网络接口列表
+        local interfaces=($(ip -br link show | awk '{print $1}' | grep -E '^(eth|wlan|ens)'))
+        
+        # 总流量限制
+        local total_limit=$(get_total_data_limit)
+        
+        # 存储结果的数组
+        local results=()
+        
+        # 遍历接口
+        for interface in "${interfaces[@]}"; do
+            # 跳过回环接口
+            [[ "$interface" == "lo" ]] && continue
+            
+            # 获取接口流量
+            local traffic=$(_get_network_traffic "$interface")
+            
+            # 计算使用百分比
+            local used_bytes=$(echo "$traffic" | jq -r '.total_bytes')
+            local percentage=$(calculate_traffic_percentage "$used_bytes" "$total_limit")
+            
+            # 构建完整结果
+            local result=$(jq -n \
+                --argjson traffic "$traffic" \
+                --arg total_limit "$total_limit" \
+                --arg percentage "$percentage" \
+                '{
+                    traffic: $traffic, 
+                    total_limit: $total_limit, 
+                    usage_percentage: $percentage
+                }')
+            
+            results+=("$result")
+        done
+        
+        # 输出结果
+        printf '%s\n' "${results[@]}" | jq -s '.'
+    }
+
+    # 内部函数定义结束
+
+    # 执行监控
+    _install_dependencies
+    _monitor_network_traffic
 }
 
-# 如果直接运行此脚本，则执行主函数
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    your_main_function
-fi
+# 如果直接运行脚本，不会自动执行
+# 需要显式调用 network_traffic_monitor 函数
 
 
 show_main_menu() {
@@ -506,7 +585,7 @@ show_main_menu() {
             vps_setup
             ;;  
         15) 
-            your_main_function
+            network_traffic_monitor
             ;;  
         0)
             echo -e "${GREEN}退出程序...${NC}"
