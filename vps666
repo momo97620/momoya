@@ -582,10 +582,6 @@ network_traffic_monitor() {
     _monitor_network_traffic
 }
 
-# 如果直接运行脚本，不会自动执行
-# 需要显式调用 network_traffic_monitor 函数
-
-
 show_main_menu() {
     clear
     # 定义颜色
