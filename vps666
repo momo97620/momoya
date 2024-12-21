@@ -76,18 +76,19 @@ configure_ssh_pam() {
     # 设置变量
     local SSHD_CONFIG="/etc/ssh/sshd_config"
     local COMMON_AUTH="/etc/pam.d/common-auth"
+    local SSH_KEY_DIR="$HOME/.ssh"
+    local SSH_KEY_FILE="$SSH_KEY_DIR/id_rsa"
 
     # 打印界面信息
     print_banner() {
         echo -e "\033[1;32m=======================================\033[0m"
-        echo -e "\033[1;32m       SSH 和 PAM 配置自动化脚本      \033[0m"
+        echo -e "\033[1;32m   SSH 和 PAM 配置自动化脚本（增强版）   \033[0m"
         echo -e "\033[1;32m=======================================\033[0m"
     }
 
     # 禁用 UsePAM
     disable_use_pam() {
         echo -e "\033[1;34m正在禁用 UsePAM...\033[0m"
-
         if grep -q "^UsePAM" "$SSHD_CONFIG"; then
             sed -i.bak '/^UsePAM/c\UsePAM no' "$SSHD_CONFIG"
             echo -e "\033[1;32m已将 UsePAM 设置为 no。\033[0m"
@@ -99,18 +100,41 @@ configure_ssh_pam() {
 
     # 注释掉指定的行
     comment_out_lines() {
-        echo -e "\033[1;34m正在注释掉指定行...\033[0m"
-
-        # 注释掉 "Primary block" 的注释
+        echo -e "\033[1;34m正在注释掉 PAM 模块指定行...\033[0m"
         sed -i.bak '/^# here are the per-package modules (the "Primary" block)/s/^/# /' "$COMMON_AUTH"
-
-        # 注释掉 pam_unix.so
         sed -i '/^auth\s\+\[success=1 default=ignore\]\s\+pam_unix.so nullok/s/^/# /' "$COMMON_AUTH"
 
         if grep -q "^# auth\s\+\[success=1 default=ignore\]\s\+pam_unix.so nullok" "$COMMON_AUTH"; then
             echo -e "\033[1;32m已成功注释指定的行。\033[0m"
         else
             echo -e "\033[0;31m[警告] 未成功注释指定的行，请手动检查。\033[0m"
+        fi
+    }
+
+    # 禁用密码登录
+    disable_password_auth() {
+        echo -e "\033[1;34m正在禁用密码登录...\033[0m"
+        if grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
+            sed -i '/^PasswordAuthentication/c\PasswordAuthentication no' "$SSHD_CONFIG"
+            echo -e "\033[1;32m已禁用密码登录。\033[0m"
+        else
+            echo "PasswordAuthentication no" >> "$SSHD_CONFIG"
+            echo -e "\033[1;32m已添加 PasswordAuthentication no。\033[0m"
+        fi
+    }
+
+    # 自动生成 SSH 密钥
+    generate_ssh_key() {
+        echo -e "\033[1;34m正在检查或生成 SSH 密钥对...\033[0m"
+        if [[ ! -f "$SSH_KEY_FILE" ]]; then
+            mkdir -p "$SSH_KEY_DIR"
+            chmod 700 "$SSH_KEY_DIR"
+            ssh-keygen -t rsa -b 4096 -f "$SSH_KEY_FILE" -N "" >/dev/null
+            echo -e "\033[1;32m已成功生成 SSH 密钥对。\033[0m"
+            echo -e "\033[1;34m请将以下公钥添加到目标服务器的 ~/.ssh/authorized_keys 文件中：\033[0m"
+            cat "$SSH_KEY_FILE.pub"
+        else
+            echo -e "\033[1;32mSSH 密钥已存在，跳过生成步骤。\033[0m"
         fi
     }
 
@@ -123,14 +147,16 @@ configure_ssh_pam() {
     # 主脚本逻辑
     main() {
         print_banner
-        disable_use_pam  # 禁用 UsePAM
-        comment_out_lines  # 注释掉指定行
-        prompt_manual_restart  # 提示用户手动重启 SSH 服务
+        disable_use_pam          # 禁用 UsePAM
+        comment_out_lines        # 注释掉 PAM 模块指定行
+        disable_password_auth    # 禁用密码登录
+        generate_ssh_key         # 自动生成 SSH 密钥对
+        prompt_manual_restart    # 提示用户手动重启 SSH 服务
         echo -e "\033[1;32m配置完成！\033[0m"
     }
 
     # 执行主逻辑
-    main  
+    main
 }
 
 # 调用命名空间函数
