@@ -371,6 +371,53 @@ run_reinstall_script() {
     done
 }
 
+#!/bin/bash
+
+# 确定库文件的正确路径
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPT_DIR/traffic_monitor_lib.sh"  # 使用相对路径
+
+your_main_function() {
+    # 预检查
+    traffic_monitor_namespace "check_dependencies" || {
+        echo "依赖检查失败，请安装必要工具"
+        return 1
+    }
+
+    # 检查流量
+    local interfaces=()
+    traffic_monitor_namespace "get_interfaces" interfaces || {
+        echo "获取网络接口失败"
+        return 1
+    }
+
+    # 获取云服务商
+    local cloud_provider=""
+    traffic_monitor_namespace "detect_cloud_provider" cloud_provider
+
+    # 遍历接口并检查流量
+    for interface in "${interfaces[@]}"; do
+        local stats=""
+        stats=$(traffic_monitor_namespace "get_interface_stats" "$interface" "$cloud_provider")
+        
+        # 解析流量使用率
+        local usage=$(echo "$stats" | jq -r '.usage_percentage')
+        
+        # 自定义告警逻辑
+        if (( $(echo "$usage > 80" | bc -l) )); then
+            traffic_monitor_namespace "send_alert" "$interface" "$usage"
+            
+            # 可选：记录超限日志
+            traffic_monitor_namespace "save_log" "$stats"
+        fi
+    done
+}
+
+# 如果直接运行此脚本，则执行主函数
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    your_main_function
+fi
+
 
 show_main_menu() {
     clear
@@ -459,7 +506,7 @@ show_main_menu() {
             vps_setup
             ;;  
         15) 
-            liuliangcheck_network_usage
+            your_main_function
             ;;  
         0)
             echo -e "${GREEN}退出程序...${NC}"
