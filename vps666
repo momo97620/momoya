@@ -65,7 +65,6 @@ execute_script() {
     read -p "按任意键返回主菜单..."
 }
 
-# 一键修改
 vps_setup() {
     # 检查是否以root身份运行
     if [ "$(id -u)" -ne 0 ]; then
@@ -95,14 +94,36 @@ vps_setup() {
     read -p "按任意键继续..."
 
     # 步骤2：申请密钥登录
-    echo "请生成SSH密钥对（如果尚未生成），并将公钥添加到 ~/.ssh/authorized_keys 文件中。"
-    ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N ""
+    echo "请确保 ~/.ssh 目录存在，并具有正确的权限。"
+    mkdir -p ~/.ssh
+    chmod 700 ~/.ssh
 
-    # 提示用户手动添加公钥
-    echo "请将以下公钥添加到远程服务器的~/.ssh/authorized_keys中："
-    cat ~/.ssh/id_rsa.pub
+    # 生成SSH密钥对
+    if ! ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N ""; then
+        echo "密钥生成失败，请检查错误。"
+        return 1
+    fi
 
-    read -p "按任意键继续..."
+    # 将公钥添加到 authorized_keys
+    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+    chmod 600 ~/.ssh/authorized_keys
+
+    # 自动获取本机的用户名和IP地址
+    local_user=$(whoami)
+    local_ip=$(hostname -I | awk '{print $1}')  # 获取第一个 IP 地址
+
+    # 设置远程服务器的IP地址（可以直接在脚本中定义）
+    remote_ip="192.168.1.100"  # 替换为你的VPS的IP地址或主机名
+
+    echo "远程服务器的IP地址为: $remote_ip"
+
+    # 将公钥复制到远程服务器
+    if ! ssh-copy-id -i ~/.ssh/id_rsa.pub "${local_user}@${remote_ip}"; then
+        echo "公钥复制失败，请检查连接和凭据。"
+        return 1
+    fi
+
+    echo "公钥已成功添加到远程服务器的 ~/.ssh/authorized_keys。"
 
     # 禁用密码登录
     sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
@@ -111,6 +132,9 @@ vps_setup() {
     echo "请手动重启SSH服务以应用更改：sudo systemctl restart sshd"
     read -p "按任意键返回主菜单..."
 }
+
+# 赋予脚本执行权限
+chmod +x your_script.sh
 
 
 # 设置 IPv4/6 优先级
