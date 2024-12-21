@@ -372,64 +372,6 @@ run_reinstall_script() {
 }
 
 
-#!/bin/bash
-
-# 设置时区为上海时间
-export TZ='Asia/Shanghai'
-
-# 定义函数以检查网络使用情况
-liuliangcheck_network_usage() {
-    # 使用局部变量
-    local interfaces
-    local interface
-    local rx_bytes
-    local tx_bytes
-
-    # 显示当前时间
-    echo "当前时间: $(date '+%Y-%m-%d %H:%M:%S')"
-
-    # 获取所有网络接口
-    interfaces=$(ls /sys/class/net)
-
-    # 检查是否找到网络接口
-    if [ -z "$interfaces" ]; then
-        echo "未找到任何网络接口。"
-        return 1
-    fi
-
-    # 遍历每个网络接口
-    for interface in $interfaces; do
-        # 获取流量统计
-        rx_bytes=$(cat /sys/class/net/$interface/statistics/rx_bytes)
-        tx_bytes=$(cat /sys/class/net/$interface/statistics/tx_bytes)
-
-        # 只显示活动接口
-        if [ "$rx_bytes" -gt 0 ] || [ "$tx_bytes" -gt 0 ]; then
-            echo "网络接口: $interface"
-            echo "入口流量: $(human_readable "$rx_bytes")"
-            echo "出口流量: $(human_readable "$tx_bytes")"
-            echo "-------------------------"
-        fi
-    done
-}
-
-# 转换为人类可读格式
-human_readable() {
-    local num=$1
-    if [ "$num" -lt 1024 ]; then
-        echo "${num} B"
-    elif [ "$num" -lt $((1024 * 1024)) ]; then
-        echo "$(bc <<< "scale=2; $num/1024") KB"
-    elif [ "$num" -lt $((1024 * 1024 * 1024)) ]; then
-        echo "$(bc <<< "scale=2; $num/1024/1024") MB"
-    else
-        echo "$(bc <<< "scale=2; $num/1024/1024/1024") GB"
-    fi
-}
-
-# 完成后提示用户按键继续
-read -p "按任意键返回主脚本..."
-
 show_main_menu() {
     clear
     # 定义颜色
