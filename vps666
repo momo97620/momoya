@@ -374,56 +374,67 @@ run_reinstall_script() {
 #!/bin/bash
 
 network_traffic_monitor() {
-    # 检查依赖是否已安装的标志文件
-    local FLAG_FILE="/tmp/.network_monitor_deps_installed"
+    # 设置时区为上海
+    export TZ='Asia/Shanghai'
 
-    # 依赖检查和安装函数
-    _install_dependencies() {
-        # 如果标志文件存在，说明已经安装过，直接返回
-        if [ -f "$FLAG_FILE" ]; then
-            return 0
-        fi
-
-        echo "首次运行，检查并安装必要组件..."
+    # 获取网络流量数据
+    _get_network_traffic() {
+        local interface=$1
+        local stats=$(ip -s link show "$interface")
         
-        local packages=(
-            "net-tools"      # ifconfig
-            "iproute2"       # ip命令
-            "jq"            # JSON处理
-            "bc"            # 数学计算
-            "sysstat"       # 系统统计工具
-        )
+        # 提取接收和发送字节数
+        local rx_bytes=$(echo "$stats" | awk '/RX:/{getline; print $1}')
+        local tx_bytes=$(echo "$stats" | awk '/TX:/{getline; print $1}')
+        
+        # 计算总字节数
+        local total_bytes=$((rx_bytes + tx_bytes))
+        
+        # 转换为可读格式
+        local rx_readable=$(_format_bytes "$rx_bytes")
+        local tx_readable=$(_format_bytes "$tx_bytes")
+        local total_readable=$(_format_bytes "$total_bytes")
+        
+        # 返回JSON格式的结果
+        echo "{
+            \"rx_bytes\": $rx_bytes,
+            \"tx_bytes\": $tx_bytes,
+            \"total_bytes\": $total_bytes,
+            \"rx_readable\": \"$rx_readable\",
+            \"tx_readable\": \"$tx_readable\",
+            \"total_readable\": \"$total_readable\"
+        }"
+    }
 
-        # 更新包列表
-        sudo apt-get update
-
-        # 检查并安装缺失的包
-        local missing_packages=()
-        for pkg in "${packages[@]}"; do
-            if ! dpkg -s "$pkg" >/dev/null 2>&1; then
-                missing_packages+=("$pkg")
-            fi
-        done
-
-        if [ ${#missing_packages[@]} -gt 0 ]; then
-            echo "正在安装缺失的包: ${missing_packages[*]}"
-            sudo apt-get install -y "${missing_packages[@]}"
+    # 格式化字节数为可读格式
+    _format_bytes() {
+        local bytes=$1
+        if [ "$bytes" -lt 1024 ]; then
+            echo "${bytes}B"
+        elif [ "$bytes" -lt 1048576 ]; then
+            echo "$(bc <<< "scale=2; $bytes/1024")KB"
+        elif [ "$bytes" -lt 1073741824 ]; then
+            echo "$(bc <<< "scale=2; $bytes/1048576")MB"
         else
-            echo "所有依赖包已安装"
+            echo "$(bc <<< "scale=2; $bytes/1073741824")GB"
         fi
+    }
 
-        # 创建标志文件
-        touch "$FLAG_FILE"
-        echo "依赖安装完成"
-        sleep 1  # 暂停1秒让用户看到信息
-        clear    # 清屏
+    # 获取总流量限制（这里设置一个示例值，可以根据需要修改）
+    _get_total_data_limit() {
+        echo "1073741824"  # 1GB in bytes
+    }
+
+    # 计算流量使用百分比
+    _calculate_traffic_percentage() {
+        local used=$1
+        local limit=$2
+        echo "scale=2; ($used * 100) / $limit" | bc
     }
 
     # [其他函数保持不变...]
 
     # 主监控逻辑
     _monitor_network_traffic() {
-        # 清屏开始显示新的监控信息
         clear
         
         # 获取网络接口列表
@@ -445,24 +456,42 @@ network_traffic_monitor() {
             
             echo -e "\n正在分析网络接口: $interface..."
             
-            # 获取接口流量
-            local traffic=$(_get_network_traffic "$interface")
+            # 获取接口流量数据并检查是否成功
+            local traffic
+            if ! traffic=$(_get_network_traffic "$interface"); then
+                echo "获取 $interface 的流量数据失败"
+                continue
+            fi
             
-            # 计算使用百分比
-            local used_bytes=$(echo "$traffic" | jq -r '.total_bytes')
-            local percentage=$(_calculate_traffic_percentage "$used_bytes" "$total_limit")
+            # 检查traffic是否为空或无效
+            if [ -z "$traffic" ]; then
+                echo "无法获取 $interface 的流量数据"
+                continue
+            }
             
-            # 提取可读格式的流量数据
+            # 提取数据并检查是否成功
             local rx_readable=$(echo "$traffic" | jq -r '.rx_readable')
             local tx_readable=$(echo "$traffic" | jq -r '.tx_readable')
             local total_readable=$(echo "$traffic" | jq -r '.total_readable')
+            local used_bytes=$(echo "$traffic" | jq -r '.total_bytes')
             
+            # 检查是否成功获取所有数据
+            if [ -z "$rx_readable" ] || [ -z "$tx_readable" ] || [ -z "$total_readable" ] || [ -z "$used_bytes" ]; then
+                echo "数据解析失败"
+                continue
+            }
+            
+            # 计算使用百分比
+            local percentage
+            percentage=$(echo "scale=2; ($used_bytes * 100) / $total_limit" | bc)
+            
+            # 显示结果
             echo -e "\n接口 $interface 流量统计:"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "↓ 接收流量:  $rx_readable"
             echo "↑ 发送流量:  $tx_readable"
             echo "✦ 总流量:    $total_readable"
-            echo "⚠ 流量限制:  $total_limit"
+            echo "⚠ 流量限制:  $(_format_bytes $total_limit)"
             echo "⚡ 使用比例:  ${percentage}%"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             
@@ -472,32 +501,19 @@ network_traffic_monitor() {
             elif (( $(echo "$percentage > 50" | bc -l) )); then
                 echo -e "\033[33m注意: 流量使用已超过50%\033[0m"
             fi
-            
-            # 构建完整结果
-            local result=$(jq -n \
-                --argjson traffic "$traffic" \
-                --arg total_limit "$total_limit" \
-                --arg percentage "$percentage" \
-                '{
-                    traffic: $traffic, 
-                    total_limit: $total_limit, 
-                    usage_percentage: $percentage
-                }')
-            
-            results+=("$result")
         done
         
         echo -e "\n=== 监控报告生成完成 ===\n"
     }
 
     # 执行监控
-    _install_dependencies    # 现在只会在首次运行时安装依赖
+    _install_dependencies
     _monitor_network_traffic
 
     # 等待用户输入
     echo -e "\n按任意键返回主菜单..."
     read -n 1 -s -r
-    echo # 打印一个换行
+    echo
 }
 
 show_main_menu() {
