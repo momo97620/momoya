@@ -371,50 +371,63 @@ run_reinstall_script() {
     done
 }
 
-# 定义函数
-liuliangcheck_network_usage() {
-    # 获取默认网络接口
-    INTERFACE=$(ip route | grep default | awk '{print $5}')
+#!/bin/bash
 
-    # 检查网络接口是否存在
-    if [ -z "$INTERFACE" ]; then
-        echo "未找到默认网络接口。"
+# 设置时区为上海时间
+export TZ='Asia/Shanghai'
+
+# 自动赋予执行权限
+chmod +x "$0"
+
+# 显示当前时间
+echo "当前时间: $(date '+%Y-%m-%d %H:%M:%S')"
+
+# 定义函数以检查网络使用情况
+liuliangcheck_network_usage() {
+    # 获取所有网络接口
+    INTERFACES=$(ls /sys/class/net)
+
+    # 检查是否找到网络接口
+    if [ -z "$INTERFACES" ]; then
+        echo "未找到任何网络接口。"
         return 1
     fi
 
-    # 获取流量统计
-    RX_BYTES=$(cat /sys/class/net/$INTERFACE/statistics/rx_bytes)
-    TX_BYTES=$(cat /sys/class/net/$INTERFACE/statistics/tx_bytes)
+    # 遍历每个网络接口
+    for INTERFACE in $INTERFACES; do
+        # 获取流量统计
+        RX_BYTES=$(cat /sys/class/net/$INTERFACE/statistics/rx_bytes)
+        TX_BYTES=$(cat /sys/class/net/$INTERFACE/statistics/tx_bytes)
 
-    # 假设你的流量限制为 10GB（可以根据需要修改）
-    LIMIT=$((10 * 1024 * 1024 * 1024))  # 10GB 转换为字节
-
-    # 计算已使用流量和剩余流量
-    USED_BYTES=$((RX_BYTES + TX_BYTES))
-    REMAINING_BYTES=$((LIMIT - USED_BYTES))
-
-    # 转换为人类可读格式
-    function human_readable {
-        num=$1
-        if [ "$num" -lt 1024 ]; then
-            echo "${num} B"
-        elif [ "$num" -lt $((1024 * 1024)) ]; then
-            echo "$(bc <<< "scale=2; $num/1024") KB"
-        elif [ "$num" -lt $((1024 * 1024 * 1024)) ]; then
-            echo "$(bc <<< "scale=2; $num/1024/1024") MB"
-        else
-            echo "$(bc <<< "scale=2; $num/1024/1024/1024") GB"
+        # 只显示活动接口
+        if [ "$RX_BYTES" -gt 0 ] || [ "$TX_BYTES" -gt 0 ]; then
+            echo "网络接口: $INTERFACE"
+            echo "入口流量: $(human_readable $RX_BYTES)"
+            echo "出口流量: $(human_readable $TX_BYTES)"
+            echo "-------------------------"
         fi
-    }
+    done
+}
 
-    # 输出结果
-    echo "网络接口: $INTERFACE"
-    echo "已使用流量: $(human_readable $USED_BYTES)"
-    echo "剩余流量: $(human_readable $REMAINING_BYTES)"
+# 转换为人类可读格式
+function human_readable {
+    num=$1
+    if [ "$num" -lt 1024 ]; then
+        echo "${num} B"
+    elif [ "$num" -lt $((1024 * 1024)) ]; then
+        echo "$(bc <<< "scale=2; $num/1024") KB"
+    elif [ "$num" -lt $((1024 * 1024 * 1024)) ]; then
+        echo "$(bc <<< "scale=2; $num/1024/1024") MB"
+    else
+        echo "$(bc <<< "scale=2; $num/1024/1024/1024") GB"
+    fi
 }
 
 # 在主脚本中调用函数
 liuliangcheck_network_usage
+
+# 完成后提示用户按键继续
+read -p "按任意键返回主脚本..."
 
 
 show_main_menu() {
