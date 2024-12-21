@@ -374,17 +374,15 @@ run_reinstall_script() {
 #!/bin/bash
 
 # 网络流量监控函数库
-
-# 网络流量监控主函数
 network_traffic_monitor() {
     # 依赖检查和安装函数
     _install_dependencies() {
         local packages=(
             "net-tools"      # ifconfig
             "iproute2"       # ip命令
-            "jq"             # JSON处理
-            "bc"             # 数学计算
-            "sysstat"        # 系统统计工具
+            "jq"            # JSON处理
+            "bc"            # 数学计算
+            "sysstat"       # 系统统计工具
         )
 
         # 更新包列表
@@ -408,25 +406,25 @@ network_traffic_monitor() {
 
     # 获取网络接口流量信息
     _get_network_traffic() {
-        local interface=$1
+        local interface="${1:-eth0}"  # 默认使用eth0接口
         
         # 使用 /proc/net/dev 获取详细流量信息
         local rx_bytes=$(cat /proc/net/dev | grep "$interface" | awk '{print $2}')
         local tx_bytes=$(cat /proc/net/dev | grep "$interface" | awk '{print $10}')
         
         # 转换为可读格式
-        local rx_readable=$(_convert_bytes "$rx_bytes")
-        local tx_readable=$(_convert_bytes "$tx_bytes")
+        local rx_readable=$(_convert_bytes "${rx_bytes:-0}")
+        local tx_readable=$(_convert_bytes "${tx_bytes:-0}")
         
         # 计算总流量
-        local total_bytes=$((rx_bytes + tx_bytes))
+        local total_bytes=$((${rx_bytes:-0} + ${tx_bytes:-0}))
         local total_readable=$(_convert_bytes "$total_bytes")
         
         # 输出JSON格式
         jq -n \
             --arg interface "$interface" \
-            --arg rx_bytes "$rx_bytes" \
-            --arg tx_bytes "$tx_bytes" \
+            --arg rx_bytes "${rx_bytes:-0}" \
+            --arg tx_bytes "${tx_bytes:-0}" \
             --arg rx_readable "$rx_readable" \
             --arg tx_readable "$tx_readable" \
             --arg total_bytes "$total_bytes" \
@@ -444,7 +442,8 @@ network_traffic_monitor() {
 
     # 字节转换为可读格式
     _convert_bytes() {
-        local bytes=$1
+        local bytes="${1:-0}"  # 如果没有参数，默认为0
+        
         awk -v bytes="$bytes" 'BEGIN {
             units[0] = "B"; 
             units[1] = "KB"; 
@@ -462,7 +461,7 @@ network_traffic_monitor() {
     }
 
     # 获取系统总流量限制
-    get_total_data_limit() {
+    _get_total_data_limit() {
         # 这里需要根据不同的网络服务商和套餐自定义
         local provider=$(_detect_network_provider)
         
@@ -488,9 +487,9 @@ network_traffic_monitor() {
         local ip=$(hostname -I | awk '{print $1}')
         
         # 这里可以添加更复杂的IP段识别
-        if [[ "$ip" == 192.168* ]]; then
+        if [[ "$ip" == "192.168"* ]]; then
             echo "china_mobile"
-        elif [[ "$ip" == 10.* ]]; then
+        elif [[ "$ip" == "10."* ]]; then
             echo "china_telecom"
         else
             echo "china_unicom"
@@ -498,9 +497,9 @@ network_traffic_monitor() {
     }
 
     # 计算流量使用百分比
-    calculate_traffic_percentage() {
-        local used_bytes=$1
-        local total_limit=$2
+    _calculate_traffic_percentage() {
+        local used_bytes="${1:-0}"
+        local total_limit="${2:-500GB}"
         
         # 转换总限制为字节
         local total_bytes=$(_convert_limit_to_bytes "$total_limit")
@@ -514,7 +513,7 @@ network_traffic_monitor() {
 
     # 将流量限制转换为字节
     _convert_limit_to_bytes() {
-        local limit=$1
+        local limit="${1:-500GB}"
         
         # 处理不同单位
         case "${limit: -2}" in
@@ -542,7 +541,7 @@ network_traffic_monitor() {
         local interfaces=($(ip -br link show | awk '{print $1}' | grep -E '^(eth|wlan|ens)'))
         
         # 总流量限制
-        local total_limit=$(get_total_data_limit)
+        local total_limit=$(_get_total_data_limit)
         
         # 存储结果的数组
         local results=()
@@ -557,7 +556,7 @@ network_traffic_monitor() {
             
             # 计算使用百分比
             local used_bytes=$(echo "$traffic" | jq -r '.total_bytes')
-            local percentage=$(calculate_traffic_percentage "$used_bytes" "$total_limit")
+            local percentage=$(_calculate_traffic_percentage "$used_bytes" "$total_limit")
             
             # 构建完整结果
             local result=$(jq -n \
