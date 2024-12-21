@@ -372,8 +372,6 @@ run_reinstall_script() {
 }
 
 #!/bin/bash
-set -e  # 遇到错误立即退出
-set -u  # 使用未定义变量时报错
 
 # 网络流量监控函数库
 
