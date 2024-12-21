@@ -65,7 +65,6 @@ execute_script() {
     read -p "按任意键返回主菜单..."
 }
 
-# 密钥修改
 # 定义 configure_ssh_pam 函数
 configure_ssh_pam() {
     # 检查是否以 root 权限运行
@@ -79,6 +78,7 @@ configure_ssh_pam() {
     local COMMON_AUTH="/etc/pam.d/common-auth"
     local SSH_KEY_DIR="$HOME/.ssh"
     local SSH_KEY_FILE="$SSH_KEY_DIR/id_rsa"
+    local AUTHORIZED_KEYS="$SSH_KEY_DIR/authorized_keys"
 
     # 打印界面信息
     print_banner() {
@@ -124,7 +124,7 @@ configure_ssh_pam() {
         fi
     }
 
-    # 自动生成 SSH 密钥
+    # 自动生成 SSH 密钥并添加到本机
     generate_ssh_key() {
         echo -e "\033[1;34m正在检查或生成 SSH 密钥对...\033[0m"
         if [[ ! -f "$SSH_KEY_FILE" ]]; then
@@ -132,8 +132,15 @@ configure_ssh_pam() {
             chmod 700 "$SSH_KEY_DIR"
             ssh-keygen -t rsa -b 4096 -f "$SSH_KEY_FILE" -N "" >/dev/null
             echo -e "\033[1;32m已成功生成 SSH 密钥对。\033[0m"
-            echo -e "\033[1;34m请将以下公钥添加到目标服务器的 ~/.ssh/authorized_keys 文件中：\033[0m"
-            cat "$SSH_KEY_FILE.pub"
+
+            # 将公钥添加到 authorized_keys
+            if [[ ! -f "$AUTHORIZED_KEYS" ]]; then
+                touch "$AUTHORIZED_KEYS"
+                chmod 600 "$AUTHORIZED_KEYS"
+            fi
+
+            cat "$SSH_KEY_FILE.pub" >> "$AUTHORIZED_KEYS"
+            echo -e "\033[1;32m已将公钥添加到本机的 authorized_keys 文件。\033[0m"
         else
             echo -e "\033[1;32mSSH 密钥已存在，跳过生成步骤。\033[0m"
         fi
@@ -145,11 +152,27 @@ configure_ssh_pam() {
         echo -e "\033[1;32m命令：systemctl restart sshd\033[0m"
     }
 
+    # 主脚本逻辑
+    main() {
+        print_banner
+        disable_use_pam          # 禁用 UsePAM
+        comment_out_lines        # 注释掉 PAM 模块指定行
+        disable_password_auth    # 禁用密码登录
+        generate_ssh_key         # 自动生成 SSH 密钥对并添加到本机
+        prompt_manual_restart    # 提示用户手动重启 SSH 服务
+        echo -e "\033[1;32m配置完成！\033[0m"
+    }
 
-    # 返回主脚本
-    echo -e "\033[1;34m按任意键返回主菜单...\033[0m"
+    # 执行主逻辑
+    main
+
+    # 返回提示
+    echo -e "\033[1;34m按任意键退出脚本...\033[0m"
     read -n 1 -s
 }
+
+# 直接调用 configure_ssh_pam 函数
+configure_ssh_pam
 
 vps_setup() {
     # 检查是否以root身份运行
