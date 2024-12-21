@@ -65,6 +65,73 @@ execute_script() {
     read -p "按任意键返回主菜单..."
 }
 
+# 定义命名空间
+configure_ssh_pam() {
+    # 检查是否以 root 权限运行
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "\033[0;31m[错误] 请以 root 权限运行此脚本。\033[0m"
+        exit 1
+    fi
+
+    # 设置变量
+    local SSHD_CONFIG="/etc/ssh/sshd_config"
+    local COMMON_AUTH="/etc/pam.d/common-auth"
+
+    # 打印界面信息
+    print_banner() {
+        echo -e "\033[1;32m=======================================\033[0m"
+        echo -e "\033[1;32m       SSH 和 PAM 配置自动化脚本      \033[0m"
+        echo -e "\033[1;32m=======================================\033[0m"
+    }
+
+    # 禁用 UsePAM
+    disable_use_pam() {
+        echo -e "\033[1;34m正在禁用 UsePAM...\033[0m"
+
+        if grep -q "^UsePAM yes" "$SSHD_CONFIG"; then
+            sed -i.bak 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
+            echo -e "\033[1;32m已将 UsePAM 设置为 no。\033[0m"
+        fi
+
+        if ! grep -q "^UsePAM" "$SSHD_CONFIG"; then
+            echo "UsePAM no" >> "$SSHD_CONFIG"
+            echo -e "\033[1;32m已添加 UsePAM no。\033[0m"
+        fi
+    }
+
+    # 注释掉 pam_unix.so 行
+    comment_out_pam_unix() {
+        echo -e "\033[1;34m正在注释掉 pam_unix.so 行...\033[0m"
+
+        # 确保注释掉指定行
+        if grep -q "auth\s\+\[success=1 default=ignore\]\s\+pam_unix.so" "$COMMON_AUTH"; then
+            sed -i.bak 's/^\(auth\s\+\[success=1 default=ignore\]\s\+pam_unix.so\)/#\1/' "$COMMON_AUTH"
+            echo -e "\033[1;32m已注释掉 pam_unix.so 行。\033[0m"
+        else
+            echo -e "\033[1;33m未找到指定的 pam_unix.so 行。\033[0m"
+        fi
+    }
+
+    # 提示用户手动重启 SSH 服务
+    prompt_manual_restart() {
+        echo -e "\033[1;34m请手动重启 SSH 服务，以应用更改：\033[0m"
+        echo -e "\033[1;32m命令：systemctl restart sshd\033[0m"
+    }
+
+    # 主脚本逻辑
+    main() {
+        print_banner
+        disable_use_pam  # 禁用 UsePAM
+        comment_out_pam_unix  # 注释掉 pam_unix.so 行
+        prompt_manual_restart  # 提示用户手动重启 SSH 服务
+        echo -e "\033[1;32m配置完成！\033[0m"
+    }
+
+    # 执行主逻辑
+    main  
+}
+
+
 vps_setup() {
     # 检查是否以root身份运行
     if [ "$(id -u)" -ne 0 ]; then
@@ -373,7 +440,7 @@ show_main_menu() {
             execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
             ;;
         3)
-            execute_script "https://gist.githubusercontent.com/momo97620/035985261aa7f946270590a15ca4c9f6/raw/0a81d05bcbfdf1b3f8c94ba7203044c55f2e030e/miyao" "配置密钥登录完成。"
+            configure_ssh_pam
             ;;
         4)
             execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
