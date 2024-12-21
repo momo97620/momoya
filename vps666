@@ -375,38 +375,10 @@ network_traffic_monitor() {
     # 设置时区为上海
     export TZ='Asia/Shanghai'
 
-    # 使用 ifconfig 获取更准确的网络流量数据
+    # 获取网络流量数据
     _get_network_traffic() {
         local interface=$1
-        local stats
-        
-        # 尝试使用 ifconfig 获取数据
-        if command -v ifconfig >/dev/null 2>&1; then
-            stats=$(ifconfig "$interface")
-            if [ $? -eq 0 ]; then
-                local rx_bytes=$(echo "$stats" | grep "RX packets" | awk '{print $5}')
-                local tx_bytes=$(echo "$stats" | grep "TX packets" | awk '{print $5}')
-                
-                # 如果 ifconfig 输出格式不同，尝试替代方案
-                if [ -z "$rx_bytes" ] || [ -z "$tx_bytes" ]; then
-                    rx_bytes=$(echo "$stats" | grep "RX bytes" | cut -d: -f2 | awk '{print $1}')
-                    tx_bytes=$(echo "$stats" | grep "TX bytes" | cut -d: -f3 | awk '{print $1}')
-                fi
-                
-                if [ -n "$rx_bytes" ] && [ -n "$tx_bytes" ]; then
-                    local total_bytes=$((rx_bytes + tx_bytes))
-                    local rx_readable=$(_format_bytes "$rx_bytes")
-                    local tx_readable=$(_format_bytes "$tx_bytes")
-                    local total_readable=$(_format_bytes "$total_bytes")
-                    
-                    echo "{\"rx_bytes\": $rx_bytes, \"tx_bytes\": $tx_bytes, \"total_bytes\": $total_bytes, \"rx_readable\": \"$rx_readable\", \"tx_readable\": \"$tx_readable\", \"total_readable\": \"$total_readable\"}"
-                    return 0
-                fi
-            fi
-        fi
-        
-        # 如果 ifconfig 失败，回退到 /proc/net/dev
-        stats=$(grep "$interface:" /proc/net/dev)
+        local stats=$(grep "$interface:" /proc/net/dev)
         if [ -z "$stats" ]; then
             echo "Error: 无法获取接口 $interface 的数据" >&2
             return 1
@@ -428,7 +400,7 @@ network_traffic_monitor() {
         echo "{\"rx_bytes\": $rx_bytes, \"tx_bytes\": $tx_bytes, \"total_bytes\": $total_bytes, \"rx_readable\": \"$rx_readable\", \"tx_readable\": \"$tx_readable\", \"total_readable\": \"$total_readable\"}"
     }
 
-    # 改进的格式化函数，提供更精确的单位转换
+    # 格式化字节数为可读格式
     _format_bytes() {
         local bytes=$1
         if [ -z "$bytes" ] || [ "$bytes" -eq 0 ]; then
@@ -436,63 +408,83 @@ network_traffic_monitor() {
             return
         fi
         
-        local units=("B" "KB" "MB" "GB" "TB")
-        local unit=0
-        local value=$bytes
-        
-        while [ $(echo "$value >= 1024" | bc -l) -eq 1 ] && [ $unit -lt 4 ]; do
-            value=$(echo "scale=2; $value/1024" | bc -l)
-            unit=$((unit + 1))
-        done
-        
-        # 去除末尾的.00
-        value=$(echo $value | sed 's/\.00$//')
-        printf "%s%s" "$value" "${units[$unit]}"
-    }
-
-    # 获取实际的月度流量限制（可以从配置文件读取）
-    _get_total_data_limit() {
-        # 这里可以改为从配置文件读取实际的流量限制
-        echo "10737418240"  # 10GB in bytes
-    }
-
-    # 保存历史数据以便比较
-    _save_traffic_data() {
-        local interface=$1
-        local rx_bytes=$2
-        local tx_bytes=$3
-        local timestamp=$(date +%s)
-        local data_file="/tmp/network_traffic_${interface}.dat"
-        
-        echo "$timestamp $rx_bytes $tx_bytes" > "$data_file"
-    }
-
-    # 获取历史数据计算速率
-    _get_traffic_rate() {
-        local interface=$1
-        local current_rx=$2
-        local current_tx=$3
-        local data_file="/tmp/network_traffic_${interface}.dat"
-        
-        if [ -f "$data_file" ]; then
-            local previous_data=$(cat "$data_file")
-            local previous_time=$(echo "$previous_data" | awk '{print $1}')
-            local previous_rx=$(echo "$previous_data" | awk '{print $2}')
-            local previous_tx=$(echo "$previous_data" | awk '{print $3}')
-            local current_time=$(date +%s)
-            local time_diff=$((current_time - previous_time))
-            
-            if [ $time_diff -gt 0 ]; then
-                local rx_rate=$(( (current_rx - previous_rx) / time_diff ))
-                local tx_rate=$(( (current_tx - previous_tx) / time_diff ))
-                echo "{\"rx_rate\": $rx_rate, \"tx_rate\": $tx_rate}"
-            fi
+        if [ "$bytes" -lt 1024 ]; then
+            printf "%.2fB" "$bytes"
+        elif [ "$bytes" -lt 1048576 ]; then
+            printf "%.2fKB" "$(echo "scale=2; $bytes/1024" | bc)"
+        elif [ "$bytes" -lt 1073741824 ]; then
+            printf "%.2fMB" "$(echo "scale=2; $bytes/1048576" | bc)"
+        else
+            printf "%.2fGB" "$(echo "scale=2; $bytes/1073741824" | bc)"
         fi
     }
 
-    # 主监控逻辑保持不变...
-    # [之前的主监控逻辑代码]
+    # 获取总流量限制
+    _get_total_data_limit() {
+        echo "1073741824"  # 200GB in bytes
+    }
+
+    # 主监控逻辑
+    _monitor_network_traffic() {
+        clear
+        local interfaces=($(ls /sys/class/net | grep -E '^(eth|wlan|ens)'))
+        local total_limit=$(_get_total_data_limit)
+        local total_limit_readable=$(_format_bytes "$total_limit")
+        
+        echo -e "\n=== 网络流量监控报告 ===\n"
+        echo "监控时间: $(date '+%Y-%m-%d %H:%M:%S')"
+        
+        for interface in "${interfaces[@]}"; do
+            [[ "$interface" == "lo" ]] && continue
+            
+            if [ ! -d "/sys/class/net/$interface" ]; then
+                continue
+            fi
+            
+            echo -e "\n正在分析网络接口: $interface..."
+            
+            local traffic
+            if ! traffic=$(_get_network_traffic "$interface"); then
+                echo "获取 $interface 的流量数据失败"
+                continue
+            fi
+            
+            local rx_readable=$(echo "$traffic" | jq -r '.rx_readable')
+            local tx_readable=$(echo "$traffic" | jq -r '.tx_readable')
+            local total_readable=$(echo "$traffic" | jq -r '.total_readable')
+            local used_bytes=$(echo "$traffic" | jq -r '.total_bytes')
+            
+            local percentage
+            percentage=$(echo "scale=2; ($used_bytes * 100) / $total_limit" | bc)
+            
+            echo -e "\n接口 $interface 流量统计:"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "↓ 接收流量:  $rx_readable"
+            echo "↑ 发送流量:  $tx_readable"
+            echo "✦ 总流量:    $total_readable"
+            echo "⚠ 流量限制:  $total_limit_readable"
+            echo "⚡ 使用比例:  ${percentage}%"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            
+            if (( $(echo "$percentage > 80" | bc -l) )); then
+                echo -e "\033[31m警告: 流量使用已超过80%！\033[0m"
+            elif (( $(echo "$percentage > 50" | bc -l) )); then
+                echo -e "\033[33m注意: 流量使用已超过50%\033[0m"
+            fi
+        done
+        
+        echo -e "\n=== 监控报告生成完成 ===\n"
+    }
+
+    # 执行监控
+    _monitor_network_traffic
+
+    # 等待用户输入
+    echo -e "\n按任意键返回主菜单..."
+    read -n 1 -s -r
+    echo
 }
+
 
 show_main_menu() {
     clear
