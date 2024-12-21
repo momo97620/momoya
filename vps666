@@ -458,7 +458,7 @@ show_main_menu() {
     printf "${GREEN}%-3s %-30s${NC}\n" "15." "流量统计"
     printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
-    read -p "请输入选项 (0-13): " choice
+    read -p "请输入选项 (0-15): " choice
     case $choice in
         1)
             execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
