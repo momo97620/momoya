@@ -370,136 +370,6 @@ run_reinstall_script() {
     done
 }
 
-#!/bin/bash
-
-# 定义命名空间
-declare -A RAINBOW_PROMPT
-
-# 颜色代码命名空间
-RAINBOW_PROMPT[RED]='\033[0;31m'
-RAINBOW_PROMPT[GREEN]='\033[0;32m'
-RAINBOW_PROMPT[YELLOW]='\033[0;33m'
-RAINBOW_PROMPT[BLUE]='\033[0;34m'
-RAINBOW_PROMPT[PURPLE]='\033[0;35m'
-RAINBOW_PROMPT[CYAN]='\033[0;36m'
-RAINBOW_PROMPT[WHITE]='\033[0;37m'
-RAINBOW_PROMPT[RESET]='\033[0m'
-
-# 配置命名空间
-RAINBOW_PROMPT[BACKUP_FILE]="$HOME/.bashrc.backup"
-RAINBOW_PROMPT[BASHRC_FILE]="$HOME/.bashrc"
-
-# 工具函数命名空间
-RAINBOW_PROMPT::print_message() {
-    local color=$1
-    local message=$2
-    echo -e "${RAINBOW_PROMPT[$color]}$message${RAINBOW_PROMPT[RESET]}"
-}
-
-RAINBOW_PROMPT::show_menu() {
-    clear
-    echo "================================"
-    echo "       VPS主机名颜色设置        "
-    echo "================================"
-    echo "1. 设置彩虹色主机名"
-    echo "2. 恢复默认设置"
-    echo "3. 退出程序"
-    echo "================================"
-}
-
-RAINBOW_PROMPT::create_backup() {
-    if [ ! -f "${RAINBOW_PROMPT[BACKUP_FILE]}" ]; then
-        cp "${RAINBOW_PROMPT[BASHRC_FILE]}" "${RAINBOW_PROMPT[BACKUP_FILE]}"
-    fi
-}
-
-RAINBOW_PROMPT::press_any_key() {
-    RAINBOW_PROMPT::print_message "YELLOW" "\n按任意键返回主菜单..."
-    read -n 1 -s -r
-}
-
-# 核心功能命名空间
-RAINBOW_PROMPT::create_rainbow_prompt() {
-    RAINBOW_PROMPT::create_backup
-    
-    # 修改 .bashrc 文件
-    sed -i '/^PS1=/d' "${RAINBOW_PROMPT[BASHRC_FILE]}"
-    
-    # 构建彩虹PS1
-    local rainbow_ps1="PS1=\""
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[RED]}\\]r"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[GREEN]}\\]o"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[YELLOW]}\\]o"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[BLUE]}\\]t"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[PURPLE]}\\]@"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[CYAN]}\\]h"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[RED]}\\]k"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[GREEN]}\\]g"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[YELLOW]}\\]1"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[BLUE]}\\]1"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[PURPLE]}\\]-"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[CYAN]}\\]2"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[RED]}\\]0"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[GREEN]}\\]2"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[YELLOW]}\\]4"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[BLUE]}\\]1"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[PURPLE]}\\]0"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[CYAN]}\\]0"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[RED]}\\]3"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[GREEN]}\\]1"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[YELLOW]}\\]3"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[BLUE]}\\]1"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[PURPLE]}\\]2"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[CYAN]}\\]0"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[RED]}\\]4"
-    rainbow_ps1+="\\[${RAINBOW_PROMPT[RESET]}\\]:\\w\\$ \""
-
-    # 写入新的PS1设置
-    echo "$rainbow_ps1" >> "${RAINBOW_PROMPT[BASHRC_FILE]}"
-    
-    source "${RAINBOW_PROMPT[BASHRC_FILE]}"
-    RAINBOW_PROMPT::print_message "GREEN" "\n彩虹效果已成功应用！"
-}
-
-RAINBOW_PROMPT::restore_default() {
-    if [ -f "${RAINBOW_PROMPT[BACKUP_FILE]}" ]; then
-        cp "${RAINBOW_PROMPT[BACKUP_FILE]}" "${RAINBOW_PROMPT[BASHRC_FILE]}"
-        source "${RAINBOW_PROMPT[BASHRC_FILE]}"
-        RAINBOW_PROMPT::print_message "GREEN" "\n已成功恢复默认设置！"
-    else
-        RAINBOW_PROMPT::print_message "RED" "\n未找到备份文件，无法恢复默认设置！"
-    fi
-}
-
-# 主程序命名空间
-RAINBOW_PROMPT::main() {
-    while true; do
-        RAINBOW_PROMPT::show_menu
-        read -p "请输入选项 [1-3]: " choice
-        
-        case $choice in
-            1)
-                RAINBOW_PROMPT::print_message "CYAN" "\n正在设置彩虹色主机名..."
-                RAINBOW_PROMPT::create_rainbow_prompt
-                RAINBOW_PROMPT::press_any_key
-                ;;
-            2)
-                RAINBOW_PROMPT::print_message "CYAN" "\n正在恢复默认设置..."
-                RAINBOW_PROMPT::restore_default
-                RAINBOW_PROMPT::press_any_key
-                ;;
-            3)
-                RAINBOW_PROMPT::print_message "GREEN" "\n感谢使用，再见！"
-                exit 0
-                ;;
-            *)
-                RAINBOW_PROMPT::print_message "RED" "\n无效的选项，请重新选择！"
-                RAINBOW_PROMPT::press_any_key
-                ;;
-        esac
-    done
-}
-
 
 show_main_menu() {
     clear
@@ -539,7 +409,6 @@ show_main_menu() {
     printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
     printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
     printf "${GREEN}%-3s %-30s${NC}\n" "14." "TG关键词订阅"
-    printf "${GREEN}%-3s %-30s${NC}\n" "15." "主机自定义颜色"
     printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
     read -p "请输入选项 (0-15): " choice
@@ -586,10 +455,6 @@ show_main_menu() {
             ;;  
         14) 
              execute_script "https://raw.githubusercontent.com/ecouus/Feed-Push/refs/heads/main/bot_deploy.sh" "TG关键词订阅部署完成。"
-            ;;  
-        15) 
-            source "${SCRIPT_DIR}/rainbow_prompt.sh"
-            RAINBOW_PROMPT::main
             ;;  
         0)
             echo -e "${GREEN}退出程序...${NC}"
