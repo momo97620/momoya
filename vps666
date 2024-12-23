@@ -593,7 +593,8 @@ show_main_menu() {
              execute_script "https://raw.githubusercontent.com/ecouus/Feed-Push/refs/heads/main/bot_deploy.sh" "TG关键词订阅部署完成。"
             ;;  
         15) 
-            declare -A RAINBOW_PROMPT
+            source "${SCRIPT_DIR}/rainbow_prompt.sh"
+            RAINBOW_PROMPT::main
             ;;  
         0)
             echo -e "${GREEN}退出程序...${NC}"
