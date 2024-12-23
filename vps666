@@ -500,11 +500,6 @@ RAINBOW_PROMPT::main() {
     done
 }
 
-# 只在直接执行时运行主程序，被source时不运行
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    RAINBOW_PROMPT::main
-fi
-
 
 show_main_menu() {
     clear
