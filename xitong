@@ -53,16 +53,25 @@ get_system_info() {
 
 # 获取地理位置信息
 get_location() {
-    local ipinfo=$(curl -s ipinfo.io)
-    local country=$(echo "$ipinfo" | grep 'country' | awk -F': ' '{print $2}' | tr -d '",')
-    local city=$(echo "$ipinfo" | grep 'city' | awk -F': ' '{print $2}' | tr -d '",')
-    local isp=$(echo "$ipinfo" | grep 'org' | awk -F': ' '{print $2}' | tr -d '",')
-    
-    if [ -n "$country" ] && [ -n "$city" ]; then
-        echo "$country $city|$isp"
-    else
-        echo "未知位置|未知运营商"
-    fi
+    local services=("ipinfo.io" "ip-api.com" "freegeoip.net")
+    local ipinfo
+    local country
+    local city
+    local isp
+
+    for service in "${services[@]}"; do
+        ipinfo=$(curl -s "https://$service")
+        country=$(echo "$ipinfo" | grep 'country' | awk -F': ' '{print $2}' | tr -d '",')
+        city=$(echo "$ipinfo" | grep 'city' | awk -F': ' '{print $2}' | tr -d '",')
+        isp=$(echo "$ipinfo" | grep 'org' | awk -F': ' '{print $2}' | tr -d '",')
+
+        if [ -n "$country" ] && [ -n "$city" ]; then
+            echo "$country $city|$isp"
+            return
+        fi
+    done
+
+    echo "未知位置|未知运营商"
 }
 
 # 获取网络流量
