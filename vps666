@@ -252,7 +252,6 @@ set_ssh_keepalive() {
     local count=10
 
     echo "正在配置 SSH 客户端保持连接参数..."
-
     if [[ ! -f "$config_file" ]]; then
         echo "错误：SSH 配置文件 $config_file 不存在。" >&2
         exit 1
@@ -409,7 +408,7 @@ show_main_menu() {
     printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新脚本"
     printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh链接"
     printf "${GREEN}%-3s %-30s${NC}\n" "13." "DD系统"
-    printf "${GREEN}%-3s %-30s${NC}\n" "14." "一键系统"
+    printf "${GREEN}%-3s %-30s${NC}\n" "14." "TG关键词订阅"
     printf "${GREEN}%-3s %-30s${NC}\n" "15." "流量统计"
     printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
@@ -456,7 +455,7 @@ show_main_menu() {
             run_reinstall_script
             ;;  
         14) 
-            vps_setup
+             execute_script "https://raw.githubusercontent.com/ecouus/Feed-Push/refs/heads/main/bot_deploy.sh && sudo chmod +x bot_deploy.sh && ./bot_deploy.sh"
             ;;  
         15) 
             network_traffic_monitor
