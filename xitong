@@ -1,111 +1,92 @@
-#!/bin/bash
+linux_ps() {
 
-# 检查是否安装必要工具
-check_dependencies() {
-    for cmd in curl jq; do
-        if ! command -v $cmd &>/dev/null; then
-            sudo apt update && sudo apt install -y $cmd &>/dev/null
-        fi
-    done
+	clear
+	send_stats "系统信息查询"
+
+	ip_address
+
+	local cpu_info=$(lscpu | awk -F': +' '/Model name:/ {print $2; exit}')
+
+	local cpu_usage_percent=$(awk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf "%.0f\n", (($2+$4-u1) * 100 / (t-t1))}' \
+		<(grep 'cpu ' /proc/stat) <(sleep 1; grep 'cpu ' /proc/stat))
+
+	local cpu_cores=$(nproc)
+
+	local cpu_freq=$(cat /proc/cpuinfo | grep "MHz" | head -n 1 | awk '{printf "%.1f GHz\n", $4/1000}')
+
+	local mem_info=$(free -b | awk 'NR==2{printf "%.2f/%.2f MB (%.2f%%)", $3/1024/1024, $2/1024/1024, $3*100/$2}')
+
+	local disk_info=$(df -h | awk '$NF=="/"{printf "%s/%s (%s)", $3, $2, $5}')
+
+	local ipinfo=$(curl -s ipinfo.io)
+	local country=$(echo "$ipinfo" | grep 'country' | awk -F': ' '{print $2}' | tr -d '",')
+	local city=$(echo "$ipinfo" | grep 'city' | awk -F': ' '{print $2}' | tr -d '",')
+	local isp_info=$(echo "$ipinfo" | grep 'org' | awk -F': ' '{print $2}' | tr -d '",')
+
+	local load=$(uptime | awk '{print $(NF-2), $(NF-1), $NF}')
+	local dns_addresses=$(awk '/^nameserver/{printf "%s ", $2} END {print ""}' /etc/resolv.conf)
+
+
+	local cpu_arch=$(uname -m)
+
+	local hostname=$(uname -n)
+
+	local kernel_version=$(uname -r)
+
+	local congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control)
+	local queue_algorithm=$(sysctl -n net.core.default_qdisc)
+
+	local os_info=$(grep PRETTY_NAME /etc/os-release | cut -d '=' -f2 | tr -d '"')
+
+	output_status
+
+	local current_time=$(date "+%Y-%m-%d %I:%M %p")
+
+
+	local swap_info=$(free -m | awk 'NR==3{used=$3; total=$2; if (total == 0) {percentage=0} else {percentage=used*100/total}; printf "%dMB/%dMB (%d%%)", used, total, percentage}')
+
+	local runtime=$(cat /proc/uptime | awk -F. '{run_days=int($1 / 86400);run_hours=int(($1 % 86400) / 3600);run_minutes=int(($1 % 3600) / 60); if (run_days > 0) printf("%d天 ", run_days); if (run_hours > 0) printf("%d时 ", run_hours); printf("%d分\n", run_minutes)}')
+
+	local timezone=$(current_timezone)
+
+
+	echo ""
+	echo -e "系统信息查询"
+	echo -e "${gl_kjlan}-------------"
+	echo -e "${gl_kjlan}主机名:       ${gl_bai}$hostname"
+	echo -e "${gl_kjlan}系统版本:     ${gl_bai}$os_info"
+	echo -e "${gl_kjlan}Linux版本:    ${gl_bai}$kernel_version"
+	echo -e "${gl_kjlan}-------------"
+	echo -e "${gl_kjlan}CPU架构:      ${gl_bai}$cpu_arch"
+	echo -e "${gl_kjlan}CPU型号:      ${gl_bai}$cpu_info"
+	echo -e "${gl_kjlan}CPU核心数:    ${gl_bai}$cpu_cores"
+	echo -e "${gl_kjlan}CPU频率:      ${gl_bai}$cpu_freq"
+	echo -e "${gl_kjlan}-------------"
+	echo -e "${gl_kjlan}CPU占用:      ${gl_bai}$cpu_usage_percent%"
+	echo -e "${gl_kjlan}系统负载:     ${gl_bai}$load"
+	echo -e "${gl_kjlan}物理内存:     ${gl_bai}$mem_info"
+	echo -e "${gl_kjlan}虚拟内存:     ${gl_bai}$swap_info"
+	echo -e "${gl_kjlan}硬盘占用:     ${gl_bai}$disk_info"
+	echo -e "${gl_kjlan}-------------"
+	echo -e "${gl_kjlan}$output"
+	echo -e "${gl_kjlan}-------------"
+	echo -e "${gl_kjlan}网络算法:     ${gl_bai}$congestion_algorithm $queue_algorithm"
+	echo -e "${gl_kjlan}-------------"
+	echo -e "${gl_kjlan}运营商:       ${gl_bai}$isp_info"
+	if [ -n "$ipv4_address" ]; then
+		echo -e "${gl_kjlan}IPv4地址:     ${gl_bai}$ipv4_address"
+	fi
+
+	if [ -n "$ipv6_address" ]; then
+		echo -e "${gl_kjlan}IPv6地址:     ${gl_bai}$ipv6_address"
+	fi
+	echo -e "${gl_kjlan}DNS地址:      ${gl_bai}$dns_addresses"
+	echo -e "${gl_kjlan}地理位置:     ${gl_bai}$country $city"
+	echo -e "${gl_kjlan}系统时间:     ${gl_bai}$timezone $current_time"
+	echo -e "${gl_kjlan}-------------"
+	echo -e "${gl_kjlan}运行时长:     ${gl_bai}$runtime"
+	echo
+
+
+
 }
-
-# 获取地理位置
-get_location() {
-    LOCATION=$(curl -s https://ipinfo.io | jq -r '.region + " " + .country' 2>/dev/null)
-    if [ -z "$LOCATION" ]; then
-        LOCATION=$(curl -s https://ipapi.co/json | jq -r '.region + " " + .country_name' 2>/dev/null)
-    fi
-    if [ -z "$LOCATION" ]; then
-        LOCATION=$(curl -s http://ip-api.com/json/ | jq -r '.regionName + " " + .country' 2>/dev/null)
-    fi
-    if [ -z "$LOCATION" ]; then
-        LOCATION=$(curl -s https://freegeoip.app/json/ | jq -r '.region_name + " " + .country_name' 2>/dev/null)
-    fi
-    [ -z "$LOCATION" ] && LOCATION="未知"
-    echo "$LOCATION"
-}
-
-# 获取防火墙状态
-get_firewall_status() {
-    if command -v ufw &>/dev/null; then
-        STATUS=$(ufw status | grep -i "status" | awk '{print $2}')
-        echo "${STATUS:-未知}"
-    else
-        echo "未安装"
-    fi
-}
-
-# 获取IPv6地址
-get_ipv6() {
-    IPV6=$(ip -6 addr show | grep inet6 | grep -v '::1' | grep -v 'fe80' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
-    if [ -z "$IPV6" ]; then
-        IPV6="未分配"
-    fi
-    echo "$IPV6"
-}
-
-# 主程序
-main() {
-    check_dependencies
-
-    HOSTNAME=$(hostname)
-    OS_VERSION=$(lsb_release -d | awk -F'\t' '{print $2}')
-    KERNEL_VERSION=$(uname -r)
-    ARCH=$(uname -m)
-    CPU_MODEL=$(awk -F': ' '/model name/{print $2; exit}' /proc/cpuinfo)
-    CPU_CORES=$(grep -c '^processor' /proc/cpuinfo)
-    CPU_FREQ=$(awk -F'[ :]' '/cpu MHz/{printf "%.1f GHz", $3/1000; exit}' /proc/cpuinfo)
-    LOAD_AVG=$(awk '{print $1", "$2", "$3}' /proc/loadavg)
-    MEM_TOTAL=$(free -m | awk '/Mem:/{print $2}')
-    MEM_USED=$(free -m | awk '/Mem:/{print $3}')
-    SWAP_TOTAL=$(free -m | awk '/Swap:/{print $2}')
-    SWAP_USED=$(free -m | awk '/Swap:/{print $3}')
-    DISK_USAGE=$(df -h --total | awk '/^total/{print $3"/"$2 " ("$5")"}')
-    RX_BYTES=$(ifconfig | grep -oP 'RX bytes:\K\d+' | awk '{sum+=$1} END {printf "%.2f GB\n", sum/1024/1024/1024}')
-    TX_BYTES=$(ifconfig | grep -oP 'TX bytes:\K\d+' | awk '{sum+=$1} END {printf "%.2f GB\n", sum/1024/1024/1024}')
-    NETWORK_ALGO=$(sysctl net.ipv4.tcp_congestion_control | awk '{print $3}')
-    LOCATION=$(get_location)
-    FIREWALL_STATUS=$(get_firewall_status)
-    ISP=$(curl -s https://ipinfo.io/org | sed 's/AS[0-9]* //')
-    IPV4=$(curl -s4 https://ipinfo.io/ip || echo "未分配")
-    IPV6=$(get_ipv6)
-    DNS=$(cat /etc/resolv.conf | grep 'nameserver' | awk '{print $2}' | xargs)
-    TIMEZONE=$(cat /etc/timezone 2>/dev/null || timedatectl | grep "Time zone" | awk '{print $3}')
-    SYSTEM_TIME=$(date "+%Y-%m-%d %H:%M:%S")
-
-    clear
-    echo -e "系统信息查询\n"
-    echo -e "主机名:       $HOSTNAME"
-    echo -e "系统版本:     $OS_VERSION"
-    echo -e "Linux版本:    $KERNEL_VERSION"
-    echo -e "-------------"
-    echo -e "CPU架构:      $ARCH"
-    echo -e "CPU型号:      $CPU_MODEL"
-    echo -e "CPU核心数:    $CPU_CORES"
-    echo -e "CPU频率:      $CPU_FREQ"
-    echo -e "-------------"
-    echo -e "CPU占用:      $(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5); printf "%.0f%%", usage}')"
-    echo -e "系统负载:     $LOAD_AVG"
-    echo -e "物理内存:     ${MEM_USED}/${MEM_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $MEM_USED/$MEM_TOTAL*100}")%)"
-    echo -e "虚拟内存:     ${SWAP_USED}/${SWAP_TOTAL} MB ($(awk "BEGIN {printf \"%.2f\", $SWAP_USED/$SWOTAL*100}")%)"
-    echo -e "硬盘占用:     $DISK_USAGE"
-    echo -e "-------------"
-    echo -e "总接收:       $RX_BYTES"
-    echo -e "总发送:       $TX_BYTES"
-    echo -e "-------------"
-    echo -e "网络算法:     $NETWORK_ALGO"
-    echo -e "防火墙状态:   $FIREWALL_STATUS"
-    echo -e "-------------"
-    echo -e "运营商:       $ISP"
-    echo -e "IPv4地址:     $IPV4"
-    echo -e "IPv6地址:     $IPV6"
-    echo -e "DNS地址:      $DNS"
-    echo -e "地理位置:     $LOCATION"
-    echo -e "系统时间:     $TIMEZONE $SYSTEM_TIME"
-    echo -e "-------------"
-    echo -e "操作完成"
-    echo -e "按任意键继续..."
-    read -n 1
-}
-
-main
