@@ -455,7 +455,7 @@ show_main_menu() {
             run_reinstall_script
             ;;  
         14) 
-             execute_script "curl -sS -O https://raw.githubusercontent.com/ecouus/Feed-Push/refs/heads/main/bot_deploy.sh && sudo chmod +x bot_deploy.sh && ./bot_deploy.sh"
+             execute_script "https://raw.githubusercontent.com/ecouus/Feed-Push/refs/heads/main/bot_deploy.sh" "TG关键词订阅部署完成。"
             ;;  
         15) 
             network_traffic_monitor
