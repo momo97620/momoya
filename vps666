@@ -498,37 +498,6 @@ RAINBOW_PROMPT::main() {
     done
 }
 
-# 封装函数：执行操作
-function perform_operation {
-    echo "正在执行操作..."
-    sleep 2  # 模拟操作的执行时间
-    echo "操作已完成。"
-    return 0  # 返回值，0 表示成功
-}
-
-# 封装函数：等待用户按任意键
-function wait_for_keypress {
-    echo "请按任意键返回..."
-    read -n 1 -s -r
-}
-
-# 主函数
-function main {
-    # 调用执行操作的函数
-    perform_operation
-    local return_value=$?  # 获取返回值
-
-    # 等待用户按任意键
-    wait_for_keypress
-
-    # 输出返回值
-    echo "返回值: $return_value"
-    exit $return_value
-}
-
-# 调用主函数
-main
-
 show_main_menu() {
     clear
     # 定义颜色
@@ -620,7 +589,7 @@ show_main_menu() {
             RAINBOW_PROMPT::main
             ;;
         16)
-            perform_operation main
+
             ;;
         0)
             echo -e "${GREEN}退出程序...${NC}"
