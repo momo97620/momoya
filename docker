@@ -32,6 +32,21 @@ check_system() {
     fi
 }
 
+# 系统更新函数
+update_system() {
+    echo -e "${BLUE}正在更新系统包列表和已安装的包...${NC}"
+    case $OS in
+        ubuntu|debian)
+            apt-get update
+            apt-get upgrade -y
+            ;;
+        centos|rhel|fedora)
+            yum update -y
+            ;;
+    esac
+    echo -e "${GREEN}系统更新完成！${NC}"
+}
+
 # 更换Docker源函数
 change_docker_source() {
     echo -e "${BLUE}正在更换Docker源...${NC}"
@@ -71,14 +86,19 @@ install_docker() {
     # 根据不同系统选择安装方式
     case $OS in
         ubuntu|debian)
+            # 安装 software-properties-common 以使用 add-apt-repository
+            apt-get install -y software-properties-common
+
             # 添加Docker官方GPG key
             curl -fsSL https://download.docker.com/linux/$OS/gpg | apt-key add -
             
             # 添加Docker仓库
-            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$OS $VERSION_CODENAME stable"
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$OS $(lsb_release -cs) stable"
             
-            # 安装Docker
+            # 更新包列表
             apt-get update
+
+            # 安装Docker
             apt-get install -y docker-ce docker-ce-cli containerd.io
             ;;
         
@@ -285,6 +305,7 @@ main() {
     clear
     check_root
     check_system
+    update_system  # 在进入主菜单前自动更新系统
     main_menu
 }
 
