@@ -588,50 +588,6 @@ show_main_menu() {
         15)
             RAINBOW_PROMPT::main
             ;;
-        16)
-            # functions.py
-
-def calculate_area(radius):
-    """计算圆的面积"""
-    pi = 3.14159  # 局部变量
-    area = pi * radius ** 2
-    return area
-
-def calculate_circumference(radius):
-    """计算圆的周长"""
-    pi = 3.14159  # 局部变量
-    circumference = 2 * pi * radius
-    return circumference
-
-            # main.py
-
-import functions  # 导入定义函数的模块
-
-def main():
-    print("欢迎使用圆的计算工具！")
-    print("请选择一个选项：")
-    print("1. 计算圆的面积")
-    print("2. 计算圆的周长")
-    
-    # 获取用户输入
-    choice = input("请输入选项 (1 或 2): ")
-    
-    # 获取半径
-    radius = float(input("请输入圆的半径: "))
-    
-    # 根据用户选择调用不同的函数
-    if choice == '1':
-        result = functions.calculate_area(radius)
-        print(f"圆的面积是: {result}")
-    elif choice == '2':
-        result = functions.calculate_circumference(radius)
-        print(f"圆的周长是: {result}")
-    else:
-        print("无效的选项，请重新运行程序并选择 1 或 2。")
-
-if __name__ == "__main__":
-    main()
-
         0)
             echo -e "${GREEN}退出程序...${NC}"
             exit 0
