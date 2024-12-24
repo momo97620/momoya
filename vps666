@@ -527,8 +527,7 @@ function main {
 }
 
 # 调用主函数
-perform_operation
-
+main
 
 show_main_menu() {
     clear
@@ -621,7 +620,8 @@ show_main_menu() {
             RAINBOW_PROMPT::main
             ;;
         16)
-            perform_operation
+            perform_operation 
+            function main
             ;;
         0)
             echo -e "${GREEN}退出程序...${NC}"
