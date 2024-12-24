@@ -26,7 +26,7 @@ SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
 # 定义固定安装路径
-# INSTALL_DIR="/usr/local/my_script"
+INSTALL_DIR="/usr/local/my_script"
 
 # 检查脚本是否被直接运行
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
