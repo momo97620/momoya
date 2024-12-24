@@ -498,8 +498,8 @@ RAINBOW_PROMPT::main() {
     done
 }
 
-# 定义一个函数，计算两个数的和
-def add_numbers(a, b):
+# 定义一个函数，计算两个数的ab
+function add_numbers() {
     """
     这个函数接受两个数字作为参数，并返回它们的和。
     
@@ -554,7 +554,7 @@ if __name__ == "__main__":
         special_function()
     else:
         print("特殊函数未被触发。")
-
+}
 
 show_main_menu() {
     clear
