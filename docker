@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Docker管理脚本
-# 版本：1.2
+# 版本：1.3
 # 作者：Assistant
 # 描述：提供Docker安装、管理和卸载的一站式脚本
 
@@ -44,7 +44,13 @@ update_system() {
             yum update -y
             ;;
     esac
-    echo -e "${GREEN}系统更新完成！${NC}"
+
+    # 检查是否有更新
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}系统更新完成！${NC}"
+    else
+        echo -e "${YELLOW}系统已经是最新状态，无需更新！${NC}"
+    fi
 }
 
 # 更换Docker源函数
@@ -286,8 +292,12 @@ main_menu() {
             4) image_management ;;
             5) network_management ;;
             6) 
-                echo -e "${BLUE}Docker系统信息：${NC}"
-                docker info
+                if ! command -v docker &> /dev/null; then
+                    echo -e "${RED}错误：Docker未安装，请先安装Docker！${NC}"
+                else
+                    echo -e "${BLUE}Docker系统信息：${NC}"
+                    docker info
+                fi
                 read -n 1 -s -r -p "按任意键返回主菜单..."
                 ;;
             7) change_docker_source ;;
