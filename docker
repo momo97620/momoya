@@ -34,19 +34,21 @@ check_system() {
 
 # 系统更新函数
 update_system() {
-    echo -e "${BLUE}正在更新系统包列表和已安装的包...${NC}"
-    case $OS in
-        ubuntu|debian)
-            apt-get update
-            apt-get upgrade -y
-            ;;
-        centos|rhel|fedora)
-            yum update -y
-            ;;
-    esac
+    # 检查是否已经更新过系统
+    if [ ! -f /var/lib/docker_script_updated ]; then
+        echo -e "${BLUE}正在更新系统包列表和已安装的包...${NC}"
+        case $OS in
+            ubuntu|debian)
+                apt-get update
+                apt-get upgrade -y
+                ;;
+            centos|rhel|fedora)
+                yum update -y
+                ;;
+        esac
 
-    # 检查是否有更新
-    if [ $? -eq 0 ]; then
+        # 标记系统已经更新
+        touch /var/lib/docker_script_updated
         echo -e "${GREEN}系统更新完成！${NC}"
     else
         echo -e "${YELLOW}系统已经是最新状态，无需更新！${NC}"
@@ -92,20 +94,8 @@ install_docker() {
     # 根据不同系统选择安装方式
     case $OS in
         ubuntu|debian)
-            # 安装 software-properties-common 以使用 add-apt-repository
-            apt-get install -y software-properties-common
-
-            # 添加Docker官方GPG key
-            curl -fsSL https://download.docker.com/linux/$OS/gpg | apt-key add -
-            
-            # 添加Docker仓库
-            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$OS $(lsb_release -cs) stable"
-            
-            # 更新包列表
-            apt-get update
-
             # 安装Docker
-            apt-get install -y docker-ce docker-ce-cli containerd.io
+            apt-get install -y docker.io
             ;;
         
         centos|rhel|fedora)
@@ -141,7 +131,7 @@ uninstall_docker() {
     
     case $OS in
         ubuntu|debian)
-            apt-get purge -y docker-ce docker-ce-cli containerd.io
+            apt-get purge -y docker.io
             apt-get autoremove -y
             ;;
         
