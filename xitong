@@ -86,26 +86,22 @@ get_network_traffic() {
     
     # 检查接口是否存在
     if [ -z "$interface" ]; then
-        echo "0.00|0.00"
+        echo "0.00"
         return
-    }
+    fi
     
-    # 使用 numfmt 处理大数值转换
+    # 获取接收和发送字节数
     local rx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $2}')
     local tx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $10}')
     
-    # 转换为GB，使用 numfmt 或 bc 进行计算
-    if command -v numfmt >/dev/null 2>&1; then
-        local rx_gb=$(numfmt --to=iec-i --suffix=B --format="%.2f" $rx_bytes | sed 's/B//' | awk '{printf "%.2f", $1/1024/1024/1024}')
-        local tx_gb=$(numfmt --to=iec-i --suffix=B --format="%.2f" $tx_bytes | sed 's/B//' | awk '{printf "%.2f", $1/1024/1024/1024}')
-    else
-        local rx_gb=$(echo "scale=2; $rx_bytes/1024/1024/1024" | bc)
-        local tx_gb=$(echo "scale=2; $tx_bytes/1024/1024/1024" | bc)
-    fi
+    # 计算总流量（接收 + 发送）
+    local total_bytes=$((rx_bytes + tx_bytes))
     
-    echo "${rx_gb:-0.00}|${tx_gb:-0.00}"
+    # 转换为GB
+    local total_gb=$(echo "scale=2; $total_bytes/1024/1024/1024" | bc)
+    
+    echo "${total_gb:-0.00}"
 }
-
 
 # 获取网络信息
 get_network_info() {
@@ -127,7 +123,7 @@ main() {
     # 获取网络和位置信息
     IFS='|' read -r LOCATION ISP <<< "$(get_location)"
     IFS='|' read -r IPV4 IPV6 <<< "$(get_network_info)"
-    IFS='|' read -r RX_BYTES TX_BYTES <<< "$(get_network_traffic)"
+    local TOTAL_TRAFFIC=$(get_network_traffic)
 
     # 当前时间和时区
     local CURRENT_TIME=$(date "+%Y-%m-%d %H:%M:%S")
@@ -156,7 +152,7 @@ main() {
     echo -e "地理位置:     ${YELLOW}$LOCATION${NC}"
     echo -e "IPv4地址:     ${YELLOW}$IPV4${NC}"
     echo -e "IPv6地址:     ${YELLOW}$IPV6${NC}"
-    echo -e "网络流量:     ${YELLOW}下行: ${RX_BYTES}GB 上行: ${TX_BYTES}GB${NC}"
+    echo -e "总网络流量:   ${YELLOW}${TOTAL_TRAFFIC}GB${NC}"
     echo -e "${RED}--------------------${NC}"
 
     echo -e "${GREEN}系统时间:${NC}"
@@ -166,7 +162,6 @@ main() {
     echo -e "${RED}--------------------${NC}"
 
     echo -e "\n${GREEN}操作完成${NC}"
-    
 }
 
 # 调用主程序
