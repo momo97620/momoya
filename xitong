@@ -149,10 +149,7 @@ main() {
     echo -e "${RED}--------------------${NC}"
 
     echo -e "\n${GREEN}操作完成${NC}"
-    echo -e "${BLUE}按任意键继续...${NC}"
     
-    # 等待用户按键
-    read -n 1 -s
 }
 
 # 调用主程序
