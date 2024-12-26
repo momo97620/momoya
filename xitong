@@ -76,19 +76,36 @@ get_location() {
 
 # 获取网络流量
 get_network_traffic() {
-    # 获取网络接口
+    # 获取默认网络接口
     local interface=$(ip route | grep default | awk '{print $5}' | head -n1)
     
-    # 从 /proc/net/dev 获取流量信息
-    local rx_bytes=$(awk -v interface="$interface" '$1 == interface":" {print $2}' /proc/net/dev)
-    local tx_bytes=$(awk -v interface="$interface" '$1 == interface":" {print $10}' /proc/net/dev)
+    if [ -z "$interface" ]; then
+        # 如果没有找到默认接口，尝试获取第一个非lo的接口
+        interface=$(ip link show | awk -F: '$2 !~ /lo/ {print $2;exit}' | tr -d ' ')
+    fi
     
-    # 转换为 GB
-    local rx_gb=$(echo "scale=2; $rx_bytes / 1024 / 1024 / 1024" | bc)
-    local tx_gb=$(echo "scale=2; $tx_bytes / 1024 / 1024 / 1024" | bc)
+    # 检查接口是否存在
+    if [ -z "$interface" ]; then
+        echo "0.00|0.00"
+        return
+    }
+    
+    # 使用 numfmt 处理大数值转换
+    local rx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $2}')
+    local tx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $10}')
+    
+    # 转换为GB，使用 numfmt 或 bc 进行计算
+    if command -v numfmt >/dev/null 2>&1; then
+        local rx_gb=$(numfmt --to=iec-i --suffix=B --format="%.2f" $rx_bytes | sed 's/B//' | awk '{printf "%.2f", $1/1024/1024/1024}')
+        local tx_gb=$(numfmt --to=iec-i --suffix=B --format="%.2f" $tx_bytes | sed 's/B//' | awk '{printf "%.2f", $1/1024/1024/1024}')
+    else
+        local rx_gb=$(echo "scale=2; $rx_bytes/1024/1024/1024" | bc)
+        local tx_gb=$(echo "scale=2; $tx_bytes/1024/1024/1024" | bc)
+    fi
     
     echo "${rx_gb:-0.00}|${tx_gb:-0.00}"
 }
+
 
 # 获取网络信息
 get_network_info() {
