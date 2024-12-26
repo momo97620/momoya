@@ -519,44 +519,27 @@ show_main_menu() {
     echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
     
-# 定义更多颜色和特效
-BLUE_BG='\033[44m'
-BOLD='\033[1m'
-BLINK='\033[5m'
-UNDERLINE='\033[4m'
+    echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
-
-# 高科技风格菜单
-echo -e "${BLUE_BG}${WHITE}${BOLD}┌─ 🖥️  系统管理智能终端 v1.0 ─────────────────────────┐${NC}"
-echo -e "${CYAN}│ ${GREEN}✦${NC} 检测到当前系统环境：$(uname -s) ${GREEN}✦${NC}                  │"
-echo -e "${CYAN}├───────────────────────────────────────────────────┤${NC}"
-
-
-# 使用特殊符号和间隔，增加高科技感
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "1." "Hysteria2 节点部署"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "2." "防火墙安全配置"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "3." "安全密钥管理"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "4." "远程访问端口调整"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "5." "快速节点构建"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "6." "网络加速配置"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "7." "网络性能优化"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "8." "容器管理中心"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "9." "系统诊断报告"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "10." "网络协议优先级"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "11." "脚本自动更新"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "12." "会话保持"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "13." "系统重置"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "14." "通信监控"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "15." "主机个性化"
-printf "${CYAN}│ ${BOLD}${GREEN}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "16." "流媒体诊断"
-printf "${CYAN}│ ${BOLD}${RED}➤ %-3s ${UNDERLINE}%-35s${NC} ${CYAN}│${NC}\n" "0." "安全退出"
-
-
-# 底部状态栏
-echo -e "${CYAN}├───────────────────────────────────────────────────┤${NC}"
-echo -e "${CYAN}│ ${GREEN}🕒 $(date '+%Y-%m-%d %H:%M:%S')${NC}  ${GREEN}🖧  网络状态：正常${NC}     │"
-echo -e "${BLUE_BG}${WHITE}${BOLD}└───────────────────────────────────────────────────┘${NC}"
-}=====================================================================${NC}"
+    # 使用 printf 格式化菜单选项，确保对齐
+    printf "${GREEN}%-3s %-30s${NC}\n" "1." "搭建hy2节点"
+    printf "${GREEN}%-3s %-30s${NC}\n" "2." "UFW 防火墙"
+    printf "${GREEN}%-3s %-30s${NC}\n" "3." "配置密钥登录"
+    printf "${GREEN}%-3s %-30s${NC}\n" "4." "修改登录端口"
+    printf "${GREEN}%-3s %-30s${NC}\n" "5." "一键搭建节点"
+    printf "${GREEN}%-3s %-30s${NC}\n" "6." "一键配置WARP"
+    printf "${GREEN}%-3s %-30s${NC}\n" "7." "一键BBR加速"
+    printf "${GREEN}%-3s %-30s${NC}\n" "8." "Docker管理"
+    printf "${GREEN}%-3s %-30s${NC}\n" "9." "系统信息查询"
+    printf "${GREEN}%-3s %-30s${NC}\n" "10." "设IPv4/6优先级"
+    printf "${GREEN}%-3s %-30s${NC}\n" "11." "更新主脚本"
+    printf "${GREEN}%-3s %-30s${NC}\n" "12." "保持ssh连接"
+    printf "${GREEN}%-3s %-30s${NC}\n" "13." "一键DD系统"
+    printf "${GREEN}%-3s %-30s${NC}\n" "14." "监控TG关键词"
+    printf "${GREEN}%-3s %-30s${NC}\n" "15." "主机名颜色"
+    printf "${GREEN}%-3s %-30s${NC}\n" "16." "测试流媒体"
+    printf "${GREEN}%-3s %-30s${NC}\n" "0." "退出"
+    echo -e "${LIGHTCYAN}=====================================================================${NC}"
     read -p "请输入选项 (0-16): " choice
     case $choice in
         1)
