@@ -522,10 +522,6 @@ show_main_menu() {
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
 # 使用 printf 格式化菜单选项，确保对齐和高科技感
-clear
-echo -e "${BLUE}  ♥ System Management Console ${NC}"
-echo -e "${CYAN}  ---------------------------- ${NC}"
-echo ""
 printf "  ${PURPLE}01${NC} ${PINK}♥${NC} %-30s\n" "搭建hy2节点"
 printf "  ${PURPLE}02${NC} ${PINK}♥${NC} %-30s\n" "UFW 防火墙"
 printf "  ${PURPLE}03${NC} ${PINK}♥${NC} %-30s\n" "配置密钥登录"
