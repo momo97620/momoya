@@ -1,13 +1,12 @@
 #!/bin/bash
 
 # 定义颜色
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-LIGHTBLUE='\033[1;34m'
-LIGHTCYAN='\033[1;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
+BLUE='\033[38;5;39m'
+CYAN='\033[38;5;51m'
+PURPLE='\033[38;5;147m'
+YELLOW='\033[38;5;227m'
+PINK='\033[38;5;218m'    # 改用粉色
 
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
@@ -522,27 +521,27 @@ show_main_menu() {
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
 # 使用 printf 格式化菜单选项，确保对齐和高科技感
-printf "${GREEN}╔══════════════════════════════════════════╗${NC}\n"
-printf "${GREEN}║            ${LIGHTCYAN}🚀 系统工具 ${GREEN}             ║${NC}\n"
-printf "${GREEN}╠══════════════════════════════════════════╣${NC}\n"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "1." "搭建hy2节点"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "2." "UFW 防火墙"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "3." "配置密钥登录"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "4." "修改登录端口"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "5." "一键搭建节点"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "6." "一键配置WARP"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "7." "一键BBR加速"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "8." "Docker管理"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "9." "系统信息查询"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "10." "设IPv4/6优先级"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "11." "更新主脚本"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "12." "保持ssh连接"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "13." "一键DD系统"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "14." "监控TG关键词"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "15." "主机名颜色"
-printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "16." "测试流媒体"
-printf "${GREEN}║ ${LIGHTCYAN}[❌]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "0." "退出"
-printf "${GREEN}╚══════════════════════════════════════════╝${NC}\n"
+clear
+echo -e "${BLUE}  ♥ System Management Console ${NC}"
+echo -e "${CYAN}  ---------------------------- ${NC}"
+echo ""
+printf "  ${PURPLE}01${NC} ${PINK}♥${NC} %-30s\n" "搭建hy2节点"
+printf "  ${PURPLE}02${NC} ${PINK}♥${NC} %-30s\n" "UFW 防火墙"
+printf "  ${PURPLE}03${NC} ${PINK}♥${NC} %-30s\n" "配置密钥登录"
+printf "  ${PURPLE}04${NC} ${PINK}♥${NC} %-30s\n" "修改登录端口"
+printf "  ${PURPLE}05${NC} ${PINK}♥${NC} %-30s\n" "一键搭建节点"
+printf "  ${PURPLE}06${NC} ${PINK}♥${NC} %-30s\n" "一键配置WARP"
+printf "  ${PURPLE}07${NC} ${PINK}♥${NC} %-30s\n" "一键BBR加速"
+printf "  ${PURPLE}08${NC} ${PINK}♥${NC} %-30s\n" "Docker管理"
+printf "  ${PURPLE}09${NC} ${PINK}♥${NC} %-30s\n" "系统信息查询"
+printf "  ${PURPLE}10${NC} ${PINK}♥${NC} %-30s\n" "设IPv4/6优先级"
+printf "  ${PURPLE}11${NC} ${PINK}♥${NC} %-30s\n" "更新主脚本"
+printf "  ${PURPLE}12${NC} ${PINK}♥${NC} %-30s\n" "保持ssh连接"
+printf "  ${PURPLE}13${NC} ${PINK}♥${NC} %-30s\n" "一键DD系统"
+printf "  ${PURPLE}14${NC} ${PINK}♥${NC} %-30s\n" "监控TG关键词"
+printf "  ${PURPLE}15${NC} ${PINK}♥${NC} %-30s\n" "主机名颜色"
+printf "  ${PURPLE}16${NC} ${PINK}♥${NC} %-30s\n" "测试流媒体"
+printf "  ${PURPLE}00${NC} ${PINK}♥${NC} %-30s\n" "退出"
 
     read -p "请输入选项 (0-16): " choice
     case "$choice" in
