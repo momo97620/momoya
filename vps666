@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # 定义颜色
-NCRED='\033[0;31m'
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
-PINK='\033[38;5;218m'     # 粉色
-NC='\033[0m'  # 恢复默认颜色
+LIGHTBLUE='\033[1;34m'  # 亮蓝色
+LIGHTCYAN='\033[1;36m'  # 亮青色
+NC='\033[0m' # No Color
 
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
