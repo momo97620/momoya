@@ -519,6 +519,8 @@ show_main_menu() {
     echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
     
+#!/bin/bash
+
 # 定义颜色
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
