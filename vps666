@@ -527,18 +527,6 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # 恢复默认颜色
 
-
-# 绘制菜单头部
-print_header() {
-    clear
-    echo -e "${CYAN}"
-    echo "╔═══════════════════════════════════════╗"
-    echo "║        Linux 系统工具箱 v1.0         ║"
-    echo "╚═══════════════════════════════════════╝"
-    echo -e "${NC}"
-}
-
-
 # 绘制美化菜单
 print_menu() {
     print_header
@@ -565,36 +553,7 @@ print_menu() {
     printf "${GREEN}└───┴───────────────────────────────┘\n${NC}"
     echo -e "${PURPLE}请输入数字选择对应的功能:${NC}"
 }
-echo -e "${PURPLE}╔══════════════════════════════════════════╗${NC}"
-echo -e "${PURPLE}║           ${YELLOW}Linux 管理工具箱${PURPLE}            ║${NC}"
-echo -e "${PURPLE}╚══════════════════════════════════════════╝${NC}"
-echo ""
 
-
-printf "${GREEN}╭───────────────────────────────────────────╮${NC}\n"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "1." "搭建hy2节点"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "2." "UFW 防火墙"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "3." "配置密钥登录"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "4." "修改登录端口"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "5." "一键搭建节点"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "6." "一键配置WARP"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "7." "一键BBR加速"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "8." "Docker管理"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "9." "系统信息查询"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "10." "设IPv4/6优先级"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "11." "更新主脚本"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "12." "保持ssh连接"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "13." "一键DD系统"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "14." "监控TG关键词"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "15." "主机名颜色"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "16." "测试流媒体"
-printf "${GREEN}│ ${BLUE}%-3s ${LIGHTCYAN}%-35s${GREEN} │${NC}\n" "0." "退出"
-printf "${GREEN}╰───────────────────────────────────────────╯${NC}\n"
-
-
-echo -e "${YELLOW}请输入对应数字选择操作:${NC}"
-
-    
 =====================================================================${NC}"
     read -p "请输入选项 (0-16): " choice
     case $choice in
