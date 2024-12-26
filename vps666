@@ -5,8 +5,9 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
-LIGHTBLUE='\033[1;34m'  # 亮蓝色
-LIGHTCYAN='\033[1;36m'  # 亮青色
+LIGHTBLUE='\033[1;34m'
+LIGHTCYAN='\033[1;36m'
+PINK='\033[38;5;218m'
 NC='\033[0m' # No Color
 
 # 定义符号链接的目标和链接名称
