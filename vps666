@@ -544,6 +544,8 @@ printf "${GREEN}║ ${LIGHTCYAN}[✦]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "16.
 printf "${GREEN}║ ${LIGHTCYAN}[❌]${GREEN} %-3s %-30s${GREEN}║${NC}\n" "0." "退出"
 printf "${GREEN}╚══════════════════════════════════════════╝${NC}\n"
  =====================================================================${NC}"
+    read -p "请输入选项 (0-16): " choice
+    case $choice in
         1)
             execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
             ;;
