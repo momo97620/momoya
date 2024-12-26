@@ -74,9 +74,9 @@ get_location() {
     echo "未知位置|未知运营商"
 }
 
-# 获取网络流量
+# 获取网络流量（准确方式）
 get_network_traffic() {
-    # 获取默认网络接口
+    # 获取默认网关接口
     local interface=$(ip route | grep default | awk '{print $5}' | head -n1)
     
     if [ -z "$interface" ]; then
@@ -90,14 +90,18 @@ get_network_traffic() {
         return
     fi
     
-    # 获取接收和发送字节数
+    # 获取流量数据（接收+发送）
     local rx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $2}')
     local tx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $10}')
     
-    # 计算总流量（接收 + 发送）
-    local total_bytes=$((rx_bytes + tx_bytes))
+    # 校验是否成功读取数据
+    if [ -z "$rx_bytes" ] || [ -z "$tx_bytes" ]; then
+        echo "0.00"
+        return
+    fi
     
-    # 转换为GB
+    # 计算总流量
+    local total_bytes=$((rx_bytes + tx_bytes))
     local total_gb=$(echo "scale=2; $total_bytes/1024/1024/1024" | bc)
     
     echo "${total_gb:-0.00}"
