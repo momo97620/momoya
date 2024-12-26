@@ -518,7 +518,53 @@ show_main_menu() {
     echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
     echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
+    
+# 定义颜色
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # 恢复默认颜色
 
+
+# 绘制菜单头部
+print_header() {
+    clear
+    echo -e "${CYAN}"
+    echo "╔═══════════════════════════════════════╗"
+    echo "║        Linux 系统工具箱 v1.0         ║"
+    echo "╚═══════════════════════════════════════╝"
+    echo -e "${NC}"
+}
+
+
+# 绘制美化菜单
+print_menu() {
+    print_header
+    echo -e "${YELLOW}请选择您需要的操作:${NC}"
+    echo ""
+    printf "${GREEN}┌───┬───────────────────────────────┐\n"
+    printf "${GREEN}│ %2s │ %-30s │\n" "1" "搭建 Hysteria2 节点"
+    printf "${GREEN}│ %2s │ %-30s │\n" "2" "UFW 防火墙配置"
+    printf "${GREEN}│ %2s │ %-30s │\n" "3" "配置 SSH 密钥登录"
+    printf "${GREEN}│ %2s │ %-30s │\n" "4" "修改 SSH 登录端口"
+    printf "${GREEN}│ %2s │ %-30s │\n" "5" "一键部署服务节点"
+    printf "${GREEN}│ %2s │ %-30s │\n" "6" "一键配置 WARP"
+    printf "${GREEN}│ %2s │ %-30s │\n" "7" "一键 BBR 网络加速"
+    printf "${GREEN}│ %2s │ %-30s │\n" "8" "Docker 容器管理"
+    printf "${GREEN}│ %2s │ %-30s │\n" "9" "系统信息查询"
+    printf "${GREEN}│ %2s │ %-30s │\n" "10" "设置 IPv4/IPv6 优先级"
+    printf "${GREEN}│ %2s │ %-30s │\n" "11" "更新主脚本"
+    printf "${GREEN}│ %2s │ %-30s │\n" "12" "保持 SSH 会话"
+    printf "${GREEN}│ %2s │ %-30s │\n" "13" "一键重装系统"
+    printf "${GREEN}│ %2s │ %-30s │\n" "14" "监控 Telegram 关键词"
+    printf "${GREEN}│ %2s │ %-30s │\n" "15" "自定义主机名颜色"
+    printf "${GREEN}│ %2s │ %-30s │\n" "16" "流媒体解锁测试"
+    printf "${GREEN}│ %2s │ %-30s │\n" "0" "退出程序"
+    printf "${GREEN}└───┴───────────────────────────────┘\n${NC}"
+    echo -e "${PURPLE}请输入数字选择对应的功能:${NC}"
+}
 echo -e "${PURPLE}╔══════════════════════════════════════════╗${NC}"
 echo -e "${PURPLE}║           ${YELLOW}Linux 管理工具箱${PURPLE}            ║${NC}"
 echo -e "${PURPLE}╚══════════════════════════════════════════╝${NC}"
