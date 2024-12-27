@@ -309,25 +309,13 @@ download_reinstall_script() {
         case $choice in
             1)
                 echo "从国外服务器下载..."
-                if command -v curl > /dev/null; then
-                    curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
-                elif command -v wget > /dev/null; then
-                    wget -O reinstall.sh https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
-                else
-                    echo "未安装curl或wget，请先安装后重试。"
-                    exit 1
-                fi
+                curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
+                break
                 ;;
             2)
                 echo "从国内服务器下载..."
-                if command -v curl > /dev/null; then
-                    curl -O https://www.ghproxy.com/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
-                elif command -v wget > /dev/null; then
-                    wget -O reinstall.sh https://www.ghproxy.com/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
-                else
-                    echo "未安装curl或wget，请先安装后重试。"
-                    exit 1
-                fi
+                curl -O https://www.ghproxy.com/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://www.ghproxy.com/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
+                break
                 ;;
             0)
                 echo "退出脚本。"
@@ -337,18 +325,52 @@ download_reinstall_script() {
                 echo "无效选项，请选择 0, 1 或 2。"
                 ;;
         esac
-
-        # 检查下载是否成功
-        if [ -f reinstall.sh ]; then
-            chmod +x reinstall.sh
-            echo "下载完成并赋予执行权限。"
-            break
-        else
-            echo "下载失败，请检查网络或链接。"
-            exit 1
-        fi
     done
 }
+
+run_reinstall_script() {
+    while true; do
+        echo -e "${GREEN}请选择要安装的系统版本：${NC}"
+        echo -e "${RED}1. Ubuntu 22.04${NC}"
+        echo -e "${YELLOW}2. Ubuntu 20.04${NC}"
+        echo -e "${BLUE}3. Ubuntu 24.04${NC}"
+        echo -e "${MAGENTA}4. Debian 11${NC}"
+        echo -e "${CYAN}5. Debian 12${NC}"
+        echo -e "${GREEN}0. 退出${NC}"
+        read -p "请输入选项 (0-5): " choice
+
+        case $choice in
+            1)
+                bash reinstall.sh ubuntu 22.04
+                break
+                ;;
+            2)
+                bash reinstall.sh ubuntu 20.04
+                break
+                ;;
+            3)
+                bash reinstall.sh ubuntu 24.04
+                break
+                ;;
+            4)
+                bash reinstall.sh debian 11
+                break
+                ;;
+            5)
+                bash reinstall.sh debian 12
+                break
+                ;;
+            0)
+                echo "退出脚本。"
+                exit 0
+                ;;
+            *)
+                echo "无效选项，请选择 0-5。"
+                ;;
+        esac
+    done
+}
+
 # 定义命名空间
 declare -A RAINBOW_PROMPT
 
