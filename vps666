@@ -596,7 +596,7 @@ echo -e "  ${BLUE}00${NC} ${PINK}♥${NC} ${RED}退出${NC}"
                 bash <(curl -sL IP.Check.Place)
                 ;;
             2)
-                bash <(wget -qO- bash.spiritlhl.net/ecs)
+                curl -L https://gitlab.com/spiritysdx/za/-/raw/main/ecs.sh -o ecs.sh && chmod +x ecs.sh && bash ecs.sh
                 ;;
             3)
                 break
