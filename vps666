@@ -522,7 +522,7 @@ show_main_menu() {
     
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
-echo -e "  ${BLUE}01${NC} ${PINK}♥${NC} ${GREEN}搭建hy2节点${NC}      ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
+echo -e "  ${BLUE}01${NC} ${PINK}♥${NC} ${GREEN}搭建hy2节点${NC}       ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
 echo -e "  ${BLUE}02${NC} ${PINK}♥${NC} ${GREEN}UFW 防火墙${NC}        ${BLUE}10${NC} ${PINK}♥${NC} ${LIGHTCYAN}IPv4/6优先${NC}"
 echo -e "  ${BLUE}03${NC} ${PINK}♥${NC} ${GREEN}配置密钥登录${NC}      ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
 echo -e "  ${BLUE}04${NC} ${PINK}♥${NC} ${GREEN}修改登录端口${NC}      ${BLUE}12${NC} ${PINK}♥${NC} ${YELLOW}保持ssh连接${NC}"
