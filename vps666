@@ -517,7 +517,7 @@ show_main_menu() {
 
     echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
     echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
-    echo -e "${LIGHTBLUE}作者：emo的小默默${NC}"
+    echo -e "${PINK}作者：emo的小默默${NC}"
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
     
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
