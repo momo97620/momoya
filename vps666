@@ -298,79 +298,6 @@ set_ssh_keepalive() {
     read -n 1 -s -r
 }
 
-download_reinstall_script() {
-    while true; do
-        echo "请选择DD对应vps："
-        echo "1. 国外服务器"
-        echo "2. 国内服务器"
-        echo "0. 退出"
-        read -p "请输入选项 (0, 1 或 2): " choice
-
-        case $choice in
-            1)
-                echo "从国外服务器下载..."
-                curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
-                break
-                ;;
-            2)
-                echo "从国内服务器下载..."
-                curl -O https://www.ghproxy.com/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh https://www.ghproxy.com/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh
-                break
-                ;;
-            0)
-                echo "退出脚本。"
-                exit 0
-                ;;
-            *)
-                echo "无效选项，请选择 0, 1 或 2。"
-                ;;
-        esac
-    done
-}
-
-run_reinstall_script() {
-    while true; do
-        echo -e "${GREEN}请选择要安装的系统版本：${NC}"
-        echo -e "${RED}1. Ubuntu 22.04${NC}"
-        echo -e "${YELLOW}2. Ubuntu 20.04${NC}"
-        echo -e "${BLUE}3. Ubuntu 24.04${NC}"
-        echo -e "${MAGENTA}4. Debian 11${NC}"
-        echo -e "${CYAN}5. Debian 12${NC}"
-        echo -e "${GREEN}0. 退出${NC}"
-        read -p "请输入选项 (0-5): " choice
-
-        case $choice in
-            1)
-                bash reinstall.sh ubuntu 22.04
-                break
-                ;;
-            2)
-                bash reinstall.sh ubuntu 20.04
-                break
-                ;;
-            3)
-                bash reinstall.sh ubuntu 24.04
-                break
-                ;;
-            4)
-                bash reinstall.sh debian 11
-                break
-                ;;
-            5)
-                bash reinstall.sh debian 12
-                break
-                ;;
-            0)
-                echo "退出脚本。"
-                exit 0
-                ;;
-            *)
-                echo "无效选项，请选择 0-5。"
-                ;;
-        esac
-    done
-}
-
 # 定义命名空间
 declare -A RAINBOW_PROMPT
 
@@ -570,8 +497,87 @@ echo -e "  ${BLUE}00${NC} ${PINK}♥${NC} ${RED}退出${NC}"
             set_ssh_keepalive
             ;;
         13) 
-            download_reinstall_script
-            run_reinstall_script
+            while true; do
+    clear
+    echo -e "${BLUE}----------------------------------------${NC}"
+    echo -e "${BLUE}            测试流媒体子菜单            ${NC}"
+    echo -e "${BLUE}----------------------------------------${NC}"
+    echo -e "${GREEN}1.${NC} 国外服务器"
+    echo -e "${GREEN}2.${NC} 国内服务器"
+    echo -e "${GREEN}3.${NC} 返回主菜单"
+    echo -e "${BLUE}----------------------------------------${NC}"
+    read -p "请输入选项 [1-3]: " sub_choice
+
+    case $sub_choice in
+        1)
+            curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh $_
+            ;;
+        2)
+            curl -O https://jihulab.com/bin456789/reinstall/-/raw/main/reinstall.sh || wget -O reinstall.sh $_
+            ;;
+        3)
+            break
+            ;;
+        *)
+            echo -e "${RED}无效选项!${NC}"
+            sleep 2
+            continue
+            ;;
+    esac
+
+    # 赋予权限
+    chmod +x reinstall.sh
+
+    # 跳转到下一个子菜单
+    while true; do
+        clear
+        echo -e "${BLUE}----------------------------------------${NC}"
+        echo -e "${BLUE}            选择您的系统版本            ${NC}"
+        echo -e "${BLUE}----------------------------------------${NC}"
+        echo -e "${GREEN}1.${NC} Debian 10"
+        echo -e "${GREEN}2.${NC} Debian 11"
+        echo -e "${GREEN}3.${NC} Debian 12"
+        echo -e "${GREEN}4.${NC} Ubuntu 16.04"
+        echo -e "${GREEN}5.${NC} Ubuntu 18.04"
+        echo -e "${GREEN}6.${NC} Ubuntu 20.04"
+        echo -e "${GREEN}7.${NC} Ubuntu 24.04"
+        echo -e "${GREEN}8.${NC} 返回上级菜单"
+        echo -e "${BLUE}----------------------------------------${NC}"
+        read -p "请输入选项 [1-8]: " version_choice
+
+        case $version_choice in
+            1)
+                bash reinstall.sh "Debian 10"
+                ;;
+            2)
+                bash reinstall.sh "Debian 11"
+                ;;
+            3)
+                bash reinstall.sh "Debian 12"
+                ;;
+            4)
+                bash reinstall.sh "Ubuntu 16.04"
+                ;;
+            5)
+                bash reinstall.sh "Ubuntu 18.04"
+                ;;
+            6)
+                bash reinstall.sh "Ubuntu 20.04"
+                ;;
+            7)
+                bash reinstall.sh "Ubuntu 24.04"
+                ;;
+            8)
+                break
+                ;;
+            *)
+                echo -e "${RED}无效选项!${NC}"
+                sleep 2
+                ;;
+        esac
+    done
+done
+
             ;;  
         14) 
              execute_script "https://raw.githubusercontent.com/ecouus/Feed-Push/refs/heads/main/bot_deploy.sh" "TG关键词订阅部署完成。"
