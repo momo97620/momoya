@@ -199,8 +199,8 @@ image_management() {
         clear
         echo -e "${BLUE}\n===== 镜像管理 =====${NC}"
         echo "1. 列出所有镜像      2. 删除镜像"
-        echo "3. 启动容器          4. 停止容器"
-        echo "5. 启动所有容器      6. 停止所有容器"
+        echo "3. 启动镜像          4. 停止镜像"
+        echo "5. 启动所有镜像      6. 停止所有镜像"
         echo "7. 重启镜像          0. 返回主菜单"
         
         read -p "请选择操作: " image_choice
@@ -212,15 +212,15 @@ image_management() {
                 ;;
             2) 
                 # 列出所有镜像
-                images=$(docker images --format '{{.Repository}}:{{.Tag}}')
-                if [ -z "$images" ]; then
+                images=($(docker images --format '{{.Repository}}:{{.Tag}}'))
+                if [ ${#images[@]} -eq 0 ]; then
                     echo -e "${RED}没有找到任何镜像！${NC}"
                 else
                     echo -e "${BLUE}请选择要删除的镜像（按0返回）:${NC}"
-                    select image in $images; do
-                        if [ "$image" == "0" ]; then
+                    select image in "${images[@]}" "返回"; do
+                        if [ "$image" == "返回" ]; then
                             break
-                        elif [ -n "$image" ]; then
+                        elif [[ " ${images[@]} " =~ " ${image} " ]]; then
                             docker rmi "$image"
                             echo -e "${GREEN}镜像 $image 已被删除！${NC}"
                             break
@@ -231,25 +231,25 @@ image_management() {
                 fi
                 ;;
             3) 
-                # 启动容器
+                # 启动镜像
                 read -p "请输入要启动的镜像（格式：repository:tag）: " image_to_run
                 docker run -d "$image_to_run"
-                echo -e "${GREEN}容器已启动！${NC}"
+                echo -e "${GREEN}镜像已启动！${NC}"
                 ;;
             4) 
-                # 停止容器
+                # 停止镜像
                 running_containers=$(docker ps --format '{{.ID}}: {{.Image}}')
                 if [ -z "$running_containers" ]; then
-                    echo -e "${RED}没有运行中的容器！${NC}"
+                    echo -e "${RED}没有运行中的镜像！${NC}"
                 else
-                    echo -e "${BLUE}请选择要停止的容器（按0返回）:${NC}"
-                    select container in $running_containers; do
-                        if [ "$container" == "0" ]; then
+                    echo -e "${BLUE}请选择要停止的镜像（按0返回）:${NC}"
+                    select container in $running_containers "返回"; do
+                        if [ "$container" == "返回" ]; then
                             break
                         elif [ -n "$container" ]; then
                             container_id=$(echo "$container" | cut -d':' -f1)
                             docker stop "$container_id"
-                            echo -e "${GREEN}容器 $container_id 已被停止！${NC}"
+                            echo -e "${GREEN}镜像 $container_id 已被停止！${NC}"
                             break
                         else
                             echo -e "${RED}无效的选择，请重试！${NC}"
@@ -258,37 +258,36 @@ image_management() {
                 fi
                 ;;
             5) 
-                # 启动所有容器
-                echo -e "${BLUE}正在启动所有容器...${NC}"
+                # 启动所有镜像
+                echo -e "${BLUE}正在启动所有镜像...${NC}"
                 for image in $(docker images --format '{{.Repository}}:{{.Tag}}'); do
                     docker run -d "$image"
                 done
-                echo -e "${GREEN}所有容器已启动！${NC}"
+                echo -e "${GREEN}所有镜像已启动！${NC}"
                 ;;
             6) 
-                # 停止所有容器
-                echo -e "${BLUE}正在停止所有容器...${NC}"
+                # 停止所有镜像
+                echo -e "${BLUE}正在停止所有镜像...${NC}"
                 docker stop $(docker ps -q)
-                echo -e "${GREEN}所有容器已停止！${NC}"
+                echo -e "${GREEN}所有镜像已停止！${NC}"
                 ;;
             7) 
                 # 重启镜像
-                images=$(docker images --format '{{.Repository}}:{{.Tag}}')
-                if [ -z "$images" ]; then
+                images=($(docker images --format '{{.Repository}}:{{.Tag}}'))
+                if [ ${#images[@]} -eq 0 ]; then
                     echo -e "${RED}没有找到任何镜像！${NC}"
                 else
                     echo -e "${BLUE}请选择要重启的镜像（按0返回）:${NC}"
-                    select image in $images; do
-                        if [ "$image" == "0" ]; then
+                    select image in "${images[@]}" "返回"; do
+                        if [ "$image" == "返回" ]; then
                             break
-                        elif [ -n "$image" ]; then
-                            # 获取该镜像的容器ID并重启容器
+                        elif [[ " ${images[@]} " =~ " ${image} " ]]; then
                             container_id=$(docker ps -q --filter ancestor="$image")
                             if [ -n "$container_id" ]; then
                                 docker restart "$container_id"
-                                echo -e "${GREEN}镜像 $image 的容器已被重启！${NC}"
+                                echo -e "${GREEN}镜像 $image 的镜像已被重启！${NC}"
                             else
-                                echo -e "${RED}没有运行中的容器！${NC}"
+                                echo -e "${RED}没有运行中的镜像！${NC}"
                             fi
                             break
                         else
