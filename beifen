@@ -1,142 +1,139 @@
 #!/bin/bash
 
-# -----------------------------------------
-# 配置部分
-# -----------------------------------------
-SOURCE_DIR="/"                        # 整机备份，注意权限问题
-CLOUD_REMOTE="gdrive:/backup"         # rclone 配置的名称和目标 Google Drive 文件夹
-LOG_DIR="/path/to/logs"               # 日志存放目录
-DATE_FORMAT=$(date +'%Y%m%d')         # 当前日期格式
-LOG_FILE="$LOG_DIR/backup_$DATE_FORMAT.log"
+# 定义变量
+BACKUP_DIR="/root/backup"      # 本地备份目录
+ONEDRIVE_DIR="/root/onedrive" # 本地OneDrive同步目录
+MAX_BACKUPS=3                 # 最大保留备份数量
+TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+BACKUP_FILE="backup_$TIMESTAMP.tar.gz"
+DOCKER_BACKUP_FILE="docker_backup_$TIMESTAMP.tar.gz"
 
-# -----------------------------------------
-# 辅助函数部分
-# -----------------------------------------
+# 创建备份目录
+mkdir -p "$BACKUP_DIR"
+mkdir -p "$ONEDRIVE_DIR"
 
-# 检查并安装 rclone
-install_rclone() {
-  if ! command -v rclone &> /dev/null; then
-    echo "rclone 未安装，正在安装..."
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sudo apt install rclone -y
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-      brew install rclone
+# 检查并安装OneDrive同步工具
+install_onedrive() {
+    if ! command -v onedrive &>/dev/null; then
+        echo "未检测到 OneDrive 同步工具，开始安装..."
+        apt update && apt install -y onedrive
+        echo "OneDrive 同步工具安装完成。"
+        echo "初始化 OneDrive 同步工具配置..."
+        onedrive --synchronize || onedrive --initialize
+        echo "请根据提示完成 OneDrive 账户授权并同步。"
     else
-      echo "不支持的操作系统，请手动安装 rclone。"
-      exit 1
+        echo "OneDrive 同步工具已安装。"
     fi
-    echo "rclone 安装完成。"
-  else
-    echo "rclone 已安装。"
-  fi
 }
 
-# 检查系统资源是否足够
-check_system_resources() {
-  local min_free_space=1000000000   # 最小剩余空间 1GB
-  local min_free_memory=500         # 最小剩余内存 500MB
-
-  # 检查磁盘空间
-  local free_space=$(df "$SOURCE_DIR" | tail -1 | awk '{print $4}')
-  if [[ -z "$free_space" || $free_space -lt $min_free_space ]]; then
-    echo "磁盘空间不足，剩余空间: $(($free_space / 1024)) MB, 无法进行备份"
-    exit 1
-  fi
-
-  # 检查内存
-  local free_memory=$(free -m | grep Mem | awk '{print $4}')
-  if [[ -z "$free_memory" || $free_memory -lt $min_free_memory ]]; then
-    echo "内存不足，剩余内存: $free_memory MB, 无法进行备份"
-    exit 1
-  fi
+# 启动OneDrive同步
+start_onedrive_sync() {
+    echo "启动 OneDrive 同步服务..."
+    systemctl --user enable onedrive
+    systemctl --user start onedrive
+    echo "OneDrive 同步服务已启动。"
 }
 
-# 确保目录存在
-ensure_directory_exists() {
-  [[ -d "$1" ]] || mkdir -p "$1" || { echo "创建目录 $1 失败"; exit 1; }
+# 普通数据备份
+backup_system() {
+    echo "开始备份系统数据..."
+    tar -czf "$BACKUP_DIR/$BACKUP_FILE" /etc /home /var/log 2>/dev/null
+    echo "系统数据备份完成: $BACKUP_FILE"
 }
 
-# 日志记录函数
-log_message() {
-  local level="$1"; shift
-  echo "$(date '+%Y-%m-%d %H:%M:%S') [$level] - $*" | tee -a "$LOG_FILE"
+# Docker 备份
+backup_docker() {
+    echo "开始备份 Docker 数据..."
+    # 导出所有容器
+    mkdir -p "$BACKUP_DIR/docker_containers"
+    for container in $(docker ps -q); do
+        docker export "$container" > "$BACKUP_DIR/docker_containers/${container}_backup.tar"
+        echo "容器已备份: $container"
+    done
+
+    # 导出所有镜像
+    docker save $(docker images -q) -o "$BACKUP_DIR/docker_images.tar"
+    echo "Docker 镜像已备份。"
+
+    # 打包 Docker 备份
+    tar -czf "$BACKUP_DIR/$DOCKER_BACKUP_FILE" -C "$BACKUP_DIR" docker_containers docker_images.tar
+    echo "Docker 数据备份完成: $DOCKER_BACKUP_FILE"
+
+    # 清理中间文件
+    rm -rf "$BACKUP_DIR/docker_containers" "$BACKUP_DIR/docker_images.tar"
 }
 
-# 压缩并上传文件到 Google Drive
-backup_and_upload_to_cloud() {
-  log_message "INFO" "正在压缩文件并上传到 Google Drive"
+# 上传备份到OneDrive
+upload_to_onedrive() {
+    echo "上传备份到 OneDrive..."
+    cp "$BACKUP_DIR/$BACKUP_FILE" "$ONEDRIVE_DIR/"
+    cp "$BACKUP_DIR/$DOCKER_BACKUP_FILE" "$ONEDRIVE_DIR/"
 
-  # 使用 tar 压缩并通过管道直接上传到 Google Drive
-  tar -czf - "$SOURCE_DIR" | rclone rcd --rc-job-timeout 1h --rc-addr :5572 --rc-web-gui --rc-commands-completion --rc-pid-file "$DEST_DIR" copyto gdrive:/backup/backup_$(date +'%Y%m%d_%H%M%S').tar.gz
+    # 限制备份数量
+    echo "检查并限制OneDrive备份文件数量..."
+    while [ $(ls "$ONEDRIVE_DIR"/backup_*.tar.gz 2>/dev/null | wc -l) -gt $MAX_BACKUPS ]; do
+        OLDEST_FILE=$(ls "$ONEDRIVE_DIR"/backup_*.tar.gz | head -n 1)
+        rm -f "$OLDEST_FILE"
+        echo "已删除旧备份: $OLDEST_FILE"
+    done
+    while [ $(ls "$ONEDRIVE_DIR"/docker_backup_*.tar.gz 2>/dev/null | wc -l) -gt $MAX_BACKUPS ]; do
+        OLDEST_DOCKER_FILE=$(ls "$ONEDRIVE_DIR"/docker_backup_*.tar.gz | head -n 1)
+        rm -f "$OLDEST_DOCKER_FILE"
+        echo "已删除旧 Docker 备份: $OLDEST_DOCKER_FILE"
+    done
 
-  if [[ $? -eq 0 ]]; then
-    log_message "INFO" "上传成功"
-  else
-    log_message "ERROR" "上传失败"
-    exit 1
-  fi
+    onedrive --synchronize
+    echo "备份上传完成。"
 }
 
-# 查看备份文件
-list_backup_files() {
-  log_message "INFO" "查看备份文件"
-  rclone ls "$CLOUD_REMOTE" || { log_message "ERROR" "查看备份文件失败"; exit 1; }
+# 菜单界面
+menu() {
+    while true; do
+        clear
+        echo "====================="
+        echo "  VPS 备份管理工具"
+        echo "====================="
+        echo "1. 备份系统数据"
+        echo "2. 备份 Docker 数据"
+        echo "3. 查看备份文件"
+        echo "4. 配置 OneDrive"
+        echo "0. 退出"
+        echo "====================="
+        read -p "请输入选项: " choice
+        case $choice in
+            1)
+                backup_system
+                upload_to_onedrive
+                read -p "按任意键返回菜单..."
+                ;;
+            2)
+                backup_docker
+                upload_to_onedrive
+                read -p "按任意键返回菜单..."
+                ;;
+            3)
+                echo "本地备份文件："
+                ls -lh "$BACKUP_DIR" | grep "backup_"
+                echo "OneDrive备份文件："
+                ls -lh "$ONEDRIVE_DIR" | grep "backup_"
+                read -p "按任意键返回菜单..."
+                ;;
+            4)
+                install_onedrive
+                start_onedrive_sync
+                read -p "按任意键返回菜单..."
+                ;;
+            0)
+                echo "退出工具。"
+                break
+                ;;
+            *)
+                echo "无效选项，请重新输入。"
+                sleep 2
+                ;;
+        esac
+    done
 }
 
-# 按任意键返回
-wait_for_keypress() {
-  read -n 1 -s -r -p "按任意键返回..."
-  echo
-}
-
-# 显示菜单
-show_menu() {
-  echo "选择操作："
-  echo "1) 备份文件并上传到 Google Drive"
-  echo "2) 修改 Google Drive 配置"
-  echo "3) 查看备份文件"
-  echo "4) 退出"
-}
-
-# 修改 Google Drive 配置
-modify_rclone_config() {
-  rclone config
-}
-
-# -----------------------------------------
-# 主要执行部分
-# -----------------------------------------
-main() {
-  ensure_directory_exists "$LOG_DIR"
-  install_rclone
-
-  while true; do
-    show_menu
-    read -p "请输入选项 (1-4): " option
-    case $option in
-      1)
-        check_system_resources
-        backup_and_upload_to_cloud
-        wait_for_keypress
-        ;;
-      2)
-        modify_rclone_config
-        wait_for_keypress
-        ;;
-      3)
-        list_backup_files
-        wait_for_keypress
-        ;;
-      4)
-        echo "退出程序"
-        exit 0
-        ;;
-      *)
-        echo "无效选项，请重新选择"
-        wait_for_keypress
-        ;;
-    esac
-  done
-}
-
-main "$@"
+# 主程序入口
+menu
