@@ -97,9 +97,24 @@ install_docker() {
             # 安装 Docker
             curl -fsSL https://get.docker.com | bash -s docker
             # 安装 Docker Compose
-            curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            chmod +x /usr/local/bin
-            /usr/local/bin/docker-compose
+            COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compo
+# Docker安装函数
+install_docker() {
+    echo -e "${BLUE}正在安装Docker...${NC}"
+    
+    # 检查依赖
+    check_dependencies
+
+    # 根据不同系统选择安装方式
+    case $OS in
+        ubuntu|debian)
+            # 安装 Docker
+            curl -fsSL https://get.docker.com | bash -s docker
+            # 安装 Docker Compose
+            COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)
+            curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+            /usr/local/bin/docker-compose --version
             ;;
         centos|rhel|fedora)
             # 安装 Docker
@@ -107,10 +122,16 @@ install_docker() {
             # 启动 Docker
             systemctl start docker
             systemctl enable docker
+            # 安装 Docker Compose
+            COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)
+            curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+            /usr/local/bin/docker-compose --version
             ;;
     esac
     
     echo -e "${GREEN}Docker 安装完成！${NC}"
+    echo -e "${GREEN}Docker Compose 版本: $(/usr/local/bin/docker-compose --version)${NC}"
     read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
@@ -126,143 +147,109 @@ start_docker() {
 stop_docker() {
     systemctl stop docker
     echo -e "${GREEN}Docker 服务已停止！${NC}"
+    read -n 1 -s -r 
+# 停止 Docker 服务
+stop_docker() {
+    systemctl stop docker
+    echo -e "${GREEN}Docker 服务已停止！${NC}"
     read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
-# 容器管理
-container_management() {
-    while true; do
-        clear
-        echo -e "${BLUE}\n===== 容器管理 =====${NC}"
-        echo "1. 列出所有容器      2. 启动容器"
-        echo "3. 停止容器          4. 重启容器"
-        echo "5. 删除容器          6. 查看容器日志"
-        echo "7. 停止所有容器      8. 启动所有容器"
-        echo "0. 返回主菜单"
-        
-        read -p "请选择操作: " container_choice
-        
-        case $container_choice in
-            1) docker ps -a ;;
-            2) 
-                read -p "请输入容器名称或ID: " container
-                docker start "$container" 
-                ;;
-            3) 
-                read -p "请输入容器名称或ID: " container
-                docker stop "$container" 
-                ;;
-            4) 
-                read -p "请输入容器名称或ID: " container
-                docker restart "$container" 
-                ;;
-            5) 
-                # 列出所有容器
-                containers=$(docker ps -a --format '{{.Names}}')
-                if [ -z "$containers" ]; then
-                    echo -e "${RED}没有找到任何容器！${NC}"
-                else
-                    echo -e "${BLUE}请选择要删除的容器:${NC}"
-                    select container in $containers; do
-                        if [ -n "$container" ]; then
-                            docker rm -f "$container"
-                            echo -e "${GREEN}容器 $container 已被删除！${NC}"
-                            break
-                
-                        else
-                            echo -e "${RED}无效的选择，请重试！${NC}"
-                        fi
-                    done
-                fi
-                ;;
-            6) 
-                read -p "请输入容器名称或ID: " container
-                docker logs "$container" 
-                ;;
-            7) 
-                docker stop $(docker ps -q)
-                echo -e "${GREEN}所有容器已停止！${NC}"
-                ;;
-            8) 
-                docker start $(docker ps -aq)
-                echo -e "${GREEN}所有容器已启动！${NC}"
-                ;;
-            0) break ;;
-            *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
-        esac
-        read -n 1 -s -r -p "按任意键继续..."
-    done
+# 删除 Docker
+remove_docker() {
+    echo -e "${BLUE}正在卸载 Docker...${NC}"
+    case $OS in
+        ubuntu|debian)
+            apt-get remove --purge -y docker docker-engine docker.io containerd runc
+            ;;
+        centos|rhel|fedora)
+            yum remove -y docker docker-common docker-snapshot
+            ;;
+    esac
+    echo -e "${GREEN}Docker 卸载完成！${NC}"
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
-# 镜像管理
-image_management() {
-    while true; do
-        clear
-        echo -e "${BLUE}\n===== 镜像管理 =====${NC}"
-        echo "1. 列出所有镜像      2. 删除镜像"
-        echo "0. 返回主菜单"
-        
-        read -p "请选择操作: " image_choice
-        
-        case $image_choice in
-            1) docker images ;;
-            2) 
-                # 列出所有镜像
-                images=$(docker images --format '{{.Repositor
-y}}:{{.Tag}}')
-                if [ -z "$images" ]; then
-                    echo -e "${RED}没有找到任何镜像！${NC}"
-                else
-                    echo -e "${BLUE}请选择要删除的镜像:${NC}"
-                    select image in $images; do
-                        if [ -n "$image" ]; then
-                            docker rmi "$image"
-                            echo -e "${GREEN}镜像 $image 已被删除！${NC}"
-                            break
-                        else
-                            echo -e "${RED}无效的选择，请重试！${NC}"
-                        fi
-                    done
-                fi
-                ;;
-            0) break ;;
-            *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
-        esac
-        read -n 1 -s -r -p "按任意键继续..."
-    done
+# 查看所有容器并删除
+list_and_remove_containers() {
+    echo -e "${BLUE}列出所有容器并选择删除...${NC}"
+    containers=$(docker ps -a --format "{{.ID}}: {{.Names}}")
+    if [ -z "$containers" ]; then
+        echo -e "${RED}没有找到任何容器！${NC}"
+    else
+        echo -e "${GREEN}当前存在以下容器：${NC}"
+        echo "$containers"
+        echo -e "${YELLOW}请输入容器ID或名称删除（多个容器ID用空格分隔）：${NC}"
+        read -r containers_to_delete
+        docker rm -f $containers_to_delete
+        echo -e "${GREEN}容器删除成功！${NC}"
+    fi
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+}
+
+# 查看所有镜像并删除
+list_and_remove_images() {
+    echo -e "${BLUE}列出所有镜像并选择删除...${NC}"
+    images=$(docker images --format "{{.ID}}: {{.Repository}}:{{.Tag}}")
+    if [ -z "$images" ]; then
+        echo -e "${RED}没有找到任何镜像！${NC}"
+    else
+        echo -e "${GREEN}当前存在以下镜像：${NC}"
+        echo "$images"
+        echo -e "${YELLOW}请输入镜像ID或名称删除（多个镜像ID用空格分隔）：${NC}"
+ 
+# 查看所有镜像并删除
+list_and_remove_images() {
+    echo -e "${BLUE}列出所有镜像并选择删除...${NC}"
+    images=$(docker images --format "{{.ID}}: {{.Repository}}:{{.Tag}}")
+    if [ -z "$images" ]; then
+        echo -e "${RED}没有找到任何镜像！${NC}"
+    else
+        echo -e "${GREEN}当前存在以下镜像：${NC}"
+        echo "$images"
+        echo -e "${YELLOW}请输入镜像ID或名称删除（多个镜像ID用空格分隔）：${NC}"
+        read -r images_to_delete
+        docker rmi -f $images_to_delete
+        echo -e "${GREEN}镜像删除成功！${NC}"
+    fi
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # 主菜单
 main_menu() {
-    while true; do
-        clear
-        echo -e "${BLUE}\n===== Docker 管理脚本 =====${NC}"
-        echo "1. 安装 Docker"
-        echo "2. 启动 Docker"
-        echo "3. 停止 Docker"
-        echo "4. 容器管理"
-        echo "5. 镜像管理"
-        echo "6. 更换 Docker 源"
-        echo "0. 退出"
-        
-        read -p "请选择操作: " choice
-        
-        case $choice in
-            1) install_docker ;;
-            2) start_docker ;;
-            3) stop_docker ;;
-            4) container_management ;;
-            5) image_management ;;
-            6) change_docker_source ;;
-            0) exit 0 ;;
-            *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
-        esac
-        read -n 1 -s -r -p "按任意键继续..."
-    done
+    clear
+    echo -e "${GREEN}欢迎使用 Docker 管理脚本！${NC}"
+    echo -e "${YELLOW}请选择操作：${NC}"
+    echo -e "1. 安装 Docker 和 Docker Compose"
+    echo -e "2. 启动 Docker 服务"
+    echo -e "3. 停止 Docker 服务"
+    echo -e "4. 卸载 Docker"
+    echo -e "5. 列出并删除容器"
+    echo -e "6. 列出并删除镜像"
+    echo -e "7. 更换 Docker 源"
+    echo -e "8. 更新系统"
+    echo -e "9. 退出"
+    read -p "请输入你的选择 [1-9]: " choice
+
+    case $choice in
+        1) install_docker ;;
+        2) start_docker ;;
+        3) stop_docker ;;
+        4) remove_docker ;;
+        5) list_and_remove_containers ;;
+        6) list_and_remove_images ;;
+        7) change_docker_source ;;
+        8) update_system ;;
+        9) exit 0 ;;
+        *) echo -e "${RED}无效选择，请重新选择！${NC}" && sleep 2 && main_menu ;;
+    esac
 }
 
-# 主程序
+# 检查是否为root用户
 check_root
+
+# 系统检测
 check_system
-update_system
+
+# 启动主菜单
 main_menu
