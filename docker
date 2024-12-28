@@ -94,9 +94,11 @@ install_docker() {
     # 根据不同系统选择安装方式
     case $OS in
         ubuntu|debian)
-            # 安装Docker
-            curl -fsSL https://get.docker.com | bash -s docker
-            ;;
+          # 安装 Docker
+           curl -fsSL https://get.docker.com | bash -s docker && \
+          # 安装 Docker Compose
+           apt update && \
+           apt install -y docker-compose
         
         centos|rhel|fedora)
             # 添加Docker仓库
