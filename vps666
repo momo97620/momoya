@@ -649,8 +649,8 @@ EOL
     docker-compose up -d
 
     # 提示用户
-    echo -e "${DEEPRED}1.${NC} ⚠️请手动放行8842端口！！"
-    echo -e "${DEEPRED}2.${NC} ⚠️后台登录方式：本机IP+8842！！"
+    echo -e "${DEEPRED}1.${NC} ⚠️ ${DEEPRED}请手动放行8842端口！！${NC}"
+    echo -e "${DEEPRED}2.${NC} ⚠️ ${DEEPRED}后台登录方式：本机IP+8842！！${NC}"
     
     # 等待用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
