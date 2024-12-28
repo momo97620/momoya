@@ -39,12 +39,20 @@ install_latest_onedrive() {
     apt update
     apt install -y git gcc g++ make pkg-config curl libcurl4-openssl-dev \
         libsqlite3-dev libnotify-dev libssl-dev zlib1g-dev
+
+    # 安装 D 编译器
+    echo "检测并安装 D 编译器..."
+    if ! command -v ldc2 &> /dev/null; then
+        apt install -y ldc || apt install -y dmd-compiler
+    fi
+
     rm -rf /root/onedrive_source
     git clone https://github.com/abraunegg/onedrive.git /root/onedrive_source
     cd /root/onedrive_source || exit
     ./configure
     make
     make install
+
     # 强制覆盖旧版本
     if [ -f /usr/local/bin/onedrive ]; then
         cp /usr/local/bin/onedrive /usr/bin/onedrive
