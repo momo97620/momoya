@@ -12,6 +12,26 @@ DOCKER_BACKUP_FILE="docker_backup_$TIMESTAMP.tar.gz"
 mkdir -p "$BACKUP_DIR"
 mkdir -p "$ONEDRIVE_DIR"
 
+# 检测 OneDrive 工具是否安装
+install_or_update_onedrive() {
+    echo "检测 OneDrive 同步工具..."
+    if ! command -v onedrive &> /dev/null; then
+        echo "未安装 OneDrive，同步工具将安装最新版本..."
+        install_latest_onedrive
+    else
+        CURRENT_VERSION=$(onedrive --version | awk '{print $3}')
+        echo "检测到已安装版本: $CURRENT_VERSION"
+        # 最新版本号从 abraunegg 的 GitHub 获取
+        LATEST_VERSION=$(curl -s https://api.github.com/repos/abraunegg/onedrive/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+            echo "当前版本不是最新版本 ($CURRENT_VERSION < $LATEST_VERSION)，正在更新..."
+            install_latest_onedrive
+        else
+            echo "OneDrive 已是最新版本 ($CURRENT_VERSION)，跳过安装。"
+        fi
+    fi
+}
+
 # 安装最新的 OneDrive 工具
 install_latest_onedrive() {
     echo "安装最新的 OneDrive 同步工具..."
@@ -125,7 +145,7 @@ menu() {
                 read -p "按任意键返回菜单..."
                 ;;
             4)
-                install_latest_onedrive
+                install_or_update_onedrive
                 configure_onedrive
                 start_onedrive_sync
                 read -p "按任意键返回菜单..."
@@ -143,4 +163,5 @@ menu() {
 }
 
 # 主程序入口
+install_or_update_onedrive
 menu
