@@ -2,7 +2,7 @@
 
 # Docker管理脚本
 # 版本：1.3
-# 作者：Assistant
+# 作者：emo的小默默
 # 描述：提供Docker安装、管理和卸载的一站式脚本
 
 # 颜色定义
@@ -95,7 +95,7 @@ install_docker() {
     case $OS in
         ubuntu|debian)
             # 安装Docker
-            apt-get install -y docker.io
+            curl -fsSL https://get.docker.com | bash -s docker
             ;;
         
         centos|rhel|fedora)
