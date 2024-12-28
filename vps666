@@ -654,13 +654,13 @@ services:
       - DEFAULT_MODEL=gpt-4o-mini  #默认模型
       - ENABLE_BALANCE_QUERY=1  #启用余额查询
 # 
-# ${DEEPRED}- 注意修改换成你的key令牌.然后修改代理地址：
+# ${DEEPRED}- 注意修改换成你的key令牌.然后修改代理地址:${NC}
 
-# ${DEEPRED}- 修改代理地址(就是你取api key的网站他们要求填他们的第三方地址)
+# ${DEEPRED}- 修改代理地址(就是你取api key的网站他们要求填他们的第三方地址)${NC}
 
-# ${DEEPRED}- 后台管理员密码默认(meomomo)  其他不用修改
+# ${DEEPRED}- 后台管理员密码默认(meomomo)  其他不用修改${NC}
 
-# ${DEEPRED}- 修改完成后按住ctrl不放然后再按x(保存)
+# ${DEEPRED}- 修改完成后按住ctrl不放然后再按x(保存)${NC}
 EOL
 
     # 使用 nano 编辑器打开 docker-compose.yml 供用户修改
