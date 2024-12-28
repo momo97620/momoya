@@ -1,0 +1,132 @@
+#!/bin/bash
+
+# -----------------------------------------
+# 配置部分
+# -----------------------------------------
+SOURCE_DIR="/path/to/source"          # 需要备份的目录
+DEST_DIR="/path/to/destination"       # 本地保存压缩文件的目录
+CLOUD_REMOTE="gdrive:/backup"         # rclone 配置的名称和目标 Google Drive 文件夹
+LOG_DIR="/path/to/logs"               # 日志存放目录
+DATE_FORMAT=$(date +'%Y%m%d')         # 当前日期格式
+LOG_FILE="$LOG_DIR/backup_$DATE_FORMAT.log"
+
+# -----------------------------------------
+# 辅助函数部分
+# -----------------------------------------
+
+# 检查并安装 rclone
+install_rclone() {
+  if ! command -v rclone &> /dev/null; then
+    echo "rclone 未安装，正在安装..."
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      sudo apt install rclone -y
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      brew install rclone
+    else
+      echo "不支持的操作系统，请手动安装 rclone。"
+      exit 1
+    fi
+    echo "rclone 安装完成。"
+  else
+    echo "rclone 已安装。"
+  fi
+}
+
+# 检查系统资源是否足够
+check_system_resources() {
+  local min_free_space=10000000000  # 最小剩余空间 10GB
+  local min_free_memory=1000000     # 最小剩余内存 1GB
+
+  # 检查磁盘空间
+  local free_space=$(df "$SOURCE_DIR" | tail -1 | awk '{print $4}')
+  if [[ $free_space -lt $min_free_space ]]; then
+    echo "磁盘空间不足，剩余空间: $(($free_space / 1024 / 1024)) MB, 无法进行备份"
+    exit 1
+  fi
+
+  # 检查内存
+  local free_memory=$(free -m | grep Mem | awk '{print $4}')
+  if [[ $free_memory -lt $min_free_memory ]]; then
+    echo "内存不足，剩余内存: $free_memory MB, 无法进行备份"
+    exit 1
+  fi
+}
+
+# 确保目录存在
+ensure_directory_exists() {
+  [[ -d "$1" ]] || mkdir -p "$1" || { echo "创建目录 $1 失败"; exit 1; }
+}
+
+# 日志记录函数
+log_message() {
+  local level="$1"; shift
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [$level] - $*" | tee -a "$LOG_FILE"
+}
+
+# 压缩文件
+compress_files() {
+  log_message "INFO" "正在压缩文件从 $SOURCE_DIR 到 $DEST_DIR"
+  (cd "$SOURCE_DIR" && tar -czf "$DEST_DIR/backup_$(date +'%Y%m%d_%H%M%S').tar.gz" .) || { log_message "ERROR" "压缩失败"; exit 1; }
+  log_message "INFO" "压缩完成"
+}
+
+# 上传文件到 Google Drive
+upload_to_cloud() {
+  log_message "INFO" "开始上传到 Google Drive"
+  rclone copy "$DEST_DIR" "$CLOUD_REMOTE" && log_message "INFO" "上传成功" || log_message "ERROR" "上传失败"
+}
+
+# 查看备份文件
+list_backup_files() {
+  log_message "INFO" "查看备份文件"
+  ls -lh "$DEST_DIR" || { log_message "ERROR" "查看备份文件失败"; exit 1; }
+}
+
+# 显示菜单
+show_menu() {
+  echo "选择操作："
+  echo "1) 备份文件"
+  echo "2) 修改上传的云盘"
+  echo "3) 查看备份文件"
+  echo "0) 退出"
+}
+
+# 修改 Google Drive 配置
+modify_rclone_config() {
+  rclone config
+}
+
+# -----------------------------------------
+# 主要执行部分
+# -----------------------------------------
+main() {
+  ensure_directory_exists "$LOG_DIR"
+  install_rclone
+
+  while true; do
+    show_menu
+    read -p "请输入选项 (1-4): " option
+    case $option in
+      1)
+        check_system_resources
+        compress_files
+        upload_to_cloud
+        ;;
+      2)
+        modify_rclone_config
+        ;;
+      3)
+        list_backup_files
+        ;;
+      0)
+        echo "退出程序"
+        exit 0
+        ;;
+      *)
+        echo "无效选项，请重新选择"
+        ;;
+    esac
+  done
+}
+
+main "$@"
