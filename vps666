@@ -619,6 +619,12 @@ done
     ;;
 
         17)
+# 颜色定义
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+DEEPRED='\033[1;31m'  # 深红色
+NC='\033[0m'          # 无颜色
+
 # 检查并设置 locale
 if ! grep -q "export LANG=en_US.UTF-8" ~/.bashrc; then
     echo "export LANG=en_US.UTF-8" >> ~/.bashrc
