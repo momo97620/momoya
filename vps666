@@ -456,7 +456,7 @@ echo -e "  ${BLUE}5.${NC} ${PINK}♥${NC} ${GREEN}一键搭建节点${NC}      $
 echo -e "  ${BLUE}6.${NC} ${PINK}♥${NC} ${GREEN}一键配置WARP${NC}      ${BLUE}14${NC} ${PINK}♥${NC} ${RED}监控TG关键词 ▶${NC}"
 echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速${NC}       ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
 echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker管理${NC}        ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
-echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${LIGHTCYAN}部署NextChatGPT${NC}" 
+echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${LIGHTCYAN}NextChatGPT${NC}" 
 echo -e "  ${BLUE}00${NC} ${PINK}♥${NC} ${RED}退出${NC}"
     read -p "请输入选项 (0-17): " choice
   
