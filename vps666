@@ -646,7 +646,12 @@ EOL
     nano docker-compose.yml
 
     # 用户保存退出后，自动运行 docker-compose up -d
-    docker-compose up -d
+    if docker-compose up -d; then
+        echo -e "${GREEN}✅ Docker 容器启动成功！${NC}"
+    else
+        echo -e "${RED}❌ Docker 容器启动失败！请检查是否安装docker-compose。${NC}"
+        exit 1
+    fi
 
     # 提示用户
     echo -e "${DEEPRED}1.${NC} ⚠️ ${DEEPRED}请手动放行8842端口！！${NC}"
@@ -658,7 +663,7 @@ EOL
 
 # 调用函数
 setup_nextchat
-            ;;
+
 
         0)
             echo -e "${GREEN}退出程序...${NC}"
