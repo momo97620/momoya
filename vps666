@@ -636,12 +636,15 @@ services:
       - "8842:3000"
     environment:
       - OPENAI_API_KEY=sk-xxx #你的api key
-      - CODE=995415ada  #密码
+      - CODE=emomomo  #密码
       - BASE_URL=https://xx.xx.io #第三方代理地址
       - DEFAULT_MODEL=gpt-4o-mini  #默认模型
       - ENABLE_BALANCE_QUERY=1  #启用余额查询
 EOL
 
+          #修改你的api、代理地址(就是指你取api key令牌网站他们要求第三方的地址)
+          #后台管理员密码默认(meomomo)  其他不用修改
+          #修改完成后按esc，然后小写的:wq(保存)
     # 使用 vim 编辑器打开 docker-compose.yml 供用户修改
     vim docker-compose.yml
 
