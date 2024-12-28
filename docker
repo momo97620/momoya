@@ -94,11 +94,45 @@ install_docker() {
     # 根据不同系统选择安装方式
     case $OS in
         ubuntu|debian)
-            # 安装 Docker
+    # 安装 Docker
+    case $OS in
+        ubuntu|debian)
             curl -fsSL https://get.docker.com | bash -s docker
-            # 安装 Docker Compose
-            COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compo
-# Docker安装函数
+            ;;
+        centos|rhel|fedora)
+            curl -fsSL https://get.docker.com | bash -s docker
+            ;;
+        *)
+            echo -e "${RED}不支持的操作系统！${NC}"
+            exit 1
+            ;;
+    esac
+
+    # 安装 Docker Compose
+    COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)
+    curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+    # 设置权限
+    chmod +x /usr/local/bin/docker-compose
+
+    # 检查 Docker 和 Docker Compose 是否安装成功
+    if command -v docker &> /dev/null && command -v docker-compose &> /dev/null; then
+        echo -e "${GREEN}Docker 和 Docker Compose 安装成功！${NC}"
+    else
+        echo -e "${RED}Docker 或 Docker Compose 安装失败！${NC}"
+        exit 1
+    fi
+
+    # 启动 Docker 服务
+    systemctl start docker
+    systemctl enable docker
+
+    echo -e "${GREEN}Docker 服务已启动并设置为开机自启！${NC}"
+
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+}
+://get.docker.com | bash -s docker
+            ;;
 install_docker() {
     echo -e "${BLUE}正在安装Docker...${NC}"
     
