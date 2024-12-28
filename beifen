@@ -35,6 +35,7 @@ install_or_update_onedrive() {
 # 安装最新的 OneDrive 工具
 install_latest_onedrive() {
     echo "安装最新的 OneDrive 同步工具..."
+    apt remove --purge onedrive -y 2>/dev/null
     apt update
     apt install -y git gcc g++ make pkg-config curl libcurl4-openssl-dev \
         libsqlite3-dev libnotify-dev libssl-dev zlib1g-dev
@@ -44,9 +45,12 @@ install_latest_onedrive() {
     ./configure
     make
     make install
-    echo "OneDrive 工具安装完成。"
+    # 强制覆盖旧版本
+    if [ -f /usr/local/bin/onedrive ]; then
+        cp /usr/local/bin/onedrive /usr/bin/onedrive
+    fi
+    echo "OneDrive 工具安装完成，版本：$(onedrive --version)"
 }
-
 # 执行 OneDrive 认证
 configure_onedrive() {
     echo "配置 OneDrive 账户授权..."
