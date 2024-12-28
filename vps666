@@ -642,7 +642,7 @@ services:
       - ENABLE_BALANCE_QUERY=1  #启用余额查询
 EOL
 
-    # 使用 nano 编辑器打开 docker-compose.yml 供用户修改
+    # 使用 vim 编辑器打开 docker-compose.yml 供用户修改
     nano docker-compose.yml
 
     # 用户保存退出后，自动运行 docker-compose up -d
