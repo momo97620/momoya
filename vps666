@@ -654,7 +654,8 @@ services:
       - DEFAULT_MODEL=gpt-4o-mini  #默认模型
       - ENABLE_BALANCE_QUERY=1  #启用余额查询
 # 
-# 注意修改key 地址：
+# 注意修改换成你的key.然后代理地址：
+
 # - 修改你的api key、代理地址(就是你取api key网站他们要求第三方的地址)
 
 # - 后台管理员密码默认(meomomo)  其他不用修改
