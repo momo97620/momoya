@@ -17,10 +17,10 @@ SCRIPT_PATH="/root/vps666"
 
 # 检查符号链接是否已经存在
 if [ ! -L "$LINK_NAME" ]; then
-    ln -s "$SCRIPT_PATH" "$LINK_NAME"
-    echo -e "${GREEN}符号链接 $LINK_NAME 已创建。${NC}"
+    ln -s "$SCRIPT_PATH" "$LINK_NAME" > /dev/null 2>&1
 else
-    echo -e "${YELLOW}符号链接 $LINK_NAME 已存在。${NC}"
+    # 什么都不做，完全隐藏输出
+    :
 fi
 
 # 获取脚本路径
