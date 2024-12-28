@@ -12,24 +12,40 @@ DOCKER_BACKUP_FILE="docker_backup_$TIMESTAMP.tar.gz"
 mkdir -p "$BACKUP_DIR"
 mkdir -p "$ONEDRIVE_DIR"
 
-# 检查并安装OneDrive同步工具
-install_onedrive() {
-    if ! command -v onedrive &>/dev/null; then
-        echo "未检测到 OneDrive 同步工具，开始安装..."
-        apt update && apt install -y onedrive
-        echo "OneDrive 同步工具安装完成。"
-        echo "初始化 OneDrive 同步工具配置..."
-        onedrive --synchronize || onedrive --initialize
-        echo "请根据提示完成 OneDrive 账户授权并同步。"
+# 安装最新的 OneDrive 工具
+install_latest_onedrive() {
+    echo "安装最新的 OneDrive 同步工具..."
+    apt update
+    apt install -y git gcc g++ make pkg-config curl libcurl4-openssl-dev \
+        libsqlite3-dev libnotify-dev libssl-dev zlib1g-dev
+    rm -rf /root/onedrive_source
+    git clone https://github.com/abraunegg/onedrive.git /root/onedrive_source
+    cd /root/onedrive_source || exit
+    ./configure
+    make
+    make install
+    echo "OneDrive 工具安装完成。"
+}
+
+# 执行 OneDrive 认证
+configure_onedrive() {
+    echo "配置 OneDrive 账户授权..."
+    if [ ! -f ~/.config/onedrive/refresh_token ]; then
+        onedrive --authenticate
+        if [ $? -ne 0 ]; then
+            echo "OneDrive 授权失败，请检查网络或账户信息。"
+            exit 1
+        fi
     else
-        echo "OneDrive 同步工具已安装。"
+        echo "已检测到 OneDrive 授权，无需重复配置。"
     fi
 }
 
-# 启动OneDrive同步
+# 启动 OneDrive 同步服务
 start_onedrive_sync() {
     echo "启动 OneDrive 同步服务..."
     systemctl --user enable onedrive
+    export XDG_RUNTIME_DIR=/run/user/$(id -u)
     systemctl --user start onedrive
     echo "OneDrive 同步服务已启动。"
 }
@@ -41,36 +57,27 @@ backup_system() {
     echo "系统数据备份完成: $BACKUP_FILE"
 }
 
-# Docker 备份
+# Docker 数据备份
 backup_docker() {
     echo "开始备份 Docker 数据..."
-    # 导出所有容器
     mkdir -p "$BACKUP_DIR/docker_containers"
     for container in $(docker ps -q); do
         docker export "$container" > "$BACKUP_DIR/docker_containers/${container}_backup.tar"
         echo "容器已备份: $container"
     done
-
-    # 导出所有镜像
     docker save $(docker images -q) -o "$BACKUP_DIR/docker_images.tar"
     echo "Docker 镜像已备份。"
-
-    # 打包 Docker 备份
     tar -czf "$BACKUP_DIR/$DOCKER_BACKUP_FILE" -C "$BACKUP_DIR" docker_containers docker_images.tar
     echo "Docker 数据备份完成: $DOCKER_BACKUP_FILE"
-
-    # 清理中间文件
     rm -rf "$BACKUP_DIR/docker_containers" "$BACKUP_DIR/docker_images.tar"
 }
 
-# 上传备份到OneDrive
+# 上传备份到 OneDrive
 upload_to_onedrive() {
     echo "上传备份到 OneDrive..."
     cp "$BACKUP_DIR/$BACKUP_FILE" "$ONEDRIVE_DIR/"
     cp "$BACKUP_DIR/$DOCKER_BACKUP_FILE" "$ONEDRIVE_DIR/"
-
-    # 限制备份数量
-    echo "检查并限制OneDrive备份文件数量..."
+    echo "检查并限制 OneDrive 备份文件数量..."
     while [ $(ls "$ONEDRIVE_DIR"/backup_*.tar.gz 2>/dev/null | wc -l) -gt $MAX_BACKUPS ]; do
         OLDEST_FILE=$(ls "$ONEDRIVE_DIR"/backup_*.tar.gz | head -n 1)
         rm -f "$OLDEST_FILE"
@@ -81,7 +88,6 @@ upload_to_onedrive() {
         rm -f "$OLDEST_DOCKER_FILE"
         echo "已删除旧 Docker 备份: $OLDEST_DOCKER_FILE"
     done
-
     onedrive --synchronize
     echo "备份上传完成。"
 }
@@ -119,7 +125,8 @@ menu() {
                 read -p "按任意键返回菜单..."
                 ;;
             4)
-                install_onedrive
+                install_latest_onedrive
+                configure_onedrive
                 start_onedrive_sync
                 read -p "按任意键返回菜单..."
                 ;;
