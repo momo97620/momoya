@@ -238,18 +238,18 @@ image_management() {
                 ;;
             4) 
                 # 停止镜像
-                running_containers=$(docker ps --format '{{.ID}}: {{.Image}}')
-                if [ -z "$running_containers" ]; then
+                running_images=$(docker ps --format '{{.ID}}: {{.Image}}')
+                if [ -z "$running_images" ]; then
                     echo -e "${RED}没有运行中的镜像！${NC}"
                 else
                     echo -e "${BLUE}请选择要停止的镜像（按0返回）:${NC}"
-                    select container in $running_containers "返回"; do
-                        if [ "$container" == "返回" ]; then
+                    select image in $running_images; do
+                        if [ "$image" == "0" ]; then
                             break
-                        elif [ -n "$container" ]; then
-                            container_id=$(echo "$container" | cut -d':' -f1)
-                            docker stop "$container_id"
-                            echo -e "${GREEN}镜像 $container_id 已被停止！${NC}"
+                        elif [ -n "$image" ]; then
+                            image_id=$(echo "$image" | cut -d':' -f1)
+                            docker stop "$image_id"
+                            echo -e "${GREEN}镜像 $image_id 已被停止！${NC}"
                             break
                         else
                             echo -e "${RED}无效的选择，请重试！${NC}"
@@ -282,10 +282,10 @@ image_management() {
                         if [ "$image" == "返回" ]; then
                             break
                         elif [[ " ${images[@]} " =~ " ${image} " ]]; then
-                            container_id=$(docker ps -q --filter ancestor="$image")
-                            if [ -n "$container_id" ]; then
-                                docker restart "$container_id"
-                                echo -e "${GREEN}镜像 $image 的镜像已被重启！${NC}"
+                            image_id=$(docker ps -q --filter ancestor="$image")
+                            if [ -n "$image_id" ]; then
+                                docker restart "$image_id"
+                                echo -e "${GREEN}镜像 $image 的容器已被重启！${NC}"
                             else
                                 echo -e "${RED}没有运行中的镜像！${NC}"
                             fi
@@ -299,7 +299,6 @@ image_management() {
             0) break ;;
             *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
         esac
-        read -n 1 -s -r -p "按任意键继续..."
     done
 }
 
