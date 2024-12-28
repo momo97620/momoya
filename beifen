@@ -3,8 +3,8 @@
 # -----------------------------------------
 # 配置部分
 # -----------------------------------------
-SOURCE_DIR="/path/to/source"          # 需要备份的目录
-DEST_DIR="/path/to/destination"       # 本地保存压缩文件的目录
+SOURCE_DIR="/path/to/source"          # 需要备份的目录，请确保此路径存在
+DEST_DIR="/path/to/destination"       # 本地保存压缩文件的目录，请确保此路径存在
 CLOUD_REMOTE="gdrive:/backup"         # rclone 配置的名称和目标 Google Drive 文件夹
 LOG_DIR="/path/to/logs"               # 日志存放目录
 DATE_FORMAT=$(date +'%Y%m%d')         # 当前日期格式
@@ -39,14 +39,14 @@ check_system_resources() {
 
   # 检查磁盘空间
   local free_space=$(df "$SOURCE_DIR" | tail -1 | awk '{print $4}')
-  if [[ $free_space -lt $min_free_space ]]; then
+  if [[ -z "$free_space" || $free_space -lt $min_free_space ]]; then
     echo "磁盘空间不足，剩余空间: $(($free_space / 1024 / 1024)) MB, 无法进行备份"
     exit 1
   fi
 
   # 检查内存
   local free_memory=$(free -m | grep Mem | awk '{print $4}')
-  if [[ $free_memory -lt $min_free_memory ]]; then
+  if [[ -z "$free_memory" || $free_memory -lt $min_free_memory ]]; then
     echo "内存不足，剩余内存: $free_memory MB, 无法进行备份"
     exit 1
   fi
@@ -82,13 +82,19 @@ list_backup_files() {
   ls -lh "$DEST_DIR" || { log_message "ERROR" "查看备份文件失败"; exit 1; }
 }
 
+# 按任意键返回
+wait_for_keypress() {
+  read -n 1 -s -r -p "按任意键返回..."
+  echo
+}
+
 # 显示菜单
 show_menu() {
   echo "选择操作："
   echo "1) 备份文件"
-  echo "2) 修改上传的云盘"
+  echo "2) 修改 Google Drive 配置"
   echo "3) 查看备份文件"
-  echo "0) 退出"
+  echo "4) 退出"
 }
 
 # 修改 Google Drive 配置
@@ -101,6 +107,7 @@ modify_rclone_config() {
 # -----------------------------------------
 main() {
   ensure_directory_exists "$LOG_DIR"
+  ensure_directory_exists "$DEST_DIR"  # 确保备份目录存在
   install_rclone
 
   while true; do
@@ -111,19 +118,23 @@ main() {
         check_system_resources
         compress_files
         upload_to_cloud
+        wait_for_keypress
         ;;
       2)
         modify_rclone_config
+        wait_for_keypress
         ;;
       3)
         list_backup_files
+        wait_for_keypress
         ;;
-      0)
+      4)
         echo "退出程序"
         exit 0
         ;;
       *)
         echo "无效选项，请重新选择"
+        wait_for_keypress
         ;;
     esac
   done
