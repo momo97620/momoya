@@ -3,7 +3,7 @@
 # -----------------------------------------
 # 配置部分
 # -----------------------------------------
-SOURCE_DIR="/path/to/source"          # 需要备份的目录，请确保此路径存在
+SOURCE_DIR="/"                        # 整机备份，注意权限问题
 DEST_DIR="/path/to/destination"       # 本地保存压缩文件的目录，请确保此路径存在
 CLOUD_REMOTE="gdrive:/backup"         # rclone 配置的名称和目标 Google Drive 文件夹
 LOG_DIR="/path/to/logs"               # 日志存放目录
