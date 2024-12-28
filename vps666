@@ -643,7 +643,7 @@ services:
 EOL
 
     # 使用 vim 编辑器打开 docker-compose.yml 供用户修改
-    nano docker-compose.yml
+    vim docker-compose.yml
 
     # 用户保存退出后，自动运行 docker-compose up -d
     if docker-compose up -d; then
