@@ -653,6 +653,13 @@ services:
       - BASE_URL=https://xx.xx.io #第三方代理地址
       - DEFAULT_MODEL=gpt-4o-mini  #默认模型
       - ENABLE_BALANCE_QUERY=1  #启用余额查询
+# 
+# 注意修改key 地址：
+# - 修改你的api key、代理地址(就是你取api key网站他们要求第三方的地址)
+
+# - 后台管理员密码默认(meomomo)  其他不用修改
+
+# - 修改完成后按住ctrl不放然后再按x(保存)
 EOL
 
     # 使用 nano 编辑器打开 docker-compose.yml 供用户修改
