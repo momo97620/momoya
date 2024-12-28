@@ -707,9 +707,6 @@ main() {
         exit 0
     fi
 
-    echo -e "${YELLOW}脚本路径: $SCRIPT_PATH${NC}"
-    echo -e "${YELLOW}安装路径: $INSTALL_DIR${NC}"
-
     if [ ! -d "$INSTALL_DIR" ]; then
         install_script
     else
