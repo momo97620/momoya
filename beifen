@@ -33,13 +33,9 @@ install_or_update_onedrive() {
 }
 
 # 安装最新的 OneDrive 工具
-install_latest_onedrive() {
-    echo "检测磁盘空间..."
-    AVAILABLE_SPACE=$(df / | tail -1 | awk '{print $4}')
-    if [ "$AVAILABLE_SPACE" -lt 1048576 ]; then
-        echo "磁盘空间不足，请清理磁盘后重试！"
-        exit 1
-    fi
+install_fixed_version_onedrive() {
+    FIXED_VERSION="v2.5.3" # 指定版本号
+    echo "安装 OneDrive 同步工具，版本：$FIXED_VERSION"
 
     echo "修复系统依赖..."
     apt --fix-broken install -y || {
@@ -50,18 +46,11 @@ install_latest_onedrive() {
     echo "移除旧版本的 OneDrive..."
     apt remove --purge onedrive -y
 
-    echo "下载并安装预编译的最新 OneDrive 二进制文件..."
-    BINARY_URL=$(curl -s https://api.github.com/repos/abraunegg/onedrive/releases/latest \
-        | grep "browser_download_url.*onedrive.x86_64" \
-        | cut -d '"' -f 4)
-
-    if [ -z "$BINARY_URL" ]; then
-        echo "未能获取最新版本的下载链接，请检查网络连接或 GitHub API 状态！"
-        exit 1
-    fi
+    echo "下载指定版本的 OneDrive 二进制文件..."
+    BINARY_URL="https://github.com/abraunegg/onedrive/releases/download/$FIXED_VERSION/onedrive.x86_64"
 
     wget -q "$BINARY_URL" -O /usr/local/bin/onedrive || {
-        echo "下载失败，请检查网络连接！"
+        echo "下载失败，请检查网络连接或版本号是否正确！"
         exit 1
     }
 
