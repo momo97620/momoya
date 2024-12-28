@@ -8,7 +8,8 @@ BLUE='\033[0;34m'
 LIGHTBLUE='\033[1;34m'
 LIGHTCYAN='\033[1;36m'
 PINK='\033[38;5;198m'  # 更深的粉色
-NC='\033[0m' # No color
+DEEPRED='\033[0;91m'   # 深红色
+NC='\033[0m'           # No color
 
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
@@ -457,6 +458,7 @@ echo -e "  ${BLUE}5.${NC} ${PINK}♥${NC} ${GREEN}一键搭建节点${NC}      $
 echo -e "  ${BLUE}6.${NC} ${PINK}♥${NC} ${GREEN}一键配置WARP${NC}      ${BLUE}14${NC} ${PINK}♥${NC} ${RED}监控TG关键词 ▶${NC}"
 echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速${NC}       ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
 echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker管理${NC}        ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
+echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${LIGHTCYAN}GPT${NC}  
 echo -e "  ${BLUE}00${NC} ${PINK}♥${NC} ${RED}退出${NC}"
     read -p "请输入选项 (0-16): " choice
     case "$choice" in
@@ -614,6 +616,48 @@ done
         esac
     done
     ;;
+
+        17)
+
+           setup_nextchat() {
+         # 设置工作目录
+    local work="/docker/nextchat"
+    mkdir -p "$work" && cd "$work" || { echo "无法进入工作目录"; exit 1; }
+
+    # 创建 docker-compose.yml 文件并写入基础配置
+    cat <<EOL > docker-compose.yml
+version: '3'
+services:
+  chatgpt-next-web:
+    container_name: nextchat
+    image: yidadaa/chatgpt-next-web:latest
+    restart: always
+    ports:
+      - "8842:3000"
+    environment:
+      - OPENAI_API_KEY=sk-xxx #你的api key
+      - CODE=995415ada  #密码
+      - BASE_URL=https://xx.xx.io #第三方代理地址
+      - DEFAULT_MODEL=gpt-4o-mini  #默认模型
+      - ENABLE_BALANCE_QUERY=1  #启用余额查询
+EOL
+
+    # 使用 nano 编辑器打开 docker-compose.yml 供用户修改
+    nano docker-compose.yml
+
+    # 用户保存退出后，自动运行 docker-compose up -d
+    docker-compose up -d
+
+    # 提示用户
+    echo -e "${DEEPRED}1.${NC} ⚠️请手动放行8842端口！！"
+    echo -e "${DEEPRED}2.${NC} ⚠️后台登录方式：本机IP+8842！！"
+    
+    # 等待用户按任意键返回主菜单
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+}
+
+# 调用函数
+setup_nextchat
 
         0)
             echo -e "${GREEN}退出程序...${NC}"
