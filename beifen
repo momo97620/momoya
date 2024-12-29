@@ -30,6 +30,7 @@ configure_rclone() {
         exit 1
     }
     echo "Rclone 配置完成。"
+    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # 执行备份操作
@@ -40,6 +41,7 @@ perform_backup() {
         exit 1
     }
     echo "备份完成，文件保存在 $BACKUP_DIR/$BACKUP_FILE"
+    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # Docker 容器备份
@@ -50,6 +52,7 @@ docker_backup() {
         exit 1
     }
     echo "Docker 容器备份完成，文件保存在 $BACKUP_DIR/$DOCKER_BACKUP_FILE"
+    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # 备份清理
@@ -67,12 +70,14 @@ cleanup_backups() {
     else
         echo "备份文件数量未超过最大限制，无需删除。"
     fi
+    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # 查看已备份文件
 list_backups() {
     echo "已备份文件列表："
     ls -lh "$BACKUP_DIR" | grep "backup_"
+    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # 菜单
