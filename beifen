@@ -82,13 +82,13 @@ list_backups() {
 
 # 菜单
 menu() {
-    echo "1. 配置 Rclone"
-    echo "2. 执行备份"
-    echo "3. 备份 Docker 容器"
-    echo "4. 清理过期备份"
-    echo "5. 查看已备份文件"
-    echo "0. 退出"
     while true; do
+        echo "1. 配置 Rclone"
+        echo "2. 执行备份"
+        echo "3. 备份 Docker 容器"
+        echo "4. 清理过期备份"
+        echo "5. 查看已备份文件"
+        echo "0. 退出"
         read -p "选择操作: " choice
         case $choice in
             1)
