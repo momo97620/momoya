@@ -15,67 +15,11 @@ mkdir -p "$ONEDRIVE_DIR"
 # 检查 Rclone 是否已安装
 check_rclone_installed() {
     if ! command -v rclone &>/dev/null; then
-        echo "Rclone 未安装，正在安装..."
-        install_rclone
+        echo "Rclone 未安装，请手动安装！"
+        exit 1
     else
         echo "Rclone 已安装，跳过安装。"
     fi
-}
-
-# 安装必要的依赖项
-install_dependencies() {
-    echo "检查并安装必要的依赖项..."
-
-    # 更新软件源并清理缓存
-    echo "更新软件源..."
-    apt-get update || {
-        echo "更新软件源失败，请检查网络连接！"
-        exit 1
-    }
-
-    # 清理 APT 缓存
-    echo "清理 APT 缓存..."
-    apt-get clean || {
-        echo "清理 APT 缓存失败！"
-        exit 1
-    }
-
-    # 修复损坏的包
-    echo "修复损坏的包..."
-    apt-get install -f || {
-        echo "修复损坏包失败！"
-        exit 1
-    }
-
-    # 安装依赖项
-    echo "安装依赖：curl wget"
-    apt-get install -y curl wget || {
-        echo "依赖安装失败，请检查网络连接或手动安装！"
-        exit 1
-    }
-    echo "依赖项安装完成。"
-}
-
-# 安装 Rclone 工具
-install_rclone() {
-    echo "下载并安装 Rclone..."
-    curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip || {
-        echo "下载 Rclone 失败，请检查网络连接！"
-        exit 1
-    }
-    unzip rclone-current-linux-amd64.zip || {
-        echo "解压 Rclone 失败！"
-        exit 1
-    }
-    cd rclone-*-linux-amd64 || exit
-    cp rclone /usr/local/bin/ || {
-        echo "复制 Rclone 失败！"
-        exit 1
-    }
-    chmod 755 /usr/local/bin/rclone
-    echo "Rclone 工具安装完成，版本: $(rclone --version)"
-    cd ..
-    rm -rf rclone-*-linux-amd64 rclone-current-linux-amd64.zip
 }
 
 # 配置 Rclone
@@ -125,35 +69,37 @@ cleanup_backups() {
     fi
 }
 
+# 查看已备份文件
+list_backups() {
+    echo "已备份文件列表："
+    ls -lh "$BACKUP_DIR" | grep "backup_"
+}
+
 # 菜单
 menu() {
-    echo "1. 安装依赖"
-    echo "2. 安装 Rclone"
-    echo "3. 配置 Rclone"
-    echo "4. 执行备份"
-    echo "5. 备份 Docker 容器"
-    echo "6. 清理过期备份"
+    echo "1. 配置 Rclone"
+    echo "2. 执行备份"
+    echo "3. 备份 Docker 容器"
+    echo "4. 清理过期备份"
+    echo "5. 查看已备份文件"
     echo "0. 退出"
     while true; do
         read -p "选择操作: " choice
         case $choice in
             1)
-                install_dependencies
-                ;;
-            2)
-                check_rclone_installed
-                ;;
-            3)
                 configure_rclone
                 ;;
-            4)
+            2)
                 perform_backup
                 ;;
-            5)
+            3)
                 docker_backup
                 ;;
-            6)
+            4)
                 cleanup_backups
+                ;;
+            5)
+                list_backups
                 ;;
             0)
                 echo "退出。"
@@ -166,4 +112,8 @@ menu() {
     done
 }
 
+# 脚本开始时先检查 Rclone 是否安装
+check_rclone_installed
+
+# 启动菜单
 menu
