@@ -30,18 +30,16 @@ configure_rclone() {
         exit 1
     }
     echo "Rclone 配置完成。"
-    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # 执行备份操作
 perform_backup() {
     echo "执行备份操作..."
-    tar -czf "$BACKUP_DIR/$BACKUP_FILE" "$BACKUP_DIR" || {
+    tar -czf "$BACKUP_DIR/$BACKUP_FILE" -C "$BACKUP_DIR" . || {
         echo "备份失败，请检查路径和权限！"
         exit 1
     }
     echo "备份完成，文件保存在 $BACKUP_DIR/$BACKUP_FILE"
-    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # Docker 容器备份
@@ -52,7 +50,6 @@ docker_backup() {
         exit 1
     }
     echo "Docker 容器备份完成，文件保存在 $BACKUP_DIR/$DOCKER_BACKUP_FILE"
-    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # 备份清理
@@ -70,25 +67,29 @@ cleanup_backups() {
     else
         echo "备份文件数量未超过最大限制，无需删除。"
     fi
-    read -n 1 -s -r -p "按任意键返回菜单..."
 }
 
 # 查看已备份文件
 list_backups() {
     echo "已备份文件列表："
     ls -lh "$BACKUP_DIR" | grep "backup_"
-    read -n 1 -s -r -p "按任意键返回菜单..."
+}
+
+# 显示菜单
+show_menu() {
+    echo -e "\n菜单："
+    echo "1. 配置 Rclone"
+    echo "2. 执行备份"
+    echo "3. 备份 Docker 容器"
+    echo "4. 清理过期备份"
+    echo "5. 查看已备份文件"
+    echo "0. 退出"
 }
 
 # 菜单
 menu() {
     while true; do
-        echo "1. 配置 Rclone"
-        echo "2. 执行备份"
-        echo "3. 备份 Docker 容器"
-        echo "4. 清理过期备份"
-        echo "5. 查看已备份文件"
-        echo "0. 退出"
+        show_menu
         read -p "选择操作: " choice
         case $choice in
             1)
@@ -114,6 +115,7 @@ menu() {
                 echo "无效选项，请重新选择！"
                 ;;
         esac
+        read -n 1 -s -r -p "按任意键返回菜单..."
     done
 }
 
