@@ -691,18 +691,24 @@ setup_nextchat
            ;;
            
          18)
-          # 开始部署 RSSHub
-        hostname=$(hostname)
-        echo "本机名: $hostname"
+            # 开始部署 RSSHub
+            hostname=$(hostname)
+            echo "本机名: $hostname"
 
-        echo "正在拉取 RSSHub 镜像..."
-        docker pull diygod/rsshub
+            echo "正在拉取 RSSHub 镜像..."
+            if ! docker pull diygod/rsshub; then
+                echo "拉取 RSSHub 镜像失败，请检查网络连接！"
+                exit 1
+            fi
 
-        echo "正在运行 RSSHub 容器..."
-        docker run -d --name rsshub -p 1200:1200 diygod/rsshub
+            echo "正在运行 RSSHub 容器..."
+            if ! docker run -d --name rsshub -p 1200:1200 diygod/rsshub; then
+                echo "运行 RSSHub 容器失败，请检查 Docker 设置！"
+                exit 1
+            fi
 
-        echo "RSSHub 部署完成！"
-        ;;
+            echo "RSSHub 部署完成！端口：1200"
+            ;;
              
         0)
             echo -e "${GREEN}退出程序...${NC}"
