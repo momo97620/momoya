@@ -690,18 +690,14 @@ EOL
 setup_nextchat
            ;;
            
-       case $main_choice in
          18)
-        # 开始部署 RSSHub
-        # 获取本机名
+          # 开始部署 RSSHub
         hostname=$(hostname)
         echo "本机名: $hostname"
 
-        # 拉取 RSSHub 镜像
         echo "正在拉取 RSSHub 镜像..."
         docker pull diygod/rsshub
 
-        # 运行 RSSHub 容器
         echo "正在运行 RSSHub 容器..."
         docker run -d --name rsshub -p 1200:1200 diygod/rsshub
 
