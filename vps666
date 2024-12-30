@@ -485,22 +485,33 @@ read -p "请输入选项 (0-16): " choice
             # 调用系统管理菜单
 while true; do
     clear  # 清除屏幕
-    echo -e "\n\n"  # 增加间隔
+    # 增加间隔并美化输出
+echo -e "\n\n"
 echo -e "============================"
 echo -e "       ${LIGHTCYAN}docker项目${NC}       "
 echo -e "============================"
-echo -e "\n"  # 增加间隔
+echo -e "\n"
+
+# 使用分隔线和间隔
 echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}"
-echo -e "\n"  # 增加间隔
+echo -e "----------------------------"
+echo -e "\n"
+
 echo -e "${YELLOW}2.${NC} ${PINK}NextChatGPT${NC}"
-echo -e "\n"  # 增加间隔
+echo -e "----------------------------"
+echo -e "\n"
+
 echo -e "${BLUE}3.${NC} ${LIGHTCYAN}部署RSSHub${NC}"
-echo -e "\n"  # 增加间隔
+echo -e "----------------------------"
+echo -e "\n"
+
 echo -e "${LIGHTBLUE}4.${NC} ${GREEN}查看当前用户${NC}"
-echo -e "\n"  # 增加间隔
+echo -e "----------------------------"
+echo -e "\n"
+
 echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
-echo -e "\n"  # 增加间隔
 echo -e "============================"
+echo -e "\n\n"
 
     read -p "请输入你的选择 [1-4, 0]: " sys_choice
 
