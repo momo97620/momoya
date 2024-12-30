@@ -730,7 +730,7 @@ fi
       ;;
       
     # 主执行逻辑
-main() {
+    main() {
     if [[ "$1" == "install" ]]; then
         install_script
         exit 0
