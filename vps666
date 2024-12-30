@@ -694,11 +694,6 @@ done
             continue
             ;;
     esac
-
-    echo -e "${BLUE}----------------------------------------${NC}"
-    echo -e "按任意键继续..."
-    read -n 1 -s  # 等待用户按下任意键
-done
     # 赋予权限
     chmod +x reinstall.sh
 
