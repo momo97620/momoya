@@ -142,15 +142,15 @@ container_management() {
             1) docker ps -a ;;
             2) 
                 while true; do
-                    read -p "请输入容器名称或ID (按0返回): " container
-                    if [ "$container" == "0" ]; then break; fi
+                    read -p "请输入容器名称或ID (按任意键返回): " container
+                    if [ -z "$container" ]; then break; fi
                     docker start "$container" && echo -e "${GREEN}容器 $container 已启动！${NC}" || echo -e "${RED}启动失败，请检查容器名称或ID！${NC}"
                 done
                 ;;
             3) 
                 while true; do
-                    read -p "请输入容器名称或ID (按0返回): " container
-                    if [ "$container" == "0" ]; then break; fi
+                    read -p "请输入容器名称或ID (按任意键返回): " container
+                    if [ -z "$container" ]; then break; fi
                     docker stop "$container" && echo -e "${GREEN}容器 $container 已停止！${NC}" || echo -e "${RED}停止失败，请检查容器名称或ID！${NC}"
                 done
                 ;;
@@ -164,9 +164,9 @@ container_management() {
                 if [ -z "$containers" ]; then
                     echo -e "${RED}没有找到任何容器！${NC}"
                 else
-                    echo -e "${BLUE}请选择要删除的容器 (按0返回):${NC}"
-                    select container in $containers "返回"; do
-                        if [ "$container" == "返回" ]; then break; fi
+                    echo -e "${BLUE}请选择要删除的容器 (不输入时按任意键返回):${NC}"
+                    select container in $containers; do
+                        if [ -z "$container" ]; then break; fi
                         if [ -n "$container" ]; then
                             docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
                             break
