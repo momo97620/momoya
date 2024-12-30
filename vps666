@@ -737,7 +737,7 @@ fi
 while true; do
     clear  # 清除屏幕
     echo -e "============================"
-echo -e "       ${LIGHTCYAN}系统管理菜单${NC}       "
+echo -e "       ${LIGHTCYAN}docker项目${NC}       "
 echo -e "============================"
 echo -e "${GREEN}1.${NC} ${LIGHTBLUE}查看系统信息${NC}"
 echo -e "${YELLOW}2.${NC} ${PINK}更新系统${NC}"
@@ -749,10 +749,7 @@ echo -e "============================"
 
     case $sys_choice in
         1)
-            clear  # 清除屏幕
-            echo "系统信息："
-            uname -a
-            read -p "按任意键继续..."
+            execute_script "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" "Docker管理完成。"
             ;;
         2)
             clear  # 清除屏幕
