@@ -739,7 +739,7 @@ while true; do
     echo -e "============================"
 echo -e "       ${LIGHTCYAN}docker项目${NC}       "
 echo -e "============================"
-echo -e "${GREEN}1.${NC} ${LIGHTBLUE}查看系统信息${NC}"
+echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}"
 echo -e "${YELLOW}2.${NC} ${PINK}更新系统${NC}"
 echo -e "${BLUE}3.${NC} ${LIGHTCYAN}查看磁盘使用情况${NC}"
 echo -e "${LIGHTBLUE}4.${NC} ${GREEN}查看当前用户${NC}"
