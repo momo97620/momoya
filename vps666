@@ -676,10 +676,7 @@ done
     echo -e "${BLUE}----------------------------------------${NC}"
     echo -e "🔙 ${GREEN}3.${NC} ${LIGHTCYAN}返回主菜单${NC}  ${LIGHTCYAN}（返回上层菜单）${NC}"
     echo -e "${BLUE}----------------------------------------${NC}"
-
-    sleep 1  # 加入延迟，增加效果
-done
-
+    
     case $sub_choice in
         1)
             curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh $_
