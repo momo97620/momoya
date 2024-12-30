@@ -23,12 +23,6 @@ check_system() {
     fi
 }
 
-# 更新系统
-update_system() {
-    echo -e "${BLUE}正在更新系统...${NC}"
-    apt-get update && apt-get upgrade -y
-}
-
 # 安装 Docker 和 Docker Compose
 install_docker() {
     if command -v docker >/dev/null 2>&1; then
@@ -300,5 +294,4 @@ main_menu() {
 # 主程序
 check_root
 check_system
-update_system
 main_menu
