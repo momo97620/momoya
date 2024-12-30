@@ -120,18 +120,19 @@ container_management() {
                 read -n 1 -s -r -p "按任意键返回..."
                 ;;
             5) 
-                containers=$(docker ps -a --format '{{.Names}}')
-if [ -z "$containers" ]; then
+                containers=($(docker ps -a --format '{{.Names}}'))
+if [ ${#containers[@]} -eq 0 ]; then
     echo -e "${RED}没有找到任何容器！${NC}"
 else
-    echo -e "${BLUE}请选择要删除的容器（直接按回车键返回）:${NC}"
+    echo -e "${BLUE}请选择要删除的容器（输入数字选择，输入 0 返回上级菜单）:${NC}"
 
-    # 使用 select 列出容器
     PS3="请输入对应的数字选择："
-    select container in $containers; do
-        if [ -z "$container" ]; then
-            echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+    select container in "${containers[@]}" "返回上级菜单"; do
+        if [ "$REPLY" -eq 0 ]; then
+            echo -e "${YELLOW}已返回上级菜单。${NC}"
             break
+        elif [ -z "$container" ]; then
+            echo -e "${RED}无效的选择，请重试！${NC}"
         elif [[ "$REPLY" =~ ^[0-9]+$ ]] && [ "$REPLY" -le "${#containers[@]}" ]; then
             docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
             break
@@ -140,6 +141,8 @@ else
         fi
     done
 fi
+
+# 添加提示以便返回
 read -n 1 -s -r -p "按任意键返回..."
            ;;
             6) 
