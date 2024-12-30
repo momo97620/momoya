@@ -731,56 +731,6 @@ else
     read -n 1 -s -r -p "操作完成，按任意键返回菜单..."
 fi
       ;;
-      
-      19)
-      # 调用系统管理菜单
-while true; do
-    clear  # 清除屏幕
-    echo -e "============================"
-echo -e "       ${LIGHTCYAN}docker项目${NC}       "
-echo -e "============================"
-echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}"
-echo -e "${YELLOW}2.${NC} ${PINK}更新系统${NC}"
-echo -e "${BLUE}3.${NC} ${LIGHTCYAN}查看磁盘使用情况${NC}"
-echo -e "${LIGHTBLUE}4.${NC} ${GREEN}查看当前用户${NC}"
-echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
-echo -e "============================"
-    read -p "请输入你的选择 [1-4, 0]: " sys_choice
-
-    case $sys_choice in
-        1)
-            execute_script "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" "Docker管理完成。"
-            ;;
-        2)
-            clear  # 清除屏幕
-            echo "正在更新系统..."
-            sudo apt update && sudo apt upgrade -y
-            read -p "按任意键继续..."
-            ;;
-        3)
-            clear  # 清除屏幕
-            echo "磁盘使用情况："
-            df -h
-            read -p "按任意键继续..."
-            ;;
-        4)
-            clear  # 清除屏幕
-            echo "当前用户："
-            whoami
-            read -p "按任意键继续..."
-            ;;
-        0)
-            echo "返回主菜单..."
-            break
-            ;;
-        *)
-            clear  # 清除屏幕
-            echo "无效选择，请重新输入！"
-            read -p "按任意键继续..."
-            ;;
-    esac
-done
-            ;;
         0)
             echo -e "${GREEN}退出程序...${NC}"
             exit 0
