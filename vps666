@@ -669,7 +669,6 @@ done
     echo -e "${BGBLUE}            DD重装系统            ${NC}"
     echo -e "${BLUE}----------------------------------------${NC}"
     echo -e ""  # 增加空行作为间隔
-
     echo -e "🌍 ${GREEN}1.${NC} ${LIGHTCYAN}国外服务器${NC}  ${LIGHTCYAN}（选择服务器类型）${NC}"
     echo -e "${BLUE}----------------------------------------${NC}"
     echo -e "🏠 ${GREEN}2.${NC} ${LIGHTCYAN}国内服务器${NC}  ${LIGHTCYAN}（选择国内服务器）${NC}"
