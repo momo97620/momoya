@@ -666,18 +666,15 @@ done
  while true; do
     clear
     echo -e "${BLUE}----------------------------------------${NC}"
-    echo -e "${BGBLUE}            DD重装系统            ${NC}"
+    echo -e "${BLUE}            DD重装系统            ${NC}"
     echo -e "${BLUE}----------------------------------------${NC}"
-    echo -e ""  # 增加空行作为间隔
-    echo -e "🌍 ${GREEN}1.${NC} ${LIGHTCYAN}国外服务器${NC}  ${LIGHTCYAN}（选择服务器类型）${NC}"
-    echo -e "${BLUE}----------------------------------------${NC}"
-    echo -e "🏠 ${GREEN}2.${NC} ${LIGHTCYAN}国内服务器${NC}  ${LIGHTCYAN}（选择国内服务器）${NC}"
-    echo -e "${BLUE}----------------------------------------${NC}"
-    echo -e "🔙 ${GREEN}3.${NC} ${LIGHTCYAN}返回主菜单${NC}  ${LIGHTCYAN}（返回上层菜单）${NC}"
+    echo -e "${GREEN}1.${NC} 国外服务器"
+    echo -e "${GREEN}2.${NC} 国内服务器"
+    echo -e "${GREEN}3.${NC} 返回主菜单"
     echo -e "${BLUE}----------------------------------------${NC}"
     read -p "请输入选项 [1-3]: " sub_choice
-    
-    case $choice in
+
+    case $sub_choice in
         1)
             curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh $_
             ;;
@@ -685,18 +682,17 @@ done
             curl -O https://jihulab.com/bin456789/reinstall/-/raw/main/reinstall.sh || wget -O reinstall.sh $_
             ;;
         3)
-            echo "退出程序"
             break
             ;;
         *)
-            echo -e "${RED}无效选项! 请重新选择.${NC}"
+            echo -e "${RED}无效选项!${NC}"
             sleep 2
             continue
             ;;
     esac
+
     # 赋予权限
     chmod +x reinstall.sh
-
     # 跳转到下一个子菜单
     while true; do
         clear
