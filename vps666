@@ -736,15 +736,15 @@ fi
       # 调用系统管理菜单
 while true; do
     clear  # 清除屏幕
-    echo "============================"
-    echo "       系统管理菜单       "
-    echo "============================"
-    echo "1. 查看系统信息"
-    echo "2. 更新系统"
-    echo "3. 查看磁盘使用情况"
-    echo "4. 查看当前用户"
-    echo "0. 返回主菜单"
-    echo "============================"
+    echo -e "============================"
+echo -e "       ${LIGHTCYAN}系统管理菜单${NC}       "
+echo -e "============================"
+echo -e "${GREEN}1.${NC} ${LIGHTBLUE}查看系统信息${NC}"
+echo -e "${YELLOW}2.${NC} ${PINK}更新系统${NC}"
+echo -e "${BLUE}3.${NC} ${LIGHTCYAN}查看磁盘使用情况${NC}"
+echo -e "${LIGHTBLUE}4.${NC} ${GREEN}查看当前用户${NC}"
+echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
+echo -e "============================"
     read -p "请输入你的选择 [1-4, 0]: " sys_choice
 
     case $sys_choice in
