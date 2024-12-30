@@ -159,23 +159,26 @@ container_management() {
                 docker restart "$container" && echo -e "${GREEN}容器 $container 已重启！${NC}" || echo -e "${RED}重启失败，请检查容器名称或ID！${NC}"
                 ;;
             5) 
-                # 列出所有容器
-                containers=$(docker ps -a --format '{{.Names}}')
-                if [ -z "$containers" ]; then
-                    echo -e "${RED}没有找到任何容器！${NC}"
-                else
-                    echo -e "${BLUE}请选择要删除的容器 (不输入时按任意键返回):${NC}"
-                    select container in $containers; do
-                        if [ -z "$container" ]; then break; fi
-                        if [ -n "$container" ]; then
-                            docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
-                            break
-                        else
-                            echo -e "${RED}无效的选择，请重试！${NC}"
-                        fi
-                    done
-                fi
-                ;;
+               # 列出所有容器
+containers=$(docker ps -a --format '{{.Names}}')
+if [ -z "$containers" ]; then
+    echo -e "${RED}没有找到任何容器！${NC}"
+else
+    echo -e "${BLUE}请选择要删除的容器 (直接回车退出):${NC}"
+    select container in $containers; do
+        if [ -z "$container" ]; then
+            echo -e "${YELLOW}已取消选择，返回主菜单。${NC}"
+            break
+        fi
+        if [ -n "$container" ]; then
+            docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
+            break
+        else
+            echo -e "${RED}无效的选择，请重试！${NC}"
+        fi
+    done
+fi
+         ;;
             6) 
                 read -p "请输入容器名称或ID: " container
                 docker logs "$container" || echo -e "${RED}获取日志失败，请检查容器名称或ID！${NC}"
