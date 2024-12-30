@@ -482,6 +482,56 @@ read -p "请输入选项 (0-18): " choice
         7)
             execute_script "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" "BBR加速完成。"
             ;;
+            
+        8)
+    # 调用系统管理菜单
+    while true; do
+        clear  # 清除屏幕
+        echo -e "============================"
+        echo -e "       ${LIGHTCYAN}docker项目${NC}"
+        echo -e "============================"
+        echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}"
+        echo -e "${YELLOW}2.${NC} ${PINK}更新系统${NC}"
+        echo -e "${BLUE}3.${NC} ${LIGHTCYAN}查看磁盘使用情况${NC}"
+        echo -e "${LIGHTBLUE}4.${NC} ${GREEN}查看当前用户${NC}"
+        echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
+        echo -e "============================"
+        read -p "请输入你的选择 [1-4, 0]: " sys_choice
+
+        case $sys_choice in
+            1)
+                execute_script "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" "Docker管理完成。"
+                ;;
+            2)
+                clear  # 清除屏幕
+                echo "正在更新系统..."
+                sudo apt update && sudo apt upgrade -y
+                read -p "按任意键继续..."
+                ;;
+            3)
+                clear  # 清除屏幕
+                echo "磁盘使用情况："
+                df -h
+                read -p "按任意键继续..."
+                ;;
+            4)
+                clear  # 清除屏幕
+                echo "当前用户："
+                whoami
+                read -p "按任意键继续..."
+                ;;
+            0)
+                echo "返回主菜单..."
+                break
+                ;;
+            *)
+                clear  # 清除屏幕
+                echo "无效选择，请重新输入！"
+                read -p "按任意键继续..."
+                ;;
+        esac
+    done
+                ;;   
     
         9)
             execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
@@ -731,6 +781,8 @@ fi
       
     # 主执行逻辑
     main() {
+    check_root
+    
     if [[ "$1" == "install" ]]; then
         install_script
         exit 0
@@ -738,15 +790,26 @@ fi
 
     if [ ! -d "$INSTALL_DIR" ]; then
         install_script
-    else
-        echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
     fi
+    
+    create_symlink
 
-    # 调用主菜单
     while true; do
         show_main_menu
+        read -p "请输入选项 (0-18): " choice
+        case "$choice" in
+            # [case语句保持不变...]
+            0|00)
+                echo -e "${GREEN}感谢使用，再见！${NC}"
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}无效选项，请重新选择！${NC}"
+                sleep 2
+                ;;
+        esac
     done
 }
 
-# 执行主逻辑
+# 启动脚本
 main "$@"
