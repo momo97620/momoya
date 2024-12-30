@@ -139,69 +139,85 @@ container_management() {
         read -p "请选择操作: " container_choice
         
         case $container_choice in
-            1) docker ps -a ;;
+            1) 
+                echo -e "${BLUE}当前容器列表:${NC}"
+                docker ps -a
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
             2) 
                 while true; do
-                    read -p "请输入容器名称或ID (按任意键返回): " container
-                    if [ -z "$container" ]; then break; fi
+                    read -p "请输入容器名称或ID（直接回车返回）： " container
+                    if [ -z "$container" ]; then
+                        echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                        break
+                    fi
                     docker start "$container" && echo -e "${GREEN}容器 $container 已启动！${NC}" || echo -e "${RED}启动失败，请检查容器名称或ID！${NC}"
                 done
+                read -n 1 -s -r -p "按任意键返回..."
                 ;;
             3) 
                 while true; do
-                    read -p "请输入容器名称或ID (按任意键返回): " container
-                    if [ -z "$container" ]; then break; fi
+                    read -p "请输入容器名称或ID（直接回车返回）： " container
+                    if [ -z "$container" ]; then
+                        echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                        break
+                    fi
                     docker stop "$container" && echo -e "${GREEN}容器 $container 已停止！${NC}" || echo -e "${RED}停止失败，请检查容器名称或ID！${NC}"
                 done
+                read -n 1 -s -r -p "按任意键返回..."
                 ;;
             4) 
-                read -p "请输入容器名称或ID: " container
+                read -p "请输入容器名称或ID： " container
                 docker restart "$container" && echo -e "${GREEN}容器 $container 已重启！${NC}" || echo -e "${RED}重启失败，请检查容器名称或ID！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
                 ;;
             5) 
-               # 列出所有容器
-containers=$(docker ps -a --format '{{.Names}}')
-if [ -z "$containers" ]; then
-    echo -e "${RED}没有找到任何容器！${NC}"
-else
-    echo -e "${BLUE}请选择要删除的容器 (直接回车退出):${NC}"
-    select container in $containers; do
-        if [ -z "$container" ]; then
-            echo -e "${YELLOW}已取消选择，返回主菜单。${NC}"
-            break
-        fi
-        if [ -n "$container" ]; then
-            docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
-            break
-        else
-            echo -e "${RED}无效的选择，请重试！${NC}"
-        fi
-    done
-fi
-         ;;
+                containers=$(docker ps -a --format '{{.Names}}')
+                if [ -z "$containers" ]; then
+                    echo -e "${RED}没有找到任何容器！${NC}"
+                else
+                    PS3="请输入对应的数字选择（直接回车返回）："
+                    echo -e "${BLUE}请选择要删除的容器:${NC}"
+                    select container in $containers "返回"; do
+                        if [ "$REPLY" == "0" ] || [ "$container" == "返回" ]; then
+                            echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                            break
+                        elif [ -n "$container" ]; then
+                            docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
+                            break
+                        else
+                            echo -e "${RED}无效的选择，请重试！${NC}"
+                        fi
+                    done
+                fi
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
             6) 
-                read -p "请输入容器名称或ID: " container
+                read -p "请输入容器名称或ID： " container
                 docker logs "$container" || echo -e "${RED}获取日志失败，请检查容器名称或ID！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
                 ;;
             7) 
-                docker stop $(docker ps -q)
-                echo -e "${GREEN}所有容器已停止！${NC}"
+                echo -e "${BLUE}正在停止所有容器...${NC}"
+                docker stop $(docker ps -q) && echo -e "${GREEN}所有容器已停止！${NC}" || echo -e "${RED}停止失败！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
                 ;;
             8) 
-                docker start $(docker ps -aq)
-                echo -e "${GREEN}所有容器已启动！${NC}"
+                echo -e "${BLUE}正在启动所有容器...${NC}"
+                docker start $(docker ps -aq) && echo -e "${GREEN}所有容器已启动！${NC}" || echo -e "${RED}启动失败！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
                 ;;
-            0) break ;;
-            *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
+            0) 
+                echo -e "${YELLOW}返回主菜单。${NC}"
+                break
+                ;;
+            *) 
+                echo -e "${RED}无效的选择，请重试！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
         esac
-        
-        # 仅在选择非0选项时提示继续
-        if [ "$container_choice" -ne 0 ]; then
-            read -n 1 -s -r -p "按任意键继续..."
-        fi
     done
 }
-
 
 #镜像管理
 image_management() {
@@ -226,7 +242,7 @@ image_management() {
                 if [ ${#images[@]} -eq 0 ]; then
                     echo -e "${RED}没有找到任何镜像！${NC}"
                 else
-                    PS3="请输入对应的数字选择（按0返回）："
+                    PS3="请输入对应的数字选择（按5返回）："
                     echo -e "${BLUE}请选择要删除的镜像:${NC}"
                     select image in "${images[@]}" "返回"; do
                         if [ "$REPLY" == "0" ] || [ "$image" == "返回" ]; then
@@ -288,7 +304,7 @@ image_management() {
                 if [ ${#images[@]} -eq 0 ]; then
                     echo -e "${RED}没有找到任何镜像！${NC}"
                 else
-                    PS3="请输入对应的数字选择（按0返回）："
+                    PS3="请输入对应的数字选择（按5返回）："
                     echo -e "${BLUE}请选择要重启的镜像:${NC}"
                     select image in "${images[@]}" "返回"; do
                         if [ "$image" == "返回" ]; then
