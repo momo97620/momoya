@@ -71,7 +71,7 @@ container_management() {
     echo -e "${RED}5.${NC} ${BOLD_GREEN}删除容器${NC}          ${RED}6.${NC} ${BOLD_GREEN}查看容器日志${NC}"
     echo -e "---------------------------"
     
-    echo -e "${RED}7.${NC} ${BOLD_GREEN}停止所有容器${NC}       ${RED}8.${NC} ${BOLD_GREEN}启动所有容器${NC}"
+    echo -e "${RED}7.${NC} ${BOLD_GREEN}停止所有容器${NC}     ${RED}8.${NC} ${BOLD_GREEN}启动所有容器${NC}"
     echo -e "---------------------------"
     
     echo -e "${RED}0.${NC} ${BOLD_GREEN}返回主菜单${NC}"
