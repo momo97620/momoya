@@ -183,6 +183,7 @@ container_management() {
     if [ -z "$containers" ]; then
         echo -e "${RED}没有找到任何容器！${NC}"
     else
+    read -n 1 -s -r -p "按任意键返回..."
         PS3="请输入对应的数字选择（按3返回）："
         echo -e "${BLUE}请选择要删除的容器:${NC}"
         select container in $containers "返回"; do
