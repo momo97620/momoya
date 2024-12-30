@@ -192,8 +192,12 @@ container_management() {
                 docker start $(docker ps -aq)
                 echo -e "${GREEN}所有容器已启动！${NC}"
                 ;;
-            0) break ;;
-            *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
+            0) 
+                break 
+                ;;
+            *) 
+                echo -e "${RED}无效的选择，请重试！${NC}" 
+                ;;
         esac
         
         # 仅在选择非0选项时提示继续
@@ -202,6 +206,7 @@ container_management() {
         fi
     done
 }
+
 
 #镜像管理
 image_management() {
