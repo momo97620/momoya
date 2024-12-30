@@ -145,16 +145,22 @@ container_management() {
         case $container_choice in
             1) docker ps -a ;;
             2) 
-                read -p "请输入容器名称或ID: " container
-                docker start "$container" 
+                while true; do
+                    read -p "请输入容器名称或ID (按0返回): " container
+                    if [ "$container" == "0" ]; then break; fi
+                    docker start "$container" && echo -e "${GREEN}容器 $container 已启动！${NC}" || echo -e "${RED}启动失败，请检查容器名称或ID！${NC}"
+                done
                 ;;
             3) 
-                read -p "请输入容器名称或ID: " container
-                docker stop "$container" 
+                while true; do
+                    read -p "请输入容器名称或ID (按0返回): " container
+                    if [ "$container" == "0" ]; then break; fi
+                    docker stop "$container" && echo -e "${GREEN}容器 $container 已停止！${NC}" || echo -e "${RED}停止失败，请检查容器名称或ID！${NC}"
+                done
                 ;;
             4) 
                 read -p "请输入容器名称或ID: " container
-                docker restart "$container" 
+                docker restart "$container" && echo -e "${GREEN}容器 $container 已重启！${NC}" || echo -e "${RED}重启失败，请检查容器名称或ID！${NC}"
                 ;;
             5) 
                 # 列出所有容器
@@ -162,13 +168,12 @@ container_management() {
                 if [ -z "$containers" ]; then
                     echo -e "${RED}没有找到任何容器！${NC}"
                 else
-                    echo -e "${BLUE}请选择要删除的容器:${NC}"
+                    echo -e "${BLUE}请选择要删除的容器 (按0返回):${NC}"
                     select container in $containers; do
+                        if [ "$container" == "0" ]; then break; fi
                         if [ -n "$container" ]; then
-                            docker rm -f "$container"
-                            echo -e "${GREEN}容器 $container 已被删除！${NC}"
+                            docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
                             break
-                
                         else
                             echo -e "${RED}无效的选择，请重试！${NC}"
                         fi
@@ -177,7 +182,7 @@ container_management() {
                 ;;
             6) 
                 read -p "请输入容器名称或ID: " container
-                docker logs "$container" 
+                docker logs "$container" || echo -e "${RED}获取日志失败，请检查容器名称或ID！${NC}"
                 ;;
             7) 
                 docker stop $(docker ps -q)
@@ -190,9 +195,14 @@ container_management() {
             0) break ;;
             *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
         esac
-        read -n 1 -s -r -p "按任意键继续..."
+        
+        # 仅在选择非0选项时提示继续
+        if [ "$container_choice" -ne 0 ]; then
+            read -n 1 -s -r -p "按任意键继续..."
+        fi
     done
 }
+
 #镜像管理
 image_management() {
     while true; do
