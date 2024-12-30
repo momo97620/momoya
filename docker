@@ -5,6 +5,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+BOLD_GREEN='\033[1;32m'  # 粗体绿色
 NC='\033[0m' # 无颜色
 
 # 检查是否为 root 用户
@@ -268,16 +269,29 @@ image_management() {
 # 主菜单
 main_menu() {
     while true; do
-        clear
-        echo -e "${BLUE}\n===== Docker 管理脚本 =====${NC}"
-        echo "1. 安装 Docker"
-        echo "2. 启动 Docker"
-        echo "3. 停止 Docker"
-        echo "4. 容器管理"
-        echo "5. 镜像管理"
-        echo "0. 退出"
-        
-        read -p "请选择操作: " choice
+    clear
+    echo -e "${BOLD_GREEN}\n===== Docker 管理脚本 =====${NC}"
+    
+    # 显示选项并加上间隔线
+    echo -e "${RED}1.${NC} ${BOLD_GREEN}安装 Docker${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}2.${NC} ${BOLD_GREEN}启动 Docker${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}3.${NC} ${BOLD_GREEN}停止 Docker${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}4.${NC} ${BOLD_GREEN}容器管理${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}5.${NC} ${BOLD_GREEN}镜像管理${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}0.${NC} ${BOLD_GREEN}退出${NC}"
+    echo -e "---------------------------"
+    
+    read -p "请选择操作: " choice
         
         case $choice in
             1) install_docker ;;
