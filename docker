@@ -165,8 +165,8 @@ container_management() {
                     echo -e "${RED}没有找到任何容器！${NC}"
                 else
                     echo -e "${BLUE}请选择要删除的容器 (按0返回):${NC}"
-                    select container in $containers; do
-                        if [ "$container" == "0" ]; then break; fi
+                    select container in $containers "返回"; do
+                        if [ "$container" == "返回" ]; then break; fi
                         if [ -n "$container" ]; then
                             docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
                             break
@@ -198,6 +198,7 @@ container_management() {
         fi
     done
 }
+
 
 
 # 镜像管理
