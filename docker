@@ -126,12 +126,13 @@ if [ -z "$containers" ]; then
 else
     echo -e "${BLUE}请选择要删除的容器（直接按回车键返回）:${NC}"
 
-    # 将容器名称列表打印出来
+    # 使用 select 列出容器
+    PS3="请输入对应的数字选择："
     select container in $containers; do
         if [ -z "$container" ]; then
             echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
             break
-        elif [ -n "$container" ]; then
+        elif [[ "$REPLY" =~ ^[0-9]+$ ]] && [ "$REPLY" -le "${#containers[@]}" ]; then
             docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
             break
         else
