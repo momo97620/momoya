@@ -457,7 +457,6 @@ echo -e "  ${BLUE}6.${NC} ${PINK}♥${NC} ${GREEN}一键配置WARP${NC}      ${B
 echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速${NC}       ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
 echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目${NC}        ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
 echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${LIGHTCYAN}NextChatGPT${NC}      ${BLUE}18${NC} ${PINK}♥${NC} ${RED}部署RSSHub${NC}"
-echo -e "  ${BLUE}19.${NC} ${PINK}♥${NC} ${LIGHTCYAN}待定…${NC}"
 echo -e "  ${BLUE}00${NC} ${PINK}♥${NC} ${RED}退出${NC}"
 read -p "请输入选项 (0-19): " choice
   
@@ -504,10 +503,78 @@ echo -e "============================"
             ;;
         2)
             clear  # 清除屏幕
-            echo "正在更新系统..."
-            sudo apt update && sudo apt upgrade -y
-            read -p "按任意键继续..."
-            ;;
+            # 颜色定义
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+DEEPRED='\033[1;31m'  # 深红色
+NC='\033[0m'          # 无颜色
+
+# 检查并设置 locale
+if ! grep -q "export LANG=en_US.UTF-8" ~/.bashrc; then
+    echo "export LANG=en_US.UTF-8" >> ~/.bashrc
+fi
+
+if ! grep -q "export LC_ALL=en_US.UTF-8" ~/.bashrc; then
+    echo "export LC_ALL=en_US.UTF-8" >> ~/.bashrc
+fi
+
+# 立即生效
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+setup_nextchat() {
+    # 设置工作目录
+    local work="/docker/nextchat"
+    mkdir -p "$work" && cd "$work" || { echo "无法进入工作目录"; exit 1; }
+
+    # 创建 docker-compose.yml 文件并写入基础配置
+    cat <<EOL > docker-compose.yml
+version: '3'
+services:
+  chatgpt-next-web:
+    container_name: nextchat
+    image: yidadaa/chatgpt-next-web:latest
+    restart: always
+    ports:
+      - "8842:3000"
+    environment:
+      - OPENAI_API_KEY=sk-xxx #你的api key
+      - CODE=emomomo  #密码
+      - BASE_URL=https://xx.xx.io #第三方代理地址
+      - DEFAULT_MODEL=gpt-4o-mini  #默认模型
+      - ENABLE_BALANCE_QUERY=1  #启用余额查询
+# 
+# 注意修改换成你的key令牌.然后修改代理地址:
+
+# 修改代理地址(就是你取api key的网站他们要求填他们的第三方地址)
+
+# 后台管理员密码默认(emomomo)  其他不用修改
+
+# 修改完成后按住ctrl不放然后再按x  然后按y回车(保存)
+EOL
+
+    # 使用 nano 编辑器打开 docker-compose.yml 供用户修改
+    nano docker-compose.yml
+
+    # 用户保存退出后，自动运行 docker-compose up -d
+    if docker-compose up -d; then
+        echo -e "${GREEN}✅ Docker 容器启动成功！${NC}"
+    else
+        echo -e "${RED}❌ Docker 容器启动失败！请检查是否安装docker-compose。${NC}"
+        exit 1
+    fi
+
+    # 提示用户
+    echo -e "${DEEPRED}1.${NC} ⚠️ ${DEEPRED}请手动放行8842端口！！${NC}"
+    echo -e "${DEEPRED}2.${NC} ⚠️ ${DEEPRED}后台登录方式：本机IP+8842！！${NC}"
+    
+    # 等待用户按任意键返回主菜单
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+}
+
+# 调用函数
+setup_nextchat
+           ;;
         3)
             clear  # 清除屏幕
             echo "磁盘使用情况："
