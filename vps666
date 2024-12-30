@@ -491,7 +491,7 @@ echo -e "       ${LIGHTCYAN}docker项目${NC}       "
 echo -e "============================"
 echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}"
 echo -e "${YELLOW}2.${NC} ${PINK}NextChatGPT${NC}"
-echo -e "${BLUE}3.${NC} ${LIGHTCYAN}部署RSSHub${NC}"
+echo -e "${BLUE}3.${NC} ${LIGHTCYAN}查看磁盘使用情况${NC}"
 echo -e "${LIGHTBLUE}4.${NC} ${GREEN}查看当前用户${NC}"
 echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
 echo -e "============================"
@@ -576,44 +576,11 @@ EOL
 setup_nextchat
            ;;
         3)
-            # 创建一个 1GB 的交换文件
-sudo fallocate -l 1G /swapfile
-# 设置正确的权限
-sudo chmod 600 /swapfile
-# 将文件设置为交换空间
-sudo mkswap /swapfile
-# 启用交换空间
-sudo swapon /swapfile
-# 确保在重启后自动启用交换空间
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-
-echo "开始部署 RSSHub..."
-hostname=$(hostname)
-echo "本机名: $hostname"
-
-# 检查是否已安装 RSSHub
-if docker ps -a --format '{{.Names}}' | grep -qw rsshub; then
-    echo "RSSHub 已安装。"
-    echo
-    read -n 1 -s -r -p "按任意键返回菜单..."
-else
-    echo "正在拉取 RSSHub 镜像..."
-    if ! docker pull diygod/rsshub; then
-        echo "拉取 RSSHub 镜像失败，请检查网络连接！"
-        exit 1
-    fi
-
-    echo "正在运行 RSSHub 容器..."
-    if ! docker run -d --name rsshub -p 1200:1200 diygod/rsshub; then
-        echo "运行 RSSHub 容器失败，请检查 Docker 设置！"
-        exit 1
-    fi
-
-    echo "RSSHub 部署完成！端口：1200"
-    echo
-    read -n 1 -s -r -p "操作完成，按任意键返回菜单..."
-fi
-         ;;
+            clear  # 清除屏幕
+            echo "磁盘使用情况："
+            df -h
+            read -p "按任意键继续..."
+            ;;
         4)
             clear  # 清除屏幕
             echo "当前用户："
@@ -762,6 +729,57 @@ done
         esac
     done
     ;;
+
+    
+     18)
+# 创建一个 1GB 的交换文件
+sudo fallocate -l 1G /swapfile
+# 设置正确的权限
+sudo chmod 600 /swapfile
+# 将文件设置为交换空间
+sudo mkswap /swapfile
+# 启用交换空间
+sudo swapon /swapfile
+# 确保在重启后自动启用交换空间
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+echo "开始部署 RSSHub..."
+hostname=$(hostname)
+echo "本机名: $hostname"
+
+# 检查是否已安装 RSSHub
+if docker ps -a --format '{{.Names}}' | grep -qw rsshub; then
+    echo "RSSHub 已安装。"
+    echo
+    read -n 1 -s -r -p "按任意键返回菜单..."
+else
+    echo "正在拉取 RSSHub 镜像..."
+    if ! docker pull diygod/rsshub; then
+        echo "拉取 RSSHub 镜像失败，请检查网络连接！"
+        exit 1
+    fi
+
+    echo "正在运行 RSSHub 容器..."
+    if ! docker run -d --name rsshub -p 1200:1200 diygod/rsshub; then
+        echo "运行 RSSHub 容器失败，请检查 Docker 设置！"
+        exit 1
+    fi
+
+    echo "RSSHub 部署完成！端口：1200"
+    echo
+    read -n 1 -s -r -p "操作完成，按任意键返回菜单..."
+fi
+      ;;
+        0)
+            echo -e "${GREEN}退出程序...${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}无效的选择，请重新输入！${NC}"
+            read -p "按回车键返回主菜单..."
+            ;;
+    esac
+}
 
 # 主执行逻辑
 main() {
