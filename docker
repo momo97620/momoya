@@ -87,7 +87,7 @@ container_management() {
                 ;;
             2) 
                 while true; do
-                    read -p "请输入容器名称或ID（按3返回）： " container
+                    read -p "请输入容器名称或ID： " container
                     if [ -z "$container" ]; then
                         echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
                         break
@@ -124,7 +124,7 @@ container_management() {
                 if [ -z "$containers" ]; then
                     echo -e "${RED}没有找到任何容器！${NC}"
                 else
-                    PS3="请输入对应的数字选择（按3返回）："
+                    PS3="请输入对应的数字选择："
                     echo -e "${BLUE}请选择要删除的容器:${NC}"
                     select container in $containers "返回"; do
                         if [ "$REPLY" == "0" ] || [ "$container" == "返回" ] || [ -z "$container" ]; then
@@ -138,6 +138,7 @@ container_management() {
                         fi
                     done
                 fi
+                read -n 1 -s -r -p "按任意键返回..."
                 ;;
             6) 
                 read -p "请输入容器名称或ID： " container
