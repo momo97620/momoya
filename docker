@@ -125,7 +125,7 @@ container_management() {
                     echo -e "${RED}没有找到任何容器！${NC}"
                 else
                     PS3="请输入对应的数字选择："
-                    echo -e "${BLUE}请选择要删除的容器（按回车键返回）:${NC}"
+                    echo -e "${BLUE}请选择要删除的容器（按3返回）:${NC}"
                     select container in $containers "返回"; do
                         if [ "$REPLY" == "0" ] || [ "$container" == "返回" ] || [ -z "$container" ]; then
                             echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
@@ -200,7 +200,7 @@ image_management() {
                     echo -e "${RED}没有找到任何镜像！${NC}"
                 else
                     PS3="请输入对应的数字选择："
-                    echo -e "${BLUE}请选择要删除的镜像（按回车键返回）:${NC}"
+                    echo -e "${BLUE}请选择要删除的镜像（按回4返回）:${NC}"
                     select image in "${images[@]}" "返回"; do
                         if [ "$REPLY" == "0" ] || [ "$image" == "返回" ]; then
                             echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
@@ -225,7 +225,7 @@ image_management() {
                 if [ -z "$running_images" ]; then
                     echo -e "${RED}没有运行中的镜像！${NC}"
                 else
-                    PS3="请输入对应的数字选择（按回车键返回）："
+                    PS3="请输入对应的数字选择（按5返回）："
                     echo -e "${BLUE}请选择要停止的镜像:${NC}"
                     select image in $running_images "返回"; do
                         if [ "$REPLY" == "0" ] || [ "$image" == "返回" ]; then
