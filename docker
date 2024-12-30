@@ -1,128 +1,63 @@
 #!/bin/bash
 
-# Docker管理脚本
-# 版本：1.3
-# 作者：emo的小默默
-# 描述：提供Docker安装、管理和卸载的一站式脚本
-
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
+YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # 无颜色
 
-# 检查是否为root用户
+# 检查是否为 root 用户
 check_root() {
-    if [[ $EUID -ne 0 ]]; then
-       echo -e "${RED}错误：此脚本必须以root权限运行！${NC}"
-       exit 1
-    fi
-}
-
-# 系统检测
-check_system() {
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        OS=$ID
-        VERSION=$VERSION_ID
-    else
-        echo -e "${RED}无法检测操作系统类型！${NC}"
+    if [ "$(id -u)" -ne 0 ]; then
+        echo -e "${RED}请以 root 用户运行此脚本！${NC}"
         exit 1
     fi
 }
 
-# 系统更新函数
-update_system() {
-    # 检查是否已经更新过系统
-    if [ ! -f /var/lib/docker_script_updated ]; then
-        echo -e "${BLUE}正在更新系统包列表和已安装的包...${NC}"
-        case $OS in
-            ubuntu|debian)
-                apt-get update
-                apt-get upgrade -y
-                ;;
-            centos|rhel|fedora)
-                yum update -y
-                ;;
-        esac
-
-        # 标记系统已经更新
-        touch /var/lib/docker_script_updated
-        echo -e "${GREEN}系统更新完成！${NC}"
-    else
-        echo -e "${YELLOW}系统已经是最新状态，无需更新！${NC}"
+# 检查系统版本
+check_system() {
+    if [[ ! -f /etc/os-release ]]; then
+        echo -e "${RED}不支持的操作系统！${NC}"
+        exit 1
     fi
 }
 
-# 更换Docker源函数
-change_docker_source() {
-    echo -e "${BLUE}正在更换Docker源...${NC}"
-    bash <(curl -sSL https://cdn.jsdelivr.net/gh/SuperManito/LinuxMirrors@main/DockerInstallation.sh)
-    echo -e "${GREEN}Docker源更新完成！${NC}"
+# 更新系统
+update_system() {
+    echo -e "${BLUE}正在更新系统...${NC}"
+    apt-get update && apt-get upgrade -y
 }
 
-# 检查依赖
-check_dependencies() {
-    echo -e "${BLUE}正在检查系统依赖...${NC}"
-    case $OS in
-        ubuntu|debian)
-            if ! dpkg -l | grep -q "apt-transport-https\|ca-certificates\|curl\|software-properties-common"; then
-                echo -e "${YELLOW}正在安装必要的依赖...${NC}"
-                apt-get update
-                apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-            fi
-            ;;
-        centos|rhel|fedora)
-            if ! rpm -q yum-utils device-mapper-persistent-data lvm2; then
-                echo -e "${YELLOW}正在安装必要的依赖...${NC}"
-                yum install -y yum-utils device-mapper-persistent-data lvm2
-            fi
-            ;;
-    esac
-    echo -e "${GREEN}依赖检查完成！${NC}"
-}
-
-# Docker安装函数
+# 安装 Docker 和 Docker Compose
 install_docker() {
-    echo -e "${BLUE}正在安装Docker...${NC}"
-    
-    # 检查依赖
-    check_dependencies
-
-    # 根据不同系统选择安装方式
-    case $OS in
-        ubuntu|debian)
-            # 安装 Docker
-            curl -fsSL https://get.docker.com | bash -s docker
-            # 安装 Docker Compose
-            curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            chmod +x /usr/local/bin
-            /usr/local/bin/docker-compose
-            ;;
-        centos|rhel|fedora)
-            # 安装 Docker
-            yum install -y docker
-            # 启动 Docker
-            systemctl start docker
-            systemctl enable docker
-            ;;
-    esac
-    
-    echo -e "${GREEN}Docker 安装完成！${NC}"
+    if command -v docker >/dev/null 2>&1; then
+        echo -e "${GREEN}Docker 已安装，跳过安装步骤。${NC}"
+    else
+        echo -e "${BLUE}正在安装 Docker 和 Docker Compose...${NC}"
+        # 运行用户提供的完整安装命令
+        sudo curl -fsSL https://get.docker.com | bash && \
+        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
+        sudo chmod +x /usr/local/bin/docker-compose && \
+        sudo systemctl start docker && \
+        sudo systemctl enable docker
+        
+        echo -e "${GREEN}Docker 和 Docker Compose 安装完成！${NC}"
+    fi
 }
 
-# 启动 Docker 服务
+# 启动 Docker
 start_docker() {
-    systemctl start docker
-    systemctl enable docker
-    echo -e "${GREEN}Docker 服务已启动！${NC}"
+    echo -e "${BLUE}正在启动 Docker...${NC}"
+    sudo systemctl start docker
+    echo -e "${GREEN}Docker 已启动！${NC}"
 }
 
-# 停止 Docker 服务
+# 停止 Docker
 stop_docker() {
-    systemctl stop docker
-    echo -e "${GREEN}Docker 服务已停止！${NC}"
+    echo -e "${BLUE}正在停止 Docker...${NC}"
+    sudo systemctl stop docker
+    echo -e "${GREEN}Docker 已停止！${NC}"
 }
 
 # 容器管理
@@ -156,48 +91,48 @@ container_management() {
                 read -n 1 -s -r -p "按任意键返回..."
                 ;;
             3) 
-    while true; do
-        containers=$(docker ps --format '{{.Names}}')
-        if [ -z "$containers" ]; then
-            echo -e "${RED}没有运行中的容器！${NC}"
-            break
-        fi
-        echo -e "${BLUE}运行中的容器:${NC}"
-        docker ps --format '容器名: {{.Names}}, 容器ID: {{.ID}}'
-        read -p "请输入容器名称或ID（按3返回）： " container
-        if [ -z "$container" ]; then
-            echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
-            break
-        fi
-        docker stop "$container" && echo -e "${GREEN}容器 $container 已停止！${NC}" || echo -e "${RED}停止失败，请检查容器名称或ID！${NC}"
-    done
-    read -n 1 -s -r -p "按任意键返回..."
-    ;;
+                while true; do
+                    containers=$(docker ps --format '{{.Names}}')
+                    if [ -z "$containers" ]; then
+                        echo -e "${RED}没有运行中的容器！${NC}"
+                        break
+                    fi
+                    echo -e "${BLUE}运行中的容器:${NC}"
+                    docker ps --format '容器名: {{.Names}}, 容器ID: {{.ID}}'
+                    read -p "请输入容器名称或ID（按3返回）： " container
+                    if [ -z "$container" ]; then
+                        echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                        break
+                    fi
+                    docker stop "$container" && echo -e "${GREEN}容器 $container 已停止！${NC}" || echo -e "${RED}停止失败，请检查容器名称或ID！${NC}"
+                done
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
             4) 
                 read -p "请输入容器名称或ID： " container
                 docker restart "$container" && echo -e "${GREEN}容器 $container 已重启！${NC}" || echo -e "${RED}重启失败，请检查容器名称或ID！${NC}"
                 read -n 1 -s -r -p "按任意键返回..."
                 ;;
             5) 
-    containers=$(docker ps -a --format '{{.Names}}')
-    if [ -z "$containers" ]; then
-        echo -e "${RED}没有找到任何容器！${NC}"
-    else
-        PS3="请输入对应的数字选择（按3返回）："
-        echo -e "${BLUE}请选择要删除的容器:${NC}"
-        select container in $containers "返回"; do
-            if [ "$REPLY" == "0" ] || [ "$container" == "返回" ] || [ -z "$container" ]; then
-                echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
-                break
-            elif [ -n "$container" ]; then
-                docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
-                break
-            else
-                echo -e "${RED}无效的选择，请重试！${NC}"
-            fi
-        done
-    fi
-    ;;
+                containers=$(docker ps -a --format '{{.Names}}')
+                if [ -z "$containers" ]; then
+                    echo -e "${RED}没有找到任何容器！${NC}"
+                else
+                    PS3="请输入对应的数字选择（按3返回）："
+                    echo -e "${BLUE}请选择要删除的容器:${NC}"
+                    select container in $containers "返回"; do
+                        if [ "$REPLY" == "0" ] || [ "$container" == "返回" ] || [ -z "$container" ]; then
+                            echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                            break
+                        elif [ -n "$container" ]; then
+                            docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
+                            break
+                        else
+                            echo -e "${RED}无效的选择，请重试！${NC}"
+                        fi
+                    done
+                fi
+                ;;
             6) 
                 read -p "请输入容器名称或ID： " container
                 docker logs "$container" || echo -e "${RED}获取日志失败，请检查容器名称或ID！${NC}"
@@ -225,7 +160,7 @@ container_management() {
     done
 }
 
-#镜像管理
+# 镜像管理
 image_management() {
     while true; do
         clear
@@ -346,7 +281,6 @@ main_menu() {
         echo "3. 停止 Docker"
         echo "4. 容器管理"
         echo "5. 镜像管理"
-        echo "6. 更换 Docker 源"
         echo "0. 退出"
         
         read -p "请选择操作: " choice
@@ -357,7 +291,6 @@ main_menu() {
             3) stop_docker ;;
             4) container_management ;;
             5) image_management ;;
-            6) change_docker_source ;;
             0) exit 0 ;;
             *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
         esac
