@@ -124,17 +124,19 @@ container_management() {
 if [ ${#containers[@]} -eq 0 ]; then
     echo -e "${RED}没有找到任何容器！${NC}"
 else
-    echo -e "${BLUE}请选择要删除的容器（输入数字选择，输入 0 返回上级菜单）:${NC}"
+    echo -e "${BLUE}请选择要删除的容器（输入3返回菜单）:${NC}"
 
     PS3="请输入对应的数字选择："
     select container in "${containers[@]}" "返回上级菜单"; do
-        if [ "$REPLY" -eq 0 ]; then
+        if [ "$REPLY" -eq 0 ] || [ "$REPLY" -eq $((${#containers[@]} + 1)) ]; then
             echo -e "${YELLOW}已返回上级菜单。${NC}"
             break
         elif [ -z "$container" ]; then
             echo -e "${RED}无效的选择，请重试！${NC}"
-        elif [[ "$REPLY" =~ ^[0-9]+$ ]] && [ "$REPLY" -le "${#containers[@]}" ]; then
-            docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
+        elif [[ "$REPLY" =~ ^[0-9]+$ ]] && [ "$REPLY" -le $((${#containers[@]} + 1)) ]; then
+            if [ "$REPLY" -le "${#containers[@]}" ]; then
+                docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
+            fi
             break
         else
             echo -e "${RED}无效的选择，请重试！${NC}"
