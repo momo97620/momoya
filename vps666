@@ -541,7 +541,6 @@ done
             ;;
     esac
 }
-
         9)
             execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
             ;;
