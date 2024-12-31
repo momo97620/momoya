@@ -35,18 +35,29 @@ load_config() {
     fi
 }
 
+# 加载配置文件
+load_config() {
+    if [[ -f "config.cfg" ]]; then
+        source config.cfg
+    else
+        echo "配置文件 config.cfg 不存在. 正在创建默认配置文件..."
+        create_default_config
+        # 重新加载配置，因为文件现在已经创建
+        source config.cfg
+    fi
+}
+
 # 创建默认配置文件
 create_default_config() {
     cat <<EOL > config.cfg
 # 默认配置
-INSTALL_DIR="/path/to/install"
+INSTALL_DIR="/path/to/install"  # 请根据实际情况设置
 CACHE_FILE="cache.txt"
-URL="http://example.com/data"
+URL="http://example.com/data"    # 请根据实际情况设置
 MAX_RETRIES=3
 RETRY_DELAY=5
 EOL
-    echo "默认配置文件 config.cfg 已创建，请根据需要修改。"
-    exit 1
+    echo "默认配置文件 config.cfg 已创建，自动执行下一步..."
 }
 
 # 从缓存读取数据
@@ -98,6 +109,9 @@ initialize() {
 
     echo "Data retrieved: $data"
 }
+
+# 运行初始化
+initialize
 
 # 获取脚本路径
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
