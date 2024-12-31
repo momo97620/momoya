@@ -489,7 +489,7 @@ while true; do
     echo -e "============================"
     echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}2.${NC} ${PINK}NextChatGPT${NC}"
     echo -e "----------------------------"
-    echo -e "${BLUE}3.${NC} ${LIGHTCYAN}部署RSSHub${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}查看当前用户${NC}"
+    echo -e "${BLUE}3.${NC} ${LIGHTCYAN}部署RSSHub${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}Lsky-Pro图床${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
     echo -e "============================"
@@ -614,10 +614,68 @@ else
 fi
       ;;
         4)
-            clear  # 清除屏幕
-            echo "当前用户："
-            whoami
-            read -p "按任意键继续..."
+            # 选项 4 的现有代码
+echo "开始安装 Lsky-Pro..."
+
+# 创建目录并赋予权限
+mkdir -p /root/data/docker_data/lsky-pro
+chmod 755 /root/data/docker_data/lsky-pro
+
+# 进入目录
+cd /root/data/docker_data/lsky-pro || { echo "无法进入目录"; exit 1; }
+
+# 创建配置文件并赋予权限
+touch docker-compose.yml
+chmod 644 docker-compose.yml
+
+# 写入内容到 docker-compose.yml
+cat <<EOL > docker-compose.yml
+version: '3'
+services:
+    lsky-pro:
+        container_name: lsky-pro
+        image: dko0/lsky-pro
+        restart: always
+        volumes:
+            - /root/data/docker_data/lsky-pro/lsky-pro-data:/var/www/html  #映射到本地
+        ports:
+            - 8008:80
+        environment:
+            - MYSQL_HOST=mysql
+            - MYSQL_DATABASE=lsky-pro
+            - MYSQL_USER=lsky-pro
+            - MYSQL_PASSWORD=lsky-pro
+
+    mysql:
+        image: mysql:8.1.0
+        container_name: lsky-pro-db
+        restart: always
+        environment:
+          - MYSQL_DATABASE=lsky-pro
+          - MYSQL_USER=lsky-pro
+          - MYSQL_PASSWORD=lsky-pro
+          - MYSQL_ROOT_PASSWORD=lsky-pro
+        volumes:
+          - /root/data/docker_data/lsky-pro/db:/var/lib/mysql
+EOL
+
+# 运行 Docker Compose
+if docker compose up -d; then
+    echo "安装成功！"
+else
+    echo "安装失败！"
+    exit 1
+fi
+
+# 显示本机 IP 地址和端口信息
+IP_ADDRESS=$(hostname -I | awk '{print $1}')
+echo -e "${DEEPRED}请访问以下地址进行登录：http://$IP_ADDRESS:8008${NC}"
+
+# 提示用户放行端口
+echo -e "${DEEPRED}注意：请确保放行 8008 端口以便访问 Lsky-Pro！${NC}"
+
+# 等待用户输入任意键返回
+read -p "按任意键返回..."
             ;;
         0)
             echo "返回主菜单..."
