@@ -440,15 +440,10 @@ if [ -f "$PAM_SSHD_CONFIG" ]; then
 fi
 
 # 提示用户当前会话不会失效
-echo "重要提示："
-echo "1. 当前会话密码登录仍然有效，不会立即生效禁用。"
-echo "2. 当您手动断开连接或重启 SSH 服务时，密码登录将被禁用，只能通过密钥登录。"
-echo "3. 请测试以下命令以验证密钥登录是否正常："
-echo "   ssh -i $PRIVATE_KEY $(whoami)@<服务器IP>"
+echo -e "${DARK_RED}重要提示：${NC}"
+echo -e "${DARK_RED}1. 需要手动重启SSH禁用密码才会生效。${NC}"
+echo -e "${DARK_RED}2. 当您手动断开连接或重启 SSH 服务时，密码登录将被禁用，只能通过密钥登录。${NC}"
 
-# 提示如何恢复 SSH 配置
-echo "如果发生意外，可以通过以下命令恢复 SSH 配置："
-echo "   cp $BACKUP_CONFIG $SSHD_CONFIG && systemctl restart sshd"
 
 # 显示公钥私钥路径
 echo "公钥路径: $PUBLIC_KEY"
