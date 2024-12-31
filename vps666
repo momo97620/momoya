@@ -443,7 +443,7 @@ fi
 # 提示用户当前会话不会失效
 echo -e "${DARK_RED}重要提示：${NC}"
 echo -e "${DARK_RED}‼️ 切记要先保存好私钥！！！。${NC}"
-echo -e "${DARK_RED}‼️ 退出菜单输入systemctl restart sshd命令${NC}"
+echo -e "${DARK_RED}‼️ 退出菜单输入systemctl restart sshd重启命令${NC}"
 echo -e "${DARK_RED}‼️ 然后重启SSH禁用密码才会被加载、然后用私钥登录${NC}"
 
 
