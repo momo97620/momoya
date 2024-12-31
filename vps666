@@ -484,9 +484,9 @@ echo ""
             # 调用系统管理菜单
 while true; do
     clear  # 清除屏幕
-    echo -e "\n============================"
-    echo -e "       ${LIGHTCYAN}docker项目${NC}"
-    echo -e "============================"
+    echo -e "\n+---------------------------+"
+    echo -e "|  ${LIGHTCYAN}docker项目${NC}|"
+    echo -e "+----------------------------+"
     # 提示用户安装 Docker
 echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
 # 添加一条隔开线
