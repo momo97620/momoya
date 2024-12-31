@@ -372,6 +372,8 @@ PRIVATE_KEY="$KEY_DIR/id_rsa"
 PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 BACKUP_CONFIG="/etc/ssh/sshd_config.bak"
+CLOUD_INIT_CONFIG="/etc/ssh/sshd_config.d/50-cloud-init.conf"
+PAM_SSHD_CONFIG="/etc/pam.d/sshd"
 
 # 步骤 1：生成密钥对
 echo "正在生成密钥对..."
@@ -425,6 +427,18 @@ if grep -q "^UsePAM yes" "$SSHD_CONFIG"; then
     sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
 fi
 
+# 步骤 5：修改 cloud-init 配置以禁用公钥认证
+if [ -f "$CLOUD_INIT_CONFIG" ]; then
+    echo "修改 cloud-init 配置以禁用公钥认证..."
+    sed -i 's/^PubkeyAuthentication yes/PubkeyAuthentication no/' "$CLOUD_INIT_CONFIG"
+fi
+
+# 步骤 6：注释掉 PAM 配置中的 @include common-auth
+if [ -f "$PAM_SSHD_CONFIG" ]; then
+    echo "注释掉 PAM 配置中的 @include common-auth..."
+    sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
+fi
+
 # 提示用户当前会话不会失效
 echo "重要提示："
 echo "1. 当前会话密码登录仍然有效，不会立即生效禁用。"
@@ -435,6 +449,10 @@ echo "   ssh -i $PRIVATE_KEY $(whoami)@<服务器IP>"
 # 提示如何恢复 SSH 配置
 echo "如果发生意外，可以通过以下命令恢复 SSH 配置："
 echo "   cp $BACKUP_CONFIG $SSHD_CONFIG && systemctl restart sshd"
+
+# 显示公钥私钥路径
+echo "公钥路径: $PUBLIC_KEY"
+echo "私钥路径: $PRIVATE_KEY"
 
 # 等待用户按任意键返回菜单
 echo ""
