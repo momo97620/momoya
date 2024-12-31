@@ -41,6 +41,7 @@ start_docker() {
     echo -e "${BLUE}正在启动 Docker...${NC}"
     sudo systemctl start docker
     echo -e "${GREEN}Docker 已启动！${NC}"
+    read -n 1 -s -r -p "按任意键返回..."
 }
 
 # 停止 Docker
@@ -48,6 +49,7 @@ stop_docker() {
     echo -e "${BLUE}正在停止 Docker...${NC}"
     sudo systemctl stop docker
     echo -e "${GREEN}Docker 已停止！${NC}"
+    read -n 1 -s -r -p "按任意键返回..."
 }
 
 # 容器管理
