@@ -384,22 +384,15 @@ if [ $? -ne 0 ]; then
     continue
 fi
 echo "密钥生成成功！"
-echo "私钥路径: $PRIVATE_KEY"
-echo "公钥路径: $PUBLIC_KEY"
+echo "密钥文件路径："
+echo "私钥: $PRIVATE_KEY"
+echo "公钥: $PUBLIC_KEY"
 
-# 显示密钥内容
-echo "公钥内容："
-cat "$PUBLIC_KEY"
-echo ""
-echo "私钥内容："
-cat "$PRIVATE_KEY"
-echo ""
-
-# 步骤 2：生成公钥的 ASCII 图形化表示
+# 显示公钥的 ASCII 图形化表示
 echo "生成公钥的 ASCII 图形化表示..."
 ssh-keygen -lv -f "$PUBLIC_KEY"
 
-# 步骤 3：备份 sshd 配置文件
+# 步骤 2：备份 sshd 配置文件
 if [ ! -f "$BACKUP_CONFIG" ]; then
     cp "$SSHD_CONFIG" "$BACKUP_CONFIG"
     echo "sshd 配置文件已备份到 $BACKUP_CONFIG。"
@@ -407,7 +400,7 @@ else
     echo "sshd 配置文件已存在备份，跳过备份步骤。"
 fi
 
-# 步骤 4：配置公钥登录
+# 步骤 3：配置公钥登录
 echo "正在配置公钥登录..."
 AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
 cat "$PUBLIC_KEY" >> "$AUTHORIZED_KEYS"
@@ -415,17 +408,27 @@ chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-# 步骤 5：修改 SSH 配置以禁用密码登录（延迟生效）
+# 步骤 4：修改 SSH 配置以禁用密码登录（延迟生效）
 echo "修改 SSH 配置以禁用密码登录..."
 if ! grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
     echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
 fi
-sed -i '/^PasswordAuthentication/s/yes/no/' "$SSHD_CONFIG"
+sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
+sed -i 's/^#PasswordAuthentication no/PasswordAuthentication no/' "$SSHD_CONFIG"
+if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
+    echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
+fi
+if ! grep -q "^ChallengeResponseAuthentication no" "$SSHD_CONFIG"; then
+    echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
+fi
+if grep -q "^UsePAM yes" "$SSHD_CONFIG"; then
+    sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
+fi
 
 # 提示用户当前会话不会失效
 echo "重要提示："
 echo "1. 当前会话密码登录仍然有效，不会立即生效禁用。"
-echo "2. 配置已经完成，当您手动断开连接或重启 SSH 服务时，密码登录将被禁用，只能通过密钥登录。"
+echo "2. 当您手动断开连接或重启 SSH 服务时，密码登录将被禁用，只能通过密钥登录。"
 echo "3. 请测试以下命令以验证密钥登录是否正常："
 echo "   ssh -i $PRIVATE_KEY $(whoami)@<服务器IP>"
 
