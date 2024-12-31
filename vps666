@@ -12,7 +12,7 @@ LIGHTCYAN='\033[1;36m'
 PINK='\033[38;5;198m'  # 更深的粉色
 DEEPRED='\033[0;91m'   # 深红色
 NC='\033[0m'           # No color
-
+        
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
 SCRIPT_PATH="/root/vps666"
@@ -24,6 +24,66 @@ else
     # 什么都不做，完全隐藏输出
     :
 fi
+
+# 加载配置文件
+load_config() {
+    if [[ -f "config.cfg" ]]; then
+        source config.cfg
+    else
+        echo "配置文件 config.cfg 不存在."
+        exit 1
+    fi
+}
+
+# 从缓存读取数据
+read_cache() {
+    if [[ -f "$CACHE_FILE" ]]; then
+        cat "$CACHE_FILE"
+    else
+        echo ""
+    fi
+}
+
+# 写入缓存数据
+write_cache() {
+    echo "$1" > "$CACHE_FILE"
+}
+
+# 从远程获取数据
+fetch_data() {
+    local attempt=0
+    while (( attempt < MAX_RETRIES )); do
+        response=$(curl -s --fail "$URL")
+        if [[ $? -eq 0 ]]; then
+            echo "$response"
+            return 0
+        else
+            echo "Attempt $((attempt + 1)) failed. Retrying in $RETRY_DELAY seconds..."
+            sleep $RETRY_DELAY
+            ((attempt++))
+        fi
+    done
+    return 1
+}
+
+# 初始化配置和缓存
+initialize() {
+    load_config
+    data=$(read_cache)
+
+    if [[ -z "$data" ]]; then
+        echo "Cache not found, fetching data from remote."
+        data=$(fetch_data)
+        if [[ $? -eq 0 ]]; then
+            write_cache "$data"
+        else
+            echo "Failed to fetch data after retries."
+            exit 1
+        fi
+    fi
+
+    echo "Data retrieved: $data"
+}
 
 # 获取脚本路径
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
@@ -839,6 +899,9 @@ done
 
 # 主执行逻辑
 main() {
+    # 自动运行初始化函数
+    initialize
+
     if [[ "$1" == "install" ]]; then
         install_script
         exit 0
