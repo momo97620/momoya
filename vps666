@@ -429,23 +429,19 @@ if grep -q "^UsePAM yes" "$SSHD_CONFIG"; then
     sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
 fi
 
-# 步骤 5：修改 cloud-init 配置以禁用公钥认证
+# 步骤 5：清空 cloud-init 配置文件并添加 PasswordAuthentication no
 if [ -f "$CLOUD_INIT_CONFIG" ]; then
-    echo "检测到 $CLOUD_INIT_CONFIG，修改 PubkeyAuthentication 为 no..."
+    echo "检测到 $CLOUD_INIT_CONFIG，清空文件并添加 PasswordAuthentication no..."
+    
+    # 清空文件内容
+    > "$CLOUD_INIT_CONFIG"
+    
+    # 添加配置
+    echo "PasswordAuthentication no" >> "$CLOUD_INIT_CONFIG"
 
-    # 确保文件可写
-    chmod 644 "$CLOUD_INIT_CONFIG"
-
-    # 检查并修改文件中的 PubkeyAuthentication 设置
-    if grep -q "^PubkeyAuthentication yes" "$CLOUD_INIT_CONFIG"; then
-        sed -i 's/^PubkeyAuthentication yes/PubkeyAuthentication no/' "$CLOUD_INIT_CONFIG"
-    else
-        echo "PubkeyAuthentication no" >> "$CLOUD_INIT_CONFIG"
-    fi
-
-    # 检查修改是否生效
-    if grep -q "^PubkeyAuthentication no" "$CLOUD_INIT_CONFIG"; then
-        echo "成功修改 $CLOUD_INIT_CONFIG 中的 PubkeyAuthentication 为 no。"
+    # 确保修改生效
+    if grep -q "^PasswordAuthentication no" "$CLOUD_INIT_CONFIG"; then
+        echo "成功修改 $CLOUD_INIT_CONFIG 中的 PasswordAuthentication 为 no。"
     else
         echo "修改 $CLOUD_INIT_CONFIG 失败，请手动检查文件。"
     fi
