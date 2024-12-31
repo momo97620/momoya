@@ -488,9 +488,7 @@ while true; do
     echo -e "       ${LIGHTCYAN}docker项目${NC}"
     echo -e "============================"
     # 提示用户安装 Docker
-echo -e "${DEEPRED}⚠️  提示：所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
-
-echo -e "${DEEPRED}         安装Docker会自动安装Docker Compose。${NC}"   
+echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
 # 添加一条隔开线
 echo -e "${DEEPRED}──────────────────────────────${NC}"
     echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}2.${NC} ${PINK}NextChatGPT${NC}"
