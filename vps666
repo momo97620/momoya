@@ -484,6 +484,47 @@ echo ""
             # 调用系统管理菜单
 while true; do
     clear  # 清除屏幕
+ 
+    # 函数：检测 LDNMP 环境
+check_ldnmp() {
+    echo -e "${BLUE}\n===== LDNMP 环境检测 =====${NC}"
+
+    # 检测 PHP 版本
+    if command -v php &> /dev/null; then
+        php_version="PHP: $(php -v | head -n 1 | awk '{print $2}')"
+    else
+        php_version="PHP: 未安装"
+    fi
+
+    # 检测 MySQL 版本
+    if command -v mysql &> /dev/null; then
+        mysql_version="MySQL: $(mysql --version | awk '{print $5}')"
+    else
+        mysql_version="MySQL: 未安装"
+    fi
+
+    # 检测 Nginx 版本
+    if command -v nginx &> /dev/null; then
+        nginx_version="Nginx: $(nginx -v 2>&1 | awk -F/ '{print $2}')"
+    else
+        nginx_version="Nginx: 未安装"
+    fi
+
+    # 检测 Docker 版本
+    if command -v docker &> /dev/null; then
+        docker_version="Docker: $(docker --version | awk '{print $3}' | sed 's/,//')"
+    else
+        docker_version="Docker: 未安装"
+    fi
+
+    # 输出结果为一排
+    echo -e "${BOLD_GREEN} ${docker_version} | ${mysql_version} | ${php_version} | ${nginx_version}${NC}"
+    echo -e "${BLUE}=============================${NC}\n"
+}
+
+# 自动检测 LDNMP 环境
+check_ldnmp 
+          ;;
     # 提示用户安装 Docker
 echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
 # 添加一条隔开线
