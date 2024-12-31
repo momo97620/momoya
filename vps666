@@ -30,9 +30,23 @@ load_config() {
     if [[ -f "config.cfg" ]]; then
         source config.cfg
     else
-        echo "配置文件 config.cfg 不存在."
-        exit 1
+        echo "配置文件 config.cfg 不存在. 正在创建默认配置文件..."
+        create_default_config
     fi
+}
+
+# 创建默认配置文件
+create_default_config() {
+    cat <<EOL > config.cfg
+# 默认配置
+INSTALL_DIR="/path/to/install"
+CACHE_FILE="cache.txt"
+URL="http://example.com/data"
+MAX_RETRIES=3
+RETRY_DELAY=5
+EOL
+    echo "默认配置文件 config.cfg 已创建，请根据需要修改。"
+    exit 1
 }
 
 # 从缓存读取数据
