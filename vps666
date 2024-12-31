@@ -893,6 +893,7 @@ main() {
     fi
 
     # 调用主菜单
+    check_ldnmp
     while true; do
         show_main_menu
     done
