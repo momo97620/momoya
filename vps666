@@ -514,12 +514,10 @@ check_ldnmp() {
     else
         docker_version="Docker: 未安装"
     fi
-       # 提示用户安装 Docker
-echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
-              echo -e "${DEEPRED}-----------------------------${NC}"
               echo -e "${BLUE}\n===== LDNMP 环境检测 =====${NC}"
     # 输出结果为一排
     echo -e "${BOLD_GREEN} ${docker_version} | ${mysql_version} | ${php_version} | ${nginx_version}${NC}"
+    
     echo -e "${DEEPRED}-----------------------------${NC}"
 }
 # 自动检测 LDNMP 环境
@@ -530,7 +528,8 @@ check_ldnmp
     echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
     echo -e "============================"
-    echo -e "\n\n"
+    # 提示用户安装 Docker
+echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
     read -p "请输入你的选择 [1-4, 0]: " sys_choice
 
     case $sys_choice in
