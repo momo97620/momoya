@@ -25,94 +25,6 @@ else
     :
 fi
 
-# 加载配置文件
-load_config() {
-    if [[ -f "config.cfg" ]]; then
-        source config.cfg
-    else
-        echo "配置文件 config.cfg 不存在. 正在创建默认配置文件..."
-        create_default_config
-    fi
-}
-
-# 加载配置文件
-load_config() {
-    if [[ -f "config.cfg" ]]; then
-        source config.cfg
-    else
-        echo "配置文件 config.cfg 不存在. 正在创建默认配置文件..."
-        create_default_config
-        # 重新加载配置，因为文件现在已经创建
-        source config.cfg
-    fi
-}
-
-# 创建默认配置文件
-create_default_config() {
-    cat <<EOL > config.cfg
-# 默认配置
-INSTALL_DIR="/path/to/install"  # 请根据实际情况设置
-CACHE_FILE="cache.txt"
-URL="http://example.com/data"    # 请根据实际情况设置
-MAX_RETRIES=3
-RETRY_DELAY=5
-EOL
-    echo "默认配置文件 config.cfg 已创建，自动执行下一步..."
-}
-
-# 从缓存读取数据
-read_cache() {
-    if [[ -f "$CACHE_FILE" ]]; then
-        cat "$CACHE_FILE"
-    else
-        echo ""
-    fi
-}
-
-# 写入缓存数据
-write_cache() {
-    echo "$1" > "$CACHE_FILE"
-}
-
-# 从远程获取数据
-fetch_data() {
-    local attempt=0
-    while (( attempt < MAX_RETRIES )); do
-        response=$(curl -s --fail "$URL")
-        if [[ $? -eq 0 ]]; then
-            echo "$response"
-            return 0
-        else
-            echo "Attempt $((attempt + 1)) failed. Retrying in $RETRY_DELAY seconds..."
-            sleep $RETRY_DELAY
-            ((attempt++))
-        fi
-    done
-    return 1
-}
-
-# 初始化配置和缓存
-initialize() {
-    load_config
-    data=$(read_cache)
-
-    if [[ -z "$data" ]]; then
-        echo "Cache not found, fetching data from remote."
-        data=$(fetch_data)
-        if [[ $? -eq 0 ]]; then
-            write_cache "$data"
-        else
-            echo "Failed to fetch data after retries."
-            exit 1
-        fi
-    fi
-
-    echo "Data retrieved: $data"
-}
-
-# 运行初始化
-initialize
-
 # 获取脚本路径
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
@@ -927,9 +839,7 @@ done
 
 # 主执行逻辑
 main() {
-    # 自动运行初始化函数
-    initialize
-
+    
     if [[ "$1" == "install" ]]; then
         install_script
         exit 0
