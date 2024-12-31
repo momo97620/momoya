@@ -3,6 +3,7 @@
 # 定义颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+BRIGHT_GREEN='\033[1;32m'  # 亮绿色
 YELLOW='\033[0;94m'
 BLUE='\033[0;34m'
 DARK_RED='\033[1;31m'  # 深红色
@@ -357,7 +358,7 @@ read -p "请输入选项 (0-16): " choice
             execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
             ;;
         3)
-            # 选项 3: 自动申请密钥并配置密钥登录
+# 选项 3: 自动申请密钥并配置密钥登录
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
 
 # 检查是否以 root 用户运行
@@ -430,7 +431,8 @@ fi
 
 # 步骤 5：修改 cloud-init 配置以禁用公钥认证
 if [ -f "$CLOUD_INIT_CONFIG" ]; then
-    echo "修改 cloud-init 配置以禁用公钥认证..."
+    echo "检测到 $CLOUD_INIT_CONFIG，修改 PubkeyAuthentication 为 no..."
+    # 确保文件中有 PubkeyAuthentication 设置，并进行修改
     sed -i 's/^PubkeyAuthentication yes/PubkeyAuthentication no/' "$CLOUD_INIT_CONFIG"
 fi
 
@@ -446,10 +448,8 @@ echo -e "${DARK_RED}‼️ 切记要先保存好私钥！！！。${NC}"
 echo -e "${DARK_RED}‼️ 退出菜单输入systemctl restart sshd重启命令${NC}"
 echo -e "${DARK_RED}‼️ 然后重启SSH禁用密码才会被加载、然后用私钥登录${NC}"
 
-
-# 显示公钥私钥路径
-echo "公钥路径: $PUBLIC_KEY"
-echo "私钥路径: $PRIVATE_KEY"
+echo -e "${BRIGHT_GREEN}公钥路径: $PUBLIC_KEY${NC}"
+echo -e "${BRIGHT_GREEN}私钥路径: $PRIVATE_KEY${NC}"
 
 # 等待用户按任意键返回菜单
 echo ""
