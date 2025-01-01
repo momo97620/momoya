@@ -23,6 +23,11 @@ detect_os() {
     fi
 }
 
+# 检查软件包是否已安装
+check_installed() {
+    which nginx &>/dev/null && which certbot &>/dev/null
+}
+
 # 安装必要的软件包
 install_packages() {
     case $OS in
@@ -40,6 +45,20 @@ install_packages() {
             ;;
     esac
     log "必要软件包安装完成。"
+}
+
+# 修复 Certbot 路径
+fix_certbot_path() {
+    if ! which certbot &>/dev/null; then
+        echo "Certbot 未找到，尝试修复路径..."
+        if [ -d "/usr/local/bin" ]; then
+            sudo ln -s /usr/bin/certbot /usr/local/bin/certbot
+            echo "已修复 Certbot 路径到 /usr/local/bin/"
+        else
+            echo "无法找到适当的路径修复 Certbot。"
+            exit 1
+        fi
+    fi
 }
 
 # 检查模板文件是否存在
@@ -176,9 +195,17 @@ delete_reverse_proxy() {
 }
 
 # 主循环
-detect_os
-install_packages
-check_template_file
+if [ ! -f /etc/reverse_proxy_setup_done ]; then
+    detect_os
+    if ! check_installed; then
+        install_packages
+    fi
+    fix_certbot_path
+    check_template_file
+    sudo touch /etc/reverse_proxy_setup_done
+    echo "首次安装已完成，跳过后续安装步骤。"
+fi
+
 while true; do
     show_menu
     read -p "请输入操作编号 (0-4): " choice
