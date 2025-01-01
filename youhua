@@ -1,3 +1,7 @@
+#!/bin/bash
+
+echo "脚本开始执行"
+
 # 系统优化函数定义
 optimize_system() {
 set -euo pipefail
@@ -493,8 +497,6 @@ main() {
     
     OUT_SUCCESS "[成功] 系统优化完成！"
     OUT_INFO "[信息] 建议重启系统使所有优化生效" 
-    
-    }
 }
 # 调用函数
-optimize_system
+main
