@@ -35,18 +35,20 @@ check_nginx_status() {
 show_menu() {
     clear
     check_nginx_status  # 显示 Nginx 状态
+    echo ""              # 添加空行
     get_cert_expiry     # 显示证书到期时间
+    echo ""              # 添加空行
     echo "=========================================="
-    echo "请选择操作："
-    echo "1. 配置反向代理并申请 SSL 证书"
+    echo -e "${LIGHTCYAN}请选择操作：${NC}"
+    echo -e "${LIGHTCYAN}1. 配置反向代理并申请 SSL 证书${NC}"
     echo "------------------------------------------"
-    echo "2. 查询已配置的反向代理域名或 IP"
+    echo -e "${LIGHTCYAN}2. 查询已配置的反向代理域名或 IP${NC}"
     echo "------------------------------------------"
-    echo "3. 查询已申请的证书"
+    echo -e "${LIGHTCYAN}3. 查询已申请的证书${NC}"
     echo "------------------------------------------"
-    echo "4. 删除反向代理配置"
+    echo -e "${LIGHTCYAN}4. 删除反向代理配置${NC}"
     echo "------------------------------------------"
-    echo "0. 返回"
+    echo -e "${LIGHTCYAN}0. 返回${NC}"
     echo "=========================================="
 }
 
