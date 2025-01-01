@@ -712,7 +712,17 @@ else
 fi
       ;;
         4)
-            # 选项 4 的现有代码
+            # 检查Docker是否安装
+if ! command -v docker &> /dev/null; then
+    echo "安装失败！Docker未安装。"
+    read -p "按任意键返回..."
+    exit 1
+fi
+
+# 选项 4 的现有代码
+# 创建一个 1GB 的交换文件
+sudo fallocate -l 1G /swapfile
+
 echo "开始安装 Lsky-Pro..."
 
 # 创建目录并赋予权限
@@ -774,6 +784,7 @@ echo -e "${DEEPRED}注意：请确保放行 8008 端口以便访问 Lsky-Pro！$
 
 # 等待用户输入任意键返回
 read -p "按任意键返回..."
+
             ;;
         0)
             echo "返回主菜单..."
