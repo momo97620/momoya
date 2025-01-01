@@ -527,6 +527,8 @@ check_ldnmp
     echo -e "----------------------------"
     echo -e "${BLUE}3.${NC} ${LIGHTCYAN}部署RSSHub${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}Lsky-Pro图床${NC}"
     echo -e "----------------------------"
+    echo -e "${DEEPRED}5.${NC} ${RED}增加1G空间${NC}"
+    echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
     echo -e "============================"
     # 提示用户安装 Docker
@@ -726,6 +728,17 @@ echo -e "${DEEPRED}注意：请确保放行 8008 端口以便访问 Lsky-Pro！$
 read -p "按任意键返回..."
 
             ;;
+            
+        5)
+           echo "正在创建1G的交换空间..."
+            fallocate -l 1G /swapfile
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+            echo "1G的交换空间已成功创建并启用。"
+            read -n 1 -s -r -p "按任意键返回菜单..."
+            ;;  
         0)
             echo "返回主菜单..."
             break
@@ -737,7 +750,7 @@ read -p "按任意键返回..."
             ;;
     esac
 done
-            ;;
+            ;;    
         9)
             execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
             ;;
