@@ -97,13 +97,18 @@ configure_reverse_proxy_and_ssl() {
     read -e -p "请输入你的反代IP或IPv6地址 [默认: 127.0.0.1]: " reverseproxy
     reverseproxy="${reverseproxy:-127.0.0.1}"
 
+    # 检测 IPv6 并处理格式
+    if [[ "$reverseproxy" =~ : ]]; then
+        [[ "$reverseproxy" != \[*\] ]] && reverseproxy="[$reverseproxy]"
+    fi
+
     # 输入反向代理端口
     read -e -p "请输入你的反代端口 [默认: 80]: " port
     port="${port:-80}"
 
     # 检查反向代理是否可达（支持 IPv6 和 IPv4）
     if [[ "$reverseproxy" =~ : ]]; then
-        if ! curl -g --silent --connect-timeout 5 "http://[$reverseproxy]:$port" > /dev/null; then
+        if ! curl -g --silent --connect-timeout 5 "http://$reverseproxy:$port" > /dev/null; then
             echo "反向代理 IPv6 地址或端口不可达，请检查配置。"
             exit 1
         fi
