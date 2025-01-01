@@ -498,5 +498,9 @@ main() {
     
     }
 }
+
+main() {
+    optimize_system
+}
 # 调用函数
-optimize_system
+main
