@@ -145,7 +145,7 @@ dd_xitong() {
 				reboot
 				exit
 				;;
-
+ 
 			  23)
 				send_stats "重装alma9"
 				dd_xitong_3
