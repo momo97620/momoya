@@ -25,66 +25,6 @@ else
     :
 fi
 
-# 定义一个函数来检查和安装依赖项
-check_and_install_dependencies() {
-    local CACHE_DIR="/usr/local/cache"
-    
-    # 创建缓存目录（如果不存在）
-    sudo mkdir -p "$CACHE_DIR" > /dev/null 2>&1
-    sudo chown "$USER:$USER" "$CACHE_DIR" > /dev/null 2>&1  # 确保当前用户有权限
-
-    # 定义所需的依赖项
-    local DEPENDENCIES=(
-        "curl"         
-        "sudo"         
-        "wget"         
-        "git"          
-        "python3"      
-        "bash"         
-        "sed"          
-        "mkdir"        
-        "cp"           
-        "chmod"        
-        "ln"           
-        "echo"         
-        "grep"         
-        "realpath"     
-        "systemctl"    
-        "docker"       
-        "ssh-keygen"   
-    )
-
-    # 检查并安装依赖项的函数
-    install_dependency() {
-        local dep="$1"
-        local cache_file="$CACHE_DIR/$dep.installed"
-
-        # 如果依赖项已安装且缓存文件存在，则跳过
-        if command -v "$dep" &> /dev/null && [ -f "$cache_file" ]; then
-            return
-        fi
-
-        # 在后台安装依赖项，并隐藏输出
-        if ! command -v "$dep" &> /dev/null; then
-            sudo apt-get install -y "$dep" > /dev/null 2>&1 && touch "$cache_file" > /dev/null 2>&1
-        fi
-    }
-
-    # 遍历并检查每个依赖项
-    for dep in "${DEPENDENCIES[@]}"; do
-        install_dependency "$dep" &
-    done
-
-    # 等待所有后台进程完成
-    wait
-}
-
-# 自动赋予脚本执行权限，并隐藏输出
-chmod +x "$0" > /dev/null 2>&1
-
-# 在后台执行依赖项检查并隐藏输出
-check_and_install_dependencies &> /dev/null &
-
 # 获取脚本路径
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
@@ -971,7 +911,6 @@ main() {
     fi
 
     # 调用主菜单
-    check_and_install_dependencies
     while true; do
         show_main_menu
     done
