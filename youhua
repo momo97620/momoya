@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "脚本开始执行"
 # 系统优化函数定义
 optimize_system() {
 set -euo pipefail
