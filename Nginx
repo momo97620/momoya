@@ -16,7 +16,7 @@ echo "=========================================="
 read -p "请输入操作编号 (1-4): " choice
 
 # 设置默认值
-yuming=""
+yuming="" 
 reverseproxy=""
 port=""
 
