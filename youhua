@@ -1,3 +1,4 @@
+#!/bin/bash
 # 系统优化函数定义
 optimize_system() {
 set -euo pipefail
