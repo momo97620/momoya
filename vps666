@@ -36,6 +36,7 @@ check_and_install_dependencies() {
     # 定义所需的依赖项
     local DEPENDENCIES=(
         "curl"         # 用于下载脚本
+        "wget"         # 用于下载wget
         "git"          # 用于版本控制
         "python3"      # 用于运行 Python 脚本（如果有）
         "bash"         # 脚本本身需要 Bash
