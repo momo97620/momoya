@@ -59,8 +59,8 @@ check_and_install_dependencies() {
         local cache_file="$CACHE_DIR/$dep.installed"
 
         if ! command -v "$dep" &> /dev/null; then
-            sudo apt-get install -y "$dep" > /dev/null 2>&1  # 使用适合你系统的包管理器
-            touch "$cache_file"  # 创建缓存文件，表示已安装
+            # 在后台安装依赖项，并隐藏输出
+            (sudo apt-get install -y "$dep" > /dev/null 2>&1 && touch "$cache_file") &
         fi
     }
 
