@@ -59,11 +59,14 @@ check_and_install_dependencies() {
         local dep="$1"
         local cache_file="$CACHE_DIR/$dep.installed"
 
+        # 如果依赖项已安装且缓存文件存在，则跳过
+        if command -v "$dep" &> /dev/null && [ -f "$cache_file" ]; then
+            return
+        fi
+
+        # 在后台安装依赖项，并隐藏输出
         if ! command -v "$dep" &> /dev/null; then
-            # 在后台安装依赖项，并隐藏输出
-            if sudo apt-get install -y "$dep" > /dev/null 2>&1; then
-                touch "$cache_file"
-            fi
+            sudo apt-get install -y "$dep" > /dev/null 2>&1 && touch "$cache_file" > /dev/null 2>&1
         fi
     }
 
@@ -76,8 +79,8 @@ check_and_install_dependencies() {
     wait
 }
 
-# 自动赋予脚本执行权限
-chmod +x "$0"
+# 自动赋予脚本执行权限，并隐藏输出
+chmod +x "$0" > /dev/null 2>&1
 
 # 在后台执行依赖项检查并隐藏输出
 check_and_install_dependencies &> /dev/null &
