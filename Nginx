@@ -106,7 +106,7 @@ configure_reverse_proxy_and_ssl() {
     fi
 
     # 启用配置
-    sudo ln -sf "$nginx_conf" /etc/nginx/sites-enabled/"
+    sudo ln -sf "$nginx_conf" /etc/nginx/sites-enabled/
 
     # 测试 Nginx 配置
     if sudo nginx -t; then
