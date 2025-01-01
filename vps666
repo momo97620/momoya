@@ -60,16 +60,10 @@ check_and_install_dependencies() {
         local cache_file="$CACHE_DIR/$dep.installed"
 
         if ! command -v "$dep" &> /dev/null; then
-            echo "安装依赖项: $dep"
             # 在后台安装依赖项，并隐藏输出
             if sudo apt-get install -y "$dep" > /dev/null 2>&1; then
                 touch "$cache_file"
-                echo "$dep 安装成功！"
-            else
-                echo "$dep 安装失败！" >&2
             fi
-        else
-            echo "$dep 已安装，跳过。"
         fi
     }
 
@@ -80,14 +74,12 @@ check_and_install_dependencies() {
 
     # 等待所有后台进程完成
     wait
-
-    echo "所有依赖项检查完成！"
 }
 
 # 自动赋予脚本执行权限
 chmod +x "$0"
 
-# 在后台执行依赖项检查
+# 在后台执行依赖项检查并隐藏输出
 check_and_install_dependencies &> /dev/null &
 
 # 获取脚本路径
