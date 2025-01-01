@@ -6,17 +6,16 @@ clear
 # 菜单显示
 echo "=========================================="
 echo "请选择操作："
-echo "1. 配置反向代理"
-echo "2. 申请 SSL/TLS 证书"
-echo "3. 查询已配置的反向代理域名或 IP"
-echo "4. 查询已申请的证书"
+echo "1. 配置反向代理并申请 SSL 证书"
+echo "2. 查询已配置的反向代理域名或 IP"
+echo "3. 查询已申请的证书"
 echo "=========================================="
 
 # 读取用户输入
-read -p "请输入操作编号 (1-4): " choice
+read -p "请输入操作编号 (1-3): " choice
 
 # 设置默认值
-yuming="" 
+yuming=""
 reverseproxy=""
 port=""
 
@@ -40,39 +39,49 @@ install_certbot() {
     fi
 }
 
-# 配置反向代理
-configure_reverse_proxy() {
-    echo "配置反向代理..."
-    
-    # 提示用户输入域名
-    read -e -p "请输入你的域名: " yuming
-
-    # 检查域名格式
-    if [[ ! "$yuming" =~ ^[a-zA-Z0-9.-]+$ ]]; then
+# 检查域名格式
+validate_domain() {
+    if [[ ! "$1" =~ ^[a-zA-Z0-9.-]+$ ]]; then
         echo "无效的域名格式，请重新输入。"
         exit 1
     fi
+}
+
+# 配置反向代理并申请证书
+configure_reverse_proxy_and_ssl() {
+    echo "配置反向代理并申请 SSL/TLS 证书..."
+
+    # 输入域名
+    read -e -p "请输入你的域名: " yuming
+    validate_domain "$yuming"
 
     # 检查配置文件是否已存在
     if [ -f "/etc/nginx/sites-available/$yuming.conf" ]; then
         read -p "该域名的反向代理已存在，是否覆盖配置？(y/n): " choice
-        if [ "$choice" != "y" ]; then
-            echo "跳过反向代理配置。"
-            exit 0
-        fi
+        [[ "$choice" != "y" ]] && { echo "跳过反向代理配置。"; exit 0; }
     fi
 
-    # 提示用户输入反向代理 IP 和端口
-    read -e -p "请输入你的反代IP [默认: 127.0.0.1]: " reverseproxy
+    # 输入反向代理 IP 或 IPv6 地址
+    read -e -p "请输入你的反代IP或IPv6地址 [默认: 127.0.0.1]: " reverseproxy
     reverseproxy="${reverseproxy:-127.0.0.1}"
 
+    # 输入反向代理端口
     read -e -p "请输入你的反代端口 [默认: 80]: " port
     port="${port:-80}"
 
-    # 检查反向代理是否可达
-    if ! nc -zv "$reverseproxy" "$port"; then
-        echo "反向代理 IP 或端口不可达，请检查配置。"
-        exit 1
+    # 检查反向代理是否可达（支持 IPv6）
+    if [[ "$reverseproxy" =~ : ]]; then
+        # IPv6 地址检查
+        if ! nc -zv -6 "$reverseproxy" "$port" &> /dev/null; then
+            echo "反向代理 IPv6 地址或端口不可达，请检查配置。"
+            exit 1
+        fi
+    else
+        # IPv4 地址检查
+        if ! nc -zv "$reverseproxy" "$port" &> /dev/null; then
+            echo "反向代理 IP 或端口不可达，请检查配置。"
+            exit 1
+        fi
     fi
 
     # Nginx 配置文件路径
@@ -80,9 +89,10 @@ configure_reverse_proxy() {
     
     # 创建反向代理配置文件
     echo "配置 Nginx 反向代理..."
-    echo "
+    cat <<EOL | sudo tee "$nginx_conf" > /dev/null
 server {
     listen 80;
+    listen [::]:80;  # 添加对 IPv6 的支持
     server_name $yuming;
 
     location / {
@@ -93,46 +103,32 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
-" | sudo tee $nginx_conf > /dev/null
+EOL
 
     # 启用配置
-    sudo ln -s $nginx_conf /etc/nginx/sites-enabled/
+    sudo ln -s "$nginx_conf" /etc/nginx/sites-enabled/
 
     # Nginx 配置测试
-    sudo nginx -t
-    if [ $? -eq 0 ]; then
+    if sudo nginx -t; then
         echo "Nginx 配置正确，正在重启..."
         sudo systemctl restart nginx
+        echo "反向代理配置成功！"
     else
         echo "Nginx 配置有误，重启失败。"
         exit 1
     fi
 
-    echo "反向代理配置成功！"
-}
+    # 安装 Certbot
+    install_certbot
 
-# 申请 SSL/TLS 证书
-apply_ssl_cert() {
-    echo "申请 SSL/TLS 证书..."
-
-    # 提示用户输入域名
-    read -e -p "请输入你的域名: " yuming
-
-    # 检查域名格式
-    if [[ ! "$yuming" =~ ^[a-zA-Z0-9.-]+$ ]]; then
-        echo "无效的域名格式，请重新输入。"
-        exit 1
-    fi
-
-    # 使用 Certbot 申请证书
-    sudo certbot --nginx -d "$yuming" --non-interactive --agree-tos --email your-email@example.com
-
-    if [ $? -eq 0 ]; then
+    # 使用 Certbot 申请证书并自动配置 Nginx
+    echo "自动申请 SSL/TLS 证书..."
+    if sudo certbot --nginx -d "$yuming" --non-interactive --agree-tos --email your-email@example.com; then
         echo "SSL/TLS 证书申请成功!"
     else
         echo "证书申请失败，请检查域名和网络配置。"
         echo "详细错误信息："
-        journalctl -u certbot.service --since "1 hour ago" | tail -n 20  # 显示最近1小时的 Certbot 错误日志
+        journalctl -u certbot.service --since "1 hour ago" | tail -n 20
         exit 1
     fi
 }
@@ -141,14 +137,12 @@ apply_ssl_cert() {
 query_reverse_proxy() {
     echo "查询已配置的反向代理..."
     
-    # 查找所有反向代理配置文件
     if [ -d /etc/nginx/sites-available/ ]; then
         echo "已配置的反向代理域名和 IP:"
-        ls /etc/nginx/sites-available/ | while read file; do
-            # 从配置文件中提取域名和反向代理地址
-            domain=$(grep -oP '(?<=server_name\s)[^\s;]+' "/etc/nginx/sites-available/$file")
-            proxy_ip=$(grep -oP '(?<=proxy_pass\shttp://)[^\s:;]+' "/etc/nginx/sites-available/$file")
-            echo "域名: $domain -> 反代 IP: $proxy_ip"
+        for file in /etc/nginx/sites-available/*; do
+            domain=$(grep -oP '(?<=server_name\s)[^\s;]+' "$file")
+            proxy_ip=$(grep -oP '(?<=proxy_pass\shttp://)[^\s:;]+' "$file")
+            [[ $domain ]] && echo "域名: $domain -> 反代 IP: $proxy_ip"
         done
     else
         echo "未找到任何反向代理配置文件。"
@@ -159,8 +153,7 @@ query_reverse_proxy() {
 query_certificates() {
     echo "查询已申请的 SSL/TLS 证书..."
     
-    # 检查 Certbot 的证书列表
-    sudo certbot certificates | grep -E 'Domains|Certificate Path' | while read line; do
+    sudo certbot certificates | grep -E 'Domains|Certificate Path' | while read -r line; do
         echo "$line"
     done
 }
@@ -169,19 +162,15 @@ query_certificates() {
 case $choice in
     1)
         install_nginx
-        configure_reverse_proxy
+        configure_reverse_proxy_and_ssl
         ;;
     2)
-        install_certbot
-        apply_ssl_cert
-        ;;
-    3)
         query_reverse_proxy
         ;;
-    4)
+    3)
         query_certificates
         ;;
     *)
-        echo "无效的选择，请选择 1 到 4 之间的数字。"
+        echo "无效的选择，请选择 1 到 3 之间的数字。"
         ;;
 esac
