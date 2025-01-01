@@ -1244,8 +1244,8 @@ main() {
     
     wait_for_user
 }
-
 main
+    ;;
 
 # 主执行逻辑
 main() {
