@@ -25,8 +25,10 @@ install_nginx() {
         echo "Nginx 未安装，正在安装..."
         sudo apt update
         sudo apt install nginx -y
+        create_default_template  # 安装后创建模板
     else
         echo "Nginx 已安装"
+        create_default_template  # 确保模板存在
     fi
 }
 
@@ -37,6 +39,36 @@ install_certbot() {
     else
         echo "Certbot 已安装"
     fi
+}
+
+# 创建默认模板文件
+create_default_template() {
+    echo "创建默认的 Nginx 配置模板..."
+    local template_path="/etc/nginx/sites-available/template.conf"
+
+    # 如果模板文件已存在，跳过创建
+    if [ -f "$template_path" ]; then
+        echo "模板文件已存在，跳过创建。"
+        return
+    fi
+
+    # 创建模板文件
+    sudo tee "$template_path" > /dev/null <<EOL
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:80;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOL
+    echo "模板文件创建成功：$template_path"
 }
 
 # 检查域名格式
@@ -69,16 +101,14 @@ configure_reverse_proxy_and_ssl() {
     read -e -p "请输入你的反代端口 [默认: 80]: " port
     port="${port:-80}"
 
-    # 检查反向代理是否可达（支持 IPv6）
+    # 检查反向代理是否可达（支持 IPv6 和 IPv4）
     if [[ "$reverseproxy" =~ : ]]; then
-        # IPv6 地址检查
-        if ! nc -zv -6 "$reverseproxy" "$port" &> /dev/null; then
+        if ! curl -g --silent --connect-timeout 5 "http://[$reverseproxy]:$port" > /dev/null; then
             echo "反向代理 IPv6 地址或端口不可达，请检查配置。"
             exit 1
         fi
     else
-        # IPv4 地址检查
-        if ! nc -zv "$reverseproxy" "$port" &> /dev/null; then
+        if ! curl --silent --connect-timeout 5 "http://$reverseproxy:$port" > /dev/null; then
             echo "反向代理 IP 或端口不可达，请检查配置。"
             exit 1
         fi
@@ -86,27 +116,21 @@ configure_reverse_proxy_and_ssl() {
 
     # Nginx 配置文件路径
     nginx_conf="/etc/nginx/sites-available/$yuming.conf"
-    
-    # 创建反向代理配置文件
-    echo "配置 Nginx 反向代理..."
-    cat <<EOL | sudo tee "$nginx_conf" > /dev/null
-server {
-    listen 80;
-    listen [::]:80;  # 添加对 IPv6 的支持
-    server_name $yuming;
 
-    location / {
-        proxy_pass http://$reverseproxy:$port;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOL
+    # 使用模板生成配置文件
+    echo "基于模板创建 Nginx 配置文件..."
+    template_path="/etc/nginx/sites-available/template.conf"
+    if [ -f "$template_path" ]; then
+        sudo cp "$template_path" "$nginx_conf"
+        sudo sed -i "s/example.com/$yuming/g" "$nginx_conf"
+        sudo sed -i "s|127.0.0.1:80|$reverseproxy:$port|g" "$nginx_conf"
+    else
+        echo "模板文件缺失，无法生成配置文件。请检查模板路径：$template_path"
+        exit 1
+    fi
 
     # 启用配置
-    sudo ln -s "$nginx_conf" /etc/nginx/sites-enabled/
+    sudo ln -sf "$nginx_conf" /etc/nginx/sites-enabled/
 
     # Nginx 配置测试
     if sudo nginx -t; then
@@ -127,8 +151,6 @@ EOL
         echo "SSL/TLS 证书申请成功!"
     else
         echo "证书申请失败，请检查域名和网络配置。"
-        echo "详细错误信息："
-        journalctl -u certbot.service --since "1 hour ago" | tail -n 20
         exit 1
     fi
 }
@@ -136,7 +158,7 @@ EOL
 # 查询已配置的反向代理
 query_reverse_proxy() {
     echo "查询已配置的反向代理..."
-    
+
     if [ -d /etc/nginx/sites-available/ ]; then
         echo "已配置的反向代理域名和 IP:"
         for file in /etc/nginx/sites-available/*; do
@@ -152,7 +174,6 @@ query_reverse_proxy() {
 # 查询已申请的证书
 query_certificates() {
     echo "查询已申请的 SSL/TLS 证书..."
-    
     sudo certbot certificates | grep -E 'Domains|Certificate Path' | while read -r line; do
         echo "$line"
     done
