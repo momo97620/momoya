@@ -1,3 +1,5 @@
+#!/bin/bash
+
 dd_xitong() {
 		send_stats "重装系统"
 		dd_xitong_MollyLau() {
@@ -305,3 +307,11 @@ dd_xitong() {
 			esac
 		  done
 }
+
+main() {
+    dd_xitong
+}
+
+# 调用函数
+main
+
