@@ -874,10 +874,7 @@ done
 }
        
        17)
-    # 在脚本其他地方定义优化函数
-optimize_system() {
-
-    set -euo pipefail
+      set -euo pipefail
 
 LOG_FILE="/var/log/server-optimization.log"
 BACKUP_DIR="/root/system_backup"
@@ -1370,8 +1367,6 @@ main() {
     
     OUT_SUCCESS "[成功] 系统优化完成！"
     OUT_INFO "[信息] 建议重启系统使所有优化生效"
-    
-    sysctl -p
 }
     ;;
 # 主执行逻辑
