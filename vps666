@@ -146,9 +146,7 @@ set_ip_priority() {
                 sysctl -p
                 echo "IPv6 优先设置完成！"
                 ;;
-             0)
-               echo "返回主菜单..."
-                break   
+             
             *)
                 echo "无效的选项！请输入 '1' 或 '2'。"
                 exit 1
@@ -164,7 +162,6 @@ set_ip_priority() {
         check_current_priority
         echo "1. 优先使用 IPv4"
         echo "2. 优先使用 IPv6"
-        echo "0. 返回菜单"
         echo "==============================="
         read -p "请输入选项 [1/2，0]：" choice
         set_priority "$choice"
