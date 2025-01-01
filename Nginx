@@ -25,10 +25,8 @@ install_nginx() {
         echo "Nginx 未安装，正在安装..."
         sudo apt update
         sudo apt install nginx -y
-        create_default_template  # 安装后创建模板
     else
         echo "Nginx 已安装"
-        create_default_template  # 确保模板存在
     fi
 }
 
@@ -39,36 +37,6 @@ install_certbot() {
     else
         echo "Certbot 已安装"
     fi
-}
-
-# 创建默认模板文件
-create_default_template() {
-    echo "创建默认的 Nginx 配置模板..."
-    local template_path="/etc/nginx/sites-available/template.conf"
-
-    # 如果模板文件已存在，跳过创建
-    if [ -f "$template_path" ]; then
-        echo "模板文件已存在，跳过创建。"
-        return
-    fi
-
-    # 创建模板文件
-    sudo tee "$template_path" > /dev/null <<EOL
-server {
-    listen 80;
-    listen [::]:80;
-    server_name example.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:80;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOL
-    echo "模板文件创建成功：$template_path"
 }
 
 # 检查域名格式
@@ -87,10 +55,13 @@ configure_reverse_proxy_and_ssl() {
     read -e -p "请输入你的域名: " yuming
     validate_domain "$yuming"
 
-    # 检查配置文件是否已存在
-    if [ -f "/etc/nginx/sites-available/$yuming.conf" ]; then
-        read -p "该域名的反向代理已存在，是否覆盖配置？(y/n): " choice
-        [[ "$choice" != "y" ]] && { echo "跳过反向代理配置。"; exit 0; }
+    # 输入电子邮件地址
+    echo "请输入用于 Certbot 注册的电子邮件地址（用于接收证书到期提醒）："
+    read -p "邮箱: " user_email
+
+    if [[ ! "$user_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        echo "无效的电子邮件地址，请重新运行脚本并输入正确的邮箱。"
+        exit 1
     fi
 
     # 输入反向代理 IP 或 IPv6 地址
@@ -106,7 +77,7 @@ configure_reverse_proxy_and_ssl() {
     read -e -p "请输入你的反代端口 [默认: 80]: " port
     port="${port:-80}"
 
-    # 检查反向代理是否可达（支持 IPv6 和 IPv4）
+    # 检查反向代理是否可达
     if [[ "$reverseproxy" =~ : ]]; then
         if ! curl -g --silent --connect-timeout 5 "http://$reverseproxy:$port" > /dev/null; then
             echo "反向代理 IPv6 地址或端口不可达，请检查配置。"
@@ -121,38 +92,37 @@ configure_reverse_proxy_and_ssl() {
 
     # Nginx 配置文件路径
     nginx_conf="/etc/nginx/sites-available/$yuming.conf"
+    template_path="/etc/nginx/sites-available/template.conf"
 
     # 使用模板生成配置文件
     echo "基于模板创建 Nginx 配置文件..."
-    template_path="/etc/nginx/sites-available/template.conf"
     if [ -f "$template_path" ]; then
         sudo cp "$template_path" "$nginx_conf"
         sudo sed -i "s/example.com/$yuming/g" "$nginx_conf"
         sudo sed -i "s|127.0.0.1:80|$reverseproxy:$port|g" "$nginx_conf"
     else
-        echo "模板文件缺失，无法生成配置文件。请检查模板路径：$template_path"
+        echo "模板文件缺失，无法生成配置文件。"
         exit 1
     fi
 
     # 启用配置
-    sudo ln -sf "$nginx_conf" /etc/nginx/sites-enabled/
+    sudo ln -sf "$nginx_conf" /etc/nginx/sites-enabled/"
 
-    # Nginx 配置测试
+    # 测试 Nginx 配置
     if sudo nginx -t; then
         echo "Nginx 配置正确，正在重启..."
         sudo systemctl restart nginx
-        echo "反向代理配置成功！"
     else
-        echo "Nginx 配置有误，重启失败。"
+        echo "Nginx 配置有误，无法重启。"
         exit 1
     fi
 
     # 安装 Certbot
     install_certbot
 
-    # 使用 Certbot 申请证书并自动配置 Nginx
-    echo "自动申请 SSL/TLS 证书..."
-    if sudo certbot --nginx -d "$yuming" --non-interactive --agree-tos --email your-email@example.com; then
+    # 使用 Certbot 申请证书
+    echo "正在申请 SSL/TLS 证书..."
+    if sudo certbot --nginx -d "$yuming" --non-interactive --agree-tos --email "$user_email"; then
         echo "SSL/TLS 证书申请成功!"
     else
         echo "证书申请失败，请检查域名和网络配置。"
