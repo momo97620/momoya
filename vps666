@@ -30,24 +30,36 @@ check_and_install_dependencies() {
     local CACHE_DIR="/usr/local/cache"
     
     # 创建缓存目录（如果不存在）
-    sudo mkdir -p "$CACHE_DIR"
-    sudo chown $USER:$USER "$CACHE_DIR"  # 确保当前用户有权限
+    sudo mkdir -p "$CACHE_DIR" > /dev/null 2>&1
+    sudo chown $USER:$USER "$CACHE_DIR" > /dev/null 2>&1  # 确保当前用户有权限
 
     # 定义所需的依赖项
     local DEPENDENCIES=(
-        "curl"
-        "git"
-        "python3"
+        "curl"         # 用于下载脚本
+        "git"          # 用于版本控制
+        "python3"      # 用于运行 Python 脚本（如果有）
+        "bash"         # 脚本本身需要 Bash
+        "sed"          # 用于文本处理和配置文件修改
+        "mkdir"        # 用于创建目录
+        "cp"           # 用于复制文件
+        "chmod"        # 用于修改文件权限
+        "ln"           # 用于创建符号链接
+        "echo"         # 用于输出信息
+        "grep"         # 用于文本搜索
+        "realpath"     # 用于获取脚本的绝对路径
+        "systemctl"    # 用于管理系统服务（如重启 SSH）
+        "docker"       # 如果涉及 Docker 操作
+        "ssh-keygen"   # 用于生成 SSH 密钥对（如果需要）
     )
 
     # 检查并安装依赖项的函数
     install_dependency() {
         local dep="$1"
         if ! command -v "$dep" &> /dev/null; then
-            echo "$dep 未安装，正在安装..."
-            sudo apt-get install -y "$dep"  # 使用适合你系统的包管理器
+            echo "$dep 未安装，正在安装..." > /dev/null 2>&1
+            sudo apt-get install -y "$dep" > /dev/null 2>&1  # 使用适合你系统的包管理器
         else
-            echo "$dep 已安装"
+            echo "$dep 已安装" > /dev/null 2>&1
         fi
     }
 
@@ -56,11 +68,11 @@ check_and_install_dependencies() {
         install_dependency "$dep"
     done
 
-    echo "所有依赖项检查完成！"
+    echo "所有依赖项检查完成！" > /dev/null 2>&1
 }
 
-# 执行依赖项检查
-check_and_install_dependencies
+# 在后台执行依赖项检查，并隐藏输出
+check_and_install_dependencies &> /dev/null &
 
 # 获取脚本路径
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
