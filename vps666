@@ -55,11 +55,11 @@ check_and_install_dependencies() {
     # 检查并安装依赖项的函数
     install_dependency() {
         local dep="$1"
+        local cache_file="$CACHE_DIR/$dep.installed"
+
         if ! command -v "$dep" &> /dev/null; then
-            echo "$dep 未安装，正在安装..." > /dev/null 2>&1
             sudo apt-get install -y "$dep" > /dev/null 2>&1  # 使用适合你系统的包管理器
-        else
-            echo "$dep 已安装" > /dev/null 2>&1
+            touch "$cache_file"  # 创建缓存文件，表示已安装
         fi
     }
 
@@ -68,6 +68,7 @@ check_and_install_dependencies() {
         install_dependency "$dep"
     done
 
+    # 隐藏输出的同时，仍然可以在后台执行
     echo "所有依赖项检查完成！" > /dev/null 2>&1
 }
 
