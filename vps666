@@ -31,27 +31,27 @@ check_and_install_dependencies() {
     
     # 创建缓存目录（如果不存在）
     sudo mkdir -p "$CACHE_DIR" > /dev/null 2>&1
-    sudo chown $USER:$USER "$CACHE_DIR" > /dev/null 2>&1  # 确保当前用户有权限
+    sudo chown "$USER:$USER" "$CACHE_DIR" > /dev/null 2>&1  # 确保当前用户有权限
 
     # 定义所需的依赖项
     local DEPENDENCIES=(
-        "curl"         # 用于下载脚本
-        "sudo"         # 用于下载脚本
-        "wget"         # 用于下载wget
-        "git"          # 用于版本控制
-        "python3"      # 用于运行 Python 脚本（如果有）
-        "bash"         # 脚本本身需要 Bash
-        "sed"          # 用于文本处理和配置文件修改
-        "mkdir"        # 用于创建目录
-        "cp"           # 用于复制文件
-        "chmod"        # 用于修改文件权限
-        "ln"           # 用于创建符号链接
-        "echo"         # 用于输出信息
-        "grep"         # 用于文本搜索
-        "realpath"     # 用于获取脚本的绝对路径
-        "systemctl"    # 用于管理系统服务（如重启 SSH）
-        "docker"       # 如果涉及 Docker 操作
-        "ssh-keygen"   # 用于生成 SSH 密钥对（如果需要）
+        "curl"         
+        "sudo"         
+        "wget"         
+        "git"          
+        "python3"      
+        "bash"         
+        "sed"          
+        "mkdir"        
+        "cp"           
+        "chmod"        
+        "ln"           
+        "echo"         
+        "grep"         
+        "realpath"     
+        "systemctl"    
+        "docker"       
+        "ssh-keygen"   
     )
 
     # 检查并安装依赖项的函数
@@ -60,21 +60,34 @@ check_and_install_dependencies() {
         local cache_file="$CACHE_DIR/$dep.installed"
 
         if ! command -v "$dep" &> /dev/null; then
+            echo "安装依赖项: $dep"
             # 在后台安装依赖项，并隐藏输出
-            (sudo apt-get install -y "$dep" > /dev/null 2>&1 && touch "$cache_file") &
+            if sudo apt-get install -y "$dep" > /dev/null 2>&1; then
+                touch "$cache_file"
+                echo "$dep 安装成功！"
+            else
+                echo "$dep 安装失败！" >&2
+            fi
+        else
+            echo "$dep 已安装，跳过。"
         fi
     }
 
     # 遍历并检查每个依赖项
     for dep in "${DEPENDENCIES[@]}"; do
-        install_dependency "$dep"
+        install_dependency "$dep" &
     done
 
-    # 隐藏输出的同时，仍然可以在后台执行
-    echo "所有依赖项检查完成！" > /dev/null 2>&1
+    # 等待所有后台进程完成
+    wait
+
+    echo "所有依赖项检查完成！"
 }
 
-# 在后台执行依赖项检查，并隐藏输出
+# 自动赋予脚本执行权限
+chmod +x "$0"
+
+# 在后台执行依赖项检查
 check_and_install_dependencies &> /dev/null &
 
 # 获取脚本路径
@@ -400,7 +413,7 @@ echo -e "  ${BLUE}5.${NC} ${PINK}♥${NC} ${GREEN}一键搭建节点${NC}      $
 echo -e "  ${BLUE}6.${NC} ${PINK}♥${NC} ${GREEN}一键配置WARP${NC}      ${BLUE}14${NC} ${PINK}♥${NC} ${RED}监控TG关键词 ▶${NC}"
 echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速${NC}       ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
 echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}      ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
-echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}优化服务器${NC}"
+echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}配置反向代理${NC}"
 echo -e "  ${BLUE}00${NC} ${PINK}♥${NC} ${RED}退出${NC}"
 read -p "请输入选项 (0-17): " choice
   
@@ -922,6 +935,10 @@ done
         esac
     done
     ;;
+            17)
+                curl -O https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/Nginx && chmod +x Nginx && ./Nginx
+                ;;
+                
             0)
               echo -e "${GREEN}退出程序...${NC}"
             exit 0
