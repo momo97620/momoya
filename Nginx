@@ -85,6 +85,17 @@ EOL
     fi
 }
 
+# 更新 /etc/hosts 文件
+update_hosts_file() {
+    if ! grep -q "$yuming" /etc/hosts; then
+        echo "正在将域名 $yuming 添加到 /etc/hosts 文件..."
+        echo "127.0.1.1 $yuming" | sudo tee -a /etc/hosts > /dev/null
+        echo "已将域名 $yuming 指向 127.0.1.1"
+    else
+        echo "域名 $yuming 已在 /etc/hosts 文件中。"
+    fi
+}
+
 # 获取证书到期时间
 get_cert_expiry() {
     cert_info=$(sudo certbot certificates 2>/dev/null)
@@ -103,23 +114,6 @@ check_nginx_status() {
     else
         echo "Nginx 状态: 未安装或未运行"
     fi
-}
-
-# 主菜单显示
-show_menu() {
-    clear
-    check_nginx_status
-    echo ""
-    get_cert_expiry
-    echo ""
-    echo "=========================================="
-    echo "请选择操作："
-    echo "1. 配置反向代理并申请 SSL 证书"
-    echo "2. 查询已配置的反向代理域名或 IP"
-    echo "3. 查询已申请的证书"
-    echo "4. 删除反向代理配置"
-    echo "0. 退出"
-    echo "=========================================="
 }
 
 # 配置反向代理并申请证书
@@ -149,6 +143,9 @@ configure_reverse_proxy_and_ssl() {
         exit 1
     fi
 
+    # 更新 /etc/hosts 文件
+    update_hosts_file
+
     # Nginx 配置文件路径
     nginx_conf="/etc/nginx/sites-available/$yuming.conf"
     sudo cp "$TEMPLATE_PATH" "$nginx_conf"
@@ -169,6 +166,7 @@ configure_reverse_proxy_and_ssl() {
     fi
 
     # 申请证书
+    echo "正在申请 SSL/TLS 证书..."
     if sudo certbot --nginx -d "$yuming" --non-interactive --agree-tos --email "$user_email"; then
         echo "SSL/TLS 证书申请成功。"
         log "SSL/TLS 证书申请成功: $yuming"
@@ -192,6 +190,23 @@ delete_reverse_proxy() {
     else
         echo "未找到该域名的配置。"
     fi
+}
+
+# 主菜单显示
+show_menu() {
+    clear
+    check_nginx_status
+    echo ""
+    get_cert_expiry
+    echo ""
+    echo "=========================================="
+    echo "请选择操作："
+    echo "1. 配置反向代理并申请 SSL 证书"
+    echo "2. 查询已配置的反向代理域名或 IP"
+    echo "3. 查询已申请的证书"
+    echo "4. 删除反向代理配置"
+    echo "0. 退出"
+    echo "=========================================="
 }
 
 # 主循环
