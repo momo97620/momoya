@@ -23,38 +23,24 @@ detect_os() {
 
 # 安装必要的软件包
 install_packages() {
+    echo "检查并安装必要的软件包..."
+    export DEBIAN_FRONTEND=noninteractive
     case $OS in
         debian | ubuntu)
-            if ! dpkg -l | grep -qw nginx; then
-                echo "未检测到 Nginx，正在安装..."
-                sudo DEBIAN_FRONTEND=noninteractive apt update && sudo apt install -y nginx
-                echo "Nginx 安装完成。"
-            else
-                echo "Nginx 已安装，跳过安装步骤。"
-            fi
-            if ! dpkg -l | grep -qw certbot; then
-                echo "正在安装 Certbot..."
-                sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot python3-certbot-nginx curl
-                echo "Certbot 安装完成。"
-            else
-                echo "Certbot 已安装，跳过安装步骤。"
-            fi
+            sudo apt update
+            sudo apt install -y nginx certbot python3-certbot-nginx curl || {
+                echo "软件包安装失败，请检查网络或源配置。"
+                exit 1
+            }
+            sudo dpkg --configure -a
+            sudo apt clean
             ;;
         centos | rocky | almalinux)
-            if ! rpm -q nginx &>/dev/null; then
-                echo "未检测到 Nginx，正在安装..."
-                sudo yum install -y epel-release nginx
-                echo "Nginx 安装完成。"
-            else
-                echo "Nginx 已安装，跳过安装步骤。"
-            fi
-            if ! rpm -q certbot &>/dev/null; then
-                echo "正在安装 Certbot..."
-                sudo yum install -y certbot python3-certbot-nginx curl
-                echo "Certbot 安装完成。"
-            else
-                echo "Certbot 已安装，跳过安装步骤。"
-            fi
+            sudo yum install -y epel-release
+            sudo yum install -y nginx certbot python3-certbot-nginx curl || {
+                echo "软件包安装失败，请检查网络或源配置。"
+                exit 1
+            }
             ;;
         *)
             echo "暂不支持的操作系统: $OS"
@@ -73,8 +59,9 @@ install_packages() {
     fi
 
     ensure_permissions
-    log "必要软件包已安装。"
+    log "必要软件包安装完成。"
 }
+
 # 修复 Certbot 路径问题
 fix_certbot_path() {
     if ! which certbot &>/dev/null; then
