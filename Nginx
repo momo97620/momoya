@@ -23,11 +23,10 @@ detect_os() {
 
 # 安装必要的软件包
 install_packages() {
-    echo "检查并安装必要的软件包..."
+    echo "正在安装必要的软件包..."
     export DEBIAN_FRONTEND=noninteractive
     case $OS in
         debian | ubuntu)
-            sudo apt update
             sudo apt install -y nginx certbot python3-certbot-nginx curl || {
                 echo "软件包安装失败，请检查网络或源配置。"
                 exit 1
