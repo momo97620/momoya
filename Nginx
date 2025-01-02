@@ -26,19 +26,34 @@ install_packages() {
     case $OS in
         debian | ubuntu)
             if ! dpkg -l | grep -qw nginx; then
-                sudo apt update
-                sudo apt install -y nginx
+                echo "未检测到 Nginx，正在安装..."
+                sudo DEBIAN_FRONTEND=noninteractive apt update && sudo apt install -y nginx
+                echo "Nginx 安装完成。"
+            else
+                echo "Nginx 已安装，跳过安装步骤。"
             fi
             if ! dpkg -l | grep -qw certbot; then
-                sudo apt install -y certbot python3-certbot-nginx curl
+                echo "正在安装 Certbot..."
+                sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot python3-certbot-nginx curl
+                echo "Certbot 安装完成。"
+            else
+                echo "Certbot 已安装，跳过安装步骤。"
             fi
             ;;
         centos | rocky | almalinux)
             if ! rpm -q nginx &>/dev/null; then
+                echo "未检测到 Nginx，正在安装..."
                 sudo yum install -y epel-release nginx
+                echo "Nginx 安装完成。"
+            else
+                echo "Nginx 已安装，跳过安装步骤。"
             fi
             if ! rpm -q certbot &>/dev/null; then
+                echo "正在安装 Certbot..."
                 sudo yum install -y certbot python3-certbot-nginx curl
+                echo "Certbot 安装完成。"
+            else
+                echo "Certbot 已安装，跳过安装步骤。"
             fi
             ;;
         *)
@@ -60,7 +75,6 @@ install_packages() {
     ensure_permissions
     log "必要软件包已安装。"
 }
-
 # 修复 Certbot 路径问题
 fix_certbot_path() {
     if ! which certbot &>/dev/null; then
