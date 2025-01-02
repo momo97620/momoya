@@ -26,17 +26,35 @@ install_packages() {
     case $OS in
         debian | ubuntu)
             sudo apt update
-            sudo apt install -y nginx certbot python3-certbot-nginx curl
+            sudo apt install -y nginx certbot python3-certbot-nginx curl || {
+                echo "软件包安装失败，请检查网络或源配置。"
+                exit 1
+            }
             ;;
         centos | rocky | almalinux)
             sudo yum install -y epel-release
-            sudo yum install -y nginx certbot python3-certbot-nginx curl
+            sudo yum install -y nginx certbot python3-certbot-nginx curl || {
+                echo "软件包安装失败，请检查网络或源配置。"
+                exit 1
+            }
             ;;
         *)
             echo "暂不支持的操作系统: $OS"
             exit 1
             ;;
     esac
+
+    # 验证安装结果
+    if ! which nginx &>/dev/null; then
+        echo "Nginx 安装失败。"
+        exit 1
+    fi
+    if ! which certbot &>/dev/null; then
+        echo "Certbot 安装失败。"
+        exit 1
+    fi
+
+    ensure_permissions
     log "必要软件包安装完成。"
 }
 
@@ -52,6 +70,14 @@ fix_certbot_path() {
             exit 1
         fi
     fi
+}
+
+# 确保权限正确
+ensure_permissions() {
+    sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /var/www/html
+    sudo chmod -R 755 /etc/nginx /var/www/html
+    sudo chown -R www-data:www-data /var/www/html
+    log "权限已正确赋予：/etc/nginx 和 /var/www/html"
 }
 
 # 配置验证路径和 Nginx 配置
@@ -101,6 +127,11 @@ request_certificate() {
 
 # 配置反向代理并申请 SSL
 configure_reverse_proxy_and_ssl() {
+    # 确保必要组件已安装
+    detect_os
+    install_packages
+    fix_certbot_path
+
     # 输入域名
     read -e -p "请输入你的域名: " domain
     if [[ ! "$domain" =~ ^[a-zA-Z0-9.-]+$ ]]; then
@@ -143,6 +174,7 @@ EOF
 
     # 启用配置
     sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
+    ensure_permissions
 
     # 测试 Nginx 配置
     if sudo nginx -t; then
