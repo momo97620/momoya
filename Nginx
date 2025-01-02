@@ -1,17 +1,15 @@
 #!/bin/bash
 
-# 清屏
-clear
-
-# 日志文件
+# 日志记录
 LOGFILE="/var/log/reverse_proxy_setup.log"
-
-# 记录日志的函数
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOGFILE"
 }
 
-# 动态获取操作系统
+# 清屏
+clear
+
+# 动态检测操作系统
 detect_os() {
     if [ -f /etc/os-release ]; then
         . /etc/os-release
@@ -21,11 +19,6 @@ detect_os() {
         echo "无法检测操作系统类型。请确认系统是否兼容。"
         exit 1
     fi
-}
-
-# 检查软件包是否已安装
-check_installed() {
-    which nginx &>/dev/null && which certbot &>/dev/null
 }
 
 # 安装必要的软件包
@@ -47,7 +40,7 @@ install_packages() {
     log "必要软件包安装完成。"
 }
 
-# 修复 Certbot 路径
+# 修复 Certbot 路径问题
 fix_certbot_path() {
     if ! which certbot &>/dev/null; then
         echo "Certbot 未找到，尝试修复路径..."
@@ -61,68 +54,56 @@ fix_certbot_path() {
     fi
 }
 
-# 检查模板文件是否存在
-check_template_file() {
-    TEMPLATE_PATH="/etc/nginx/sites-available/template.conf"
-    if [ ! -f "$TEMPLATE_PATH" ]; then
-        echo "模板文件缺失，正在创建默认模板文件..."
-        sudo mkdir -p /etc/nginx/sites-available
-        cat <<EOL | sudo tee $TEMPLATE_PATH > /dev/null
-server {
-    listen 80;
-    server_name example.com;
+# 配置验证路径和 Nginx 配置
+setup_validation_path() {
+    local domain="$1"
+    local nginx_conf="/etc/nginx/sites-available/$domain.conf"
 
-    location / {
-        proxy_pass http://127.0.0.1:80;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOL
-        log "默认模板文件已创建: $TEMPLATE_PATH"
-    fi
-}
+    # 提前创建验证路径
+    sudo mkdir -p /var/www/html/.well-known/acme-challenge
+    sudo chmod -R 755 /var/www/html/.well-known
 
-# 更新 /etc/hosts 文件
-update_hosts_file() {
-    if ! grep -q "$yuming" /etc/hosts; then
-        echo "正在将域名 $yuming 添加到 /etc/hosts 文件..."
-        echo "127.0.1.1 $yuming" | sudo tee -a /etc/hosts > /dev/null
-        echo "已将域名 $yuming 指向 127.0.1.1"
+    # 确保验证路径配置在 Nginx 文件中
+    if [ -f "$nginx_conf" ]; then
+        if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
+            sudo sed -i "/server_name/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type \"text/plain\";\n\ \ \ \ }\n" "$nginx_conf"
+            log "验证路径已添加到 Nginx 配置: $nginx_conf"
+        fi
     else
-        echo "域名 $yuming 已在 /etc/hosts 文件中。"
+        echo "未找到 Nginx 配置文件: $nginx_conf"
+        exit 1
     fi
-}
 
-# 获取证书到期时间
-get_cert_expiry() {
-    cert_info=$(sudo certbot certificates 2>/dev/null)
-    if [[ $? -eq 0 && $cert_info ]]; then
-        expiry_date=$(echo "$cert_info" | grep 'Expiry Date' | awk '{print $3, $4, $5}')
-        echo "当前证书到期时间: $expiry_date"
+    # 测试并重载 Nginx 配置
+    if sudo nginx -t; then
+        sudo systemctl reload nginx
+        log "Nginx 配置已重新加载。"
     else
-        echo "没有找到有效的 SSL/TLS 证书。"
+        echo "Nginx 配置测试失败，请检查配置文件。"
+        exit 1
     fi
 }
 
-# 检查 Nginx 状态
-check_nginx_status() {
-    if systemctl is-active --quiet nginx; then
-        echo "Nginx 状态: 运行中"
+# 申请证书
+request_certificate() {
+    local domain="$1"
+    local email="$2"
+
+    if sudo certbot certonly --webroot -w /var/www/html -d "$domain" --non-interactive --agree-tos --email "$email"; then
+        echo "SSL/TLS 证书申请成功: $domain"
+        log "SSL/TLS 证书申请成功: $domain"
     else
-        echo "Nginx 状态: 未安装或未运行"
+        echo "证书申请失败，请检查域名或网络配置。"
+        exit 1
     fi
+    read -p "按任意键返回上一页..." temp
 }
 
-# 配置反向代理并申请证书
+# 配置反向代理并申请 SSL
 configure_reverse_proxy_and_ssl() {
-    echo "配置反向代理并申请 SSL/TLS 证书..."
-
     # 输入域名
-    read -e -p "请输入你的域名: " yuming
-    if [[ ! "$yuming" =~ ^[a-zA-Z0-9.-]+$ ]]; then
+    read -e -p "请输入你的域名: " domain
+    if [[ ! "$domain" =~ ^[a-zA-Z0-9.-]+$ ]]; then
         echo "无效的域名格式。"
         exit 1
     fi
@@ -143,21 +124,29 @@ configure_reverse_proxy_and_ssl() {
         exit 1
     fi
 
-    # 更新 /etc/hosts 文件
-    update_hosts_file
+    # 配置 Nginx 文件
+    local nginx_conf="/etc/nginx/sites-available/$domain.conf"
+    sudo tee "$nginx_conf" >/dev/null <<EOF
+server {
+    listen 80;
+    server_name $domain;
 
-    # Nginx 配置文件路径
-    nginx_conf="/etc/nginx/sites-available/$yuming.conf"
-    sudo cp "$TEMPLATE_PATH" "$nginx_conf"
-    sudo sed -i "s/example.com/$yuming/g" "$nginx_conf"
-    sudo sed -i "s|127.0.0.1:80|$reverseproxy:$port|g" "$nginx_conf"
+    location / {
+        proxy_pass http://$reverseproxy:$port;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
 
     # 启用配置
-    sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$yuming.conf"
+    sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
 
     # 测试 Nginx 配置
     if sudo nginx -t; then
-        sudo systemctl restart nginx
+        sudo systemctl reload nginx
         echo "Nginx 配置已生效。"
         log "Nginx 配置已成功应用。"
     else
@@ -165,70 +154,45 @@ configure_reverse_proxy_and_ssl() {
         exit 1
     fi
 
+    # 设置验证路径
+    setup_validation_path "$domain"
+
     # 申请证书
-    echo "正在申请 SSL/TLS 证书..."
-    if sudo certbot --nginx -d "$yuming" --non-interactive --agree-tos --email "$user_email"; then
-        echo "SSL/TLS 证书申请成功。"
-        log "SSL/TLS 证书申请成功: $yuming"
-    else
-        echo "证书申请失败，请检查域名和网络配置。"
-        exit 1
-    fi
+    request_certificate "$domain" "$user_email"
+
+    read -p "按任意键返回上一页..." temp
 }
 
-# 删除反向代理配置
-delete_reverse_proxy() {
-    echo "删除反向代理配置..."
-    read -e -p "请输入要删除的域名: " domain_to_delete
-    nginx_conf="/etc/nginx/sites-available/$domain_to_delete.conf"
-    if [ -f "$nginx_conf" ]; then
-        sudo rm "$nginx_conf"
-        sudo rm "/etc/nginx/sites-enabled/$domain_to_delete.conf"
-        sudo systemctl restart nginx
-        echo "反向代理配置已删除: $domain_to_delete"
-        log "删除反向代理配置: $domain_to_delete"
-    else
-        echo "未找到该域名的配置。"
-    fi
-}
-
-# 主菜单显示
-show_menu() {
+# 主菜单
+while true; do
     clear
-    check_nginx_status
-    echo ""
-    get_cert_expiry
-    echo ""
     echo "=========================================="
     echo "请选择操作："
     echo "1. 配置反向代理并申请 SSL 证书"
-    echo "2. 查询已配置的反向代理域名或 IP"
+    echo "2. 查询已配置的反向代理"
     echo "3. 查询已申请的证书"
     echo "4. 删除反向代理配置"
     echo "0. 退出"
     echo "=========================================="
-}
-
-# 主循环
-if [ ! -f /etc/reverse_proxy_setup_done ]; then
-    detect_os
-    if ! check_installed; then
-        install_packages
-    fi
-    fix_certbot_path
-    check_template_file
-    sudo touch /etc/reverse_proxy_setup_done
-    echo "首次安装已完成，跳过后续安装步骤。"
-fi
-
-while true; do
-    show_menu
     read -p "请输入操作编号 (0-4): " choice
     case $choice in
         1) configure_reverse_proxy_and_ssl ;;
-        2) ls /etc/nginx/sites-available/ ;;
-        3) sudo certbot certificates ;;
-        4) delete_reverse_proxy ;;
+        2) 
+            ls /etc/nginx/sites-available/
+            read -p "按任意键返回上一页..." temp
+            ;;
+        3) 
+            sudo certbot certificates
+            read -p "按任意键返回上一页..." temp
+            ;;
+        4) 
+            read -p "请输入要删除的域名: " domain_to_delete
+            sudo rm -f "/etc/nginx/sites-available/$domain_to_delete.conf"
+            sudo rm -f "/etc/nginx/sites-enabled/$domain_to_delete.conf"
+            sudo systemctl reload nginx
+            echo "已删除反向代理配置: $domain_to_delete"
+            read -p "按任意键返回上一页..." temp
+            ;;
         0) exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
