@@ -25,18 +25,21 @@ detect_os() {
 install_packages() {
     case $OS in
         debian | ubuntu)
-            sudo apt update
-            sudo apt install -y nginx certbot python3-certbot-nginx curl || {
-                echo "软件包安装失败，请检查网络或源配置。"
-                exit 1
-            }
+            if ! dpkg -l | grep -qw nginx; then
+                sudo apt update
+                sudo apt install -y nginx
+            fi
+            if ! dpkg -l | grep -qw certbot; then
+                sudo apt install -y certbot python3-certbot-nginx curl
+            fi
             ;;
         centos | rocky | almalinux)
-            sudo yum install -y epel-release
-            sudo yum install -y nginx certbot python3-certbot-nginx curl || {
-                echo "软件包安装失败，请检查网络或源配置。"
-                exit 1
-            }
+            if ! rpm -q nginx &>/dev/null; then
+                sudo yum install -y epel-release nginx
+            fi
+            if ! rpm -q certbot &>/dev/null; then
+                sudo yum install -y certbot python3-certbot-nginx curl
+            fi
             ;;
         *)
             echo "暂不支持的操作系统: $OS"
@@ -55,7 +58,7 @@ install_packages() {
     fi
 
     ensure_permissions
-    log "必要软件包安装完成。"
+    log "必要软件包已安装。"
 }
 
 # 修复 Certbot 路径问题
@@ -139,6 +142,12 @@ configure_reverse_proxy_and_ssl() {
         exit 1
     fi
 
+    # 检查是否已配置
+    if [ -f "/etc/nginx/sites-available/$domain.conf" ]; then
+        echo "域名 $domain 已配置。无需重复配置。"
+        return
+    fi
+
     # 输入反向代理地址
     read -e -p "请输入你的反代 IP 或 IPv6 地址 (默认: 127.0.0.1): " reverseproxy
     reverseproxy="${reverseproxy:-127.0.0.1}"
@@ -172,9 +181,8 @@ server {
 }
 EOF
 
-    # 启用配置
+    # 链接到启用配置
     sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
-    ensure_permissions
 
     # 测试 Nginx 配置
     if sudo nginx -t; then
