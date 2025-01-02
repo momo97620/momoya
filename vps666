@@ -668,9 +668,13 @@ fi
 
 # 创建目录
 mkdir -p /root/data/docker_data/easyimage
+if [ $? -ne 0 ]; then
+    echo "创建目录失败，请检查权限或磁盘空间。"
+    exit 1
+fi
 
 # 进入目录
-cd /root/data/docker_data/easyimage
+cd /root/data/docker_data/easyimage || { echo "无法进入目录，请检查路径。"; exit 1; }
 
 # 创建 docker-compose.yml 文件
 cat > docker-compose.yml <<EOF
@@ -690,9 +694,17 @@ services:
       - '/root/data/docker_data/easyimage/i:/app/web/i'
     restart: unless-stopped
 EOF
+if [ $? -ne 0 ]; then
+    echo "创建 docker-compose.yml 文件失败。"
+    exit 1
+fi
 
 # 启动容器
 docker-compose up -d
+if [ $? -ne 0 ]; then
+    echo "启动容器失败，请检查 Docker 和 Compose 的状态。"
+    exit 1
+fi
 
 # 提示用户
 echo "已安装成功，请手动放行8080端口，使用IP+8080浏览器登录。"
