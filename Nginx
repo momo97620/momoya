@@ -23,11 +23,6 @@ detect_os() {
     fi
 }
 
-# 检查软件包是否已安装
-check_installed() {
-    which nginx &>/dev/null && which certbot &>/dev/null
-}
-
 # 安装必要的软件包
 install_packages() {
     case $OS in
@@ -47,34 +42,18 @@ install_packages() {
     log "必要软件包安装完成。"
 }
 
-# 修复 Certbot 路径
-fix_certbot_path() {
-    if ! which certbot &>/dev/null; then
-        echo "Certbot 未找到，尝试修复路径..."
-        if [ -d "/usr/local/bin" ]; then
-            sudo ln -s /usr/bin/certbot /usr/local/bin/certbot
-            echo "已修复 Certbot 路径到 /usr/local/bin/"
-        else
-            echo "无法找到适当的路径修复 Certbot。"
-            exit 1
-        fi
-    fi
-}
-
 # 创建验证路径并更新配置
 setup_validation_path() {
     sudo mkdir -p /var/www/html/.well-known/acme-challenge
     sudo chmod -R 755 /var/www/html/.well-known
     nginx_conf="/etc/nginx/sites-available/default"
 
-    # 如果默认配置文件不存在，创建一个基本的 server 块
     if [ ! -f "$nginx_conf" ]; then
         echo "默认 Nginx 配置文件缺失，正在创建..."
         sudo tee "$nginx_conf" > /dev/null <<EOF
 server {
     listen 80 default_server;
     server_name _;
-
     location / {
         root /var/www/html;
         index index.html;
@@ -84,8 +63,11 @@ EOF
         log "创建了新的默认配置文件: $nginx_conf"
     fi
 
-    # 注释 .well-known/acme-challenge 配置
-    sudo sed -i '/location \^~ \/\.well-known\/acme-challenge/,+3 s/^/# /' "$nginx_conf"
+    # 确保 .well-known/acme-challenge 配置存在
+    if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
+        sudo sed -i '/server {/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type "text/plain";\n\ \ \ \ }\n' "$nginx_conf"
+        log "验证路径已添加到 Nginx 配置: $nginx_conf"
+    fi
 
     if sudo nginx -t; then
         sudo systemctl reload nginx
@@ -93,39 +75,6 @@ EOF
     else
         echo "Nginx 配置测试失败，请检查配置文件。"
         exit 1
-    fi
-}
-
-# 获取证书到期时间
-get_cert_expiry() {
-    cert_info=$(sudo certbot certificates 2>/dev/null)
-    if [[ $? -eq 0 && $cert_info ]]; then
-        echo "当前证书列表："
-        echo "$cert_info" | awk '/Certificate Name:|Expiry Date/ {print}'
-    else
-        echo "没有找到有效的 SSL/TLS 证书。"
-    fi
-}
-
-# 删除证书
-delete_certificate() {
-    echo "删除证书..."
-    read -e -p "请输入要删除的域名: " domain_to_delete
-    if sudo certbot delete --cert-name "$domain_to_delete"; then
-        echo "证书删除成功: $domain_to_delete"
-        log "删除证书: $domain_to_delete"
-    else
-        echo "未能成功删除证书，检查域名拼写是否正确。"
-    fi
-    read -p "按任意键返回主菜单..." 
-}
-
-# 检查 Nginx 状态
-check_nginx_status() {
-    if systemctl is-active --quiet nginx; then
-        echo "Nginx 状态: 运行中"
-    else
-        echo "Nginx 状态: 未安装或未运行"
     fi
 }
 
@@ -152,14 +101,20 @@ configure_reverse_proxy_and_ssl() {
     fi
 
     nginx_conf="/etc/nginx/sites-available/$yuming.conf"
-    sudo cp "/etc/nginx/sites-available/default" "$nginx_conf"
+    sudo tee "$nginx_conf" > /dev/null <<EOF
+server {
+    listen 80;
+    server_name $yuming;
 
-    # 移除 default_server 防止冲突
-    sudo sed -i '/default_server/d' "$nginx_conf"
+    location / {
+        proxy_pass http://$reverseproxy:$port;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+}
+EOF
 
-    # 更新 server_name 和 location / 配置
-    sudo sed -i "s/server_name _;/server_name $yuming;/g" "$nginx_conf"
-    sudo sed -i "/location \/ {/a \\\n        proxy_pass http://$reverseproxy:$port;\n" "$nginx_conf"
     sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$yuming.conf"
 
     if sudo nginx -t; then
@@ -176,13 +131,25 @@ configure_reverse_proxy_and_ssl() {
         log "SSL/TLS 证书申请成功: $yuming"
 
         # 添加 HTTPS 配置到 Nginx 配置文件
-        sudo sed -i "/server_name $yuming/a \
-        listen 443 ssl;\n\
-        listen [::]:443 ssl;\n\
-        ssl_certificate /etc/letsencrypt/live/$yuming/fullchain.pem;\n\
-        ssl_certificate_key /etc/letsencrypt/live/$yuming/privkey.pem;\n" "$nginx_conf"
+        sudo tee -a "$nginx_conf" > /dev/null <<EOF
 
-        # 重启 Nginx
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name $yuming;
+
+    ssl_certificate /etc/letsencrypt/live/$yuming/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$yuming/privkey.pem;
+
+    location / {
+        proxy_pass http://$reverseproxy:$port;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+}
+EOF
+
         if sudo nginx -t; then
             sudo systemctl reload nginx
             log "HTTPS 配置已应用到 Nginx 配置文件。"
@@ -196,47 +163,3 @@ configure_reverse_proxy_and_ssl() {
     fi
     read -p "按任意键返回主菜单..."
 }
-
-# 主菜单显示
-show_menu() {
-    clear
-    check_nginx_status
-    echo ""
-    get_cert_expiry
-    echo ""
-    echo "=========================================="
-    echo "请选择操作："
-    echo "1. 配置反向代理并申请 SSL 证书"
-    echo "2. 查询已配置的反向代理域名或 IP"
-    echo "3. 查询已申请的证书"
-    echo "4. 删除证书"
-    echo "0. 退出"
-    echo "=========================================="
-}
-
-# 主循环
-if [ ! -f /etc/reverse_proxy_setup_done ]; then
-    detect_os
-    if ! check_installed; then
-        install_packages
-    fi
-    fix_certbot_path
-    setup_validation_path
-    sudo touch /etc/reverse_proxy_setup_done
-    echo "首次安装已完成，跳过后续安装步骤。"
-fi
-
-while true; do
-    show_menu
-    read -p "请输入操作编号 (0-4): " choice
-    case $choice in
-        1) configure_reverse_proxy_and_ssl ;;
-        2) ls /etc/nginx/sites-available/; read -p "按任意键返回主菜单..." ;;
-        3) sudo certbot certificates; read -p "按任意键返回主菜单..." ;;
-        4) delete_certificate ;;
-        0) 
-            echo -e "\033[31m退出程序！\033[0m"
-            exit 0 ;;
-        *) echo "无效的选择，请重新输入。" ;;
-    esac
-done
