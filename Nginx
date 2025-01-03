@@ -42,44 +42,8 @@ install_packages() {
     log "必要软件包安装完成。"
 }
 
-# 创建验证路径并更新配置
-setup_validation_path() {
-    sudo mkdir -p /var/www/html/.well-known/acme-challenge
-    sudo chmod -R 755 /var/www/html/.well-known
-
-    # 停用默认站点，避免端口冲突
-    sudo rm -f /etc/nginx/sites-enabled/default
-
-    nginx_conf="/etc/nginx/sites-available/default"
-    sudo tee "$nginx_conf" > /dev/null <<EOF
-server {
-    listen 80 default_server;
-    server_name _;
-    location / {
-        root /var/www/html;
-        index index.html;
-    }
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/html;
-        default_type "text/plain";
-    }
-}
-EOF
-
-    sudo ln -sf "$nginx_conf" /etc/nginx/sites-enabled/default
-
-    if sudo nginx -t; then
-        sudo systemctl reload nginx
-        log "Nginx 配置已重启以应用验证路径。"
-    else
-        echo "Nginx 配置测试失败，请检查配置文件。"
-        exit 1
-    fi
-}
-
-# 配置反向代理并申请证书
+# 配置 Nginx 并申请证书
 configure_reverse_proxy_and_ssl() {
-    echo "配置反向代理并申请 SSL/TLS 证书..."
     read -e -p "请输入你的域名: " yuming
     if [[ ! "$yuming" =~ ^[a-zA-Z0-9.-]+$ ]]; then
         echo "无效的域名格式。"
@@ -105,16 +69,18 @@ server {
     listen 80;
     server_name $yuming;
 
+    # 验证路径，用于 Certbot
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+        default_type "text/plain";
+    }
+
+    # 转发到反向代理
     location / {
         proxy_pass http://$reverseproxy:$port;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    }
-
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/html;
-        default_type "text/plain";
     }
 }
 EOF
@@ -123,8 +89,7 @@ EOF
 
     if sudo nginx -t; then
         sudo systemctl reload nginx
-        echo "Nginx 配置已生效。"
-        log "Nginx 配置已成功应用。"
+        log "Nginx 配置已成功应用: $nginx_conf"
     else
         echo "Nginx 配置有误，无法生效。"
         return
@@ -170,24 +135,33 @@ EOF
 
 # 主菜单
 main_menu() {
-    echo "============================="
-    echo "1) 安装必要软件"
-    echo "2) 配置验证路径"
-    echo "3) 配置反向代理和 SSL/TLS"
-    echo "0) 退出"
-    echo "============================="
-    read -p "请输入操作编号 (0-3): " choice
-    case $choice in
-        1) install_packages ;;
-        2) setup_validation_path ;;
-        3) configure_reverse_proxy_and_ssl ;;
-        0) exit 0 ;;
-        *) echo "无效选项，请重试。" ;;
-    esac
+    while true; do
+        clear
+        echo "========================="
+        echo "反向代理和 SSL 配置工具"
+        echo "========================="
+        echo "1) 安装必要软件包"
+        echo "2) 配置反向代理和 SSL/TLS"
+        echo "3) 退出"
+        echo "========================="
+        read -p "请输入操作编号: " choice
+        case $choice in
+            1)
+                detect_os
+                install_packages
+                ;;
+            2)
+                configure_reverse_proxy_and_ssl
+                ;;
+            3)
+                exit 0
+                ;;
+            *)
+                echo "无效的选择，请重新输入。"
+                ;;
+        esac
+    done
 }
 
-# 脚本入口
-detect_os
-while true; do
-    main_menu
-done
+# 启动主菜单
+main_menu
