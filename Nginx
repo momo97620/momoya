@@ -106,6 +106,7 @@ delete_certificate() {
     else
         echo "未能成功删除证书，检查域名拼写是否正确。"
     fi
+    read -p "按任意键返回主菜单..." 
 }
 
 # 检查 Nginx 状态
@@ -126,11 +127,11 @@ configure_reverse_proxy_and_ssl() {
         exit 1
     fi
 
-    read -e -p "请输入你的反代 IP 或 IPv6 地址: " reverseproxy
+    read -e -p "请输入你的反代 IP 或 IPv6 地址 (默认: 127.0.0.1): " reverseproxy
     reverseproxy="${reverseproxy:-127.0.0.1}"
     [[ "$reverseproxy" =~ : && "$reverseproxy" != \[*\] ]] && reverseproxy="[$reverseproxy]"
 
-    read -e -p "请输入你的反代端口: " port
+    read -e -p "请输入你的反代端口 (默认: 80): " port
     port="${port:-80}"
 
     read -p "请输入用于 Certbot 注册的电子邮件地址: " user_email
@@ -161,6 +162,7 @@ configure_reverse_proxy_and_ssl() {
         echo "证书申请失败，请检查域名和网络配置。"
         exit 1
     fi
+    read -p "按任意键返回主菜单..."
 }
 
 # 主菜单显示
@@ -179,8 +181,6 @@ show_menu() {
     echo "5. 删除证书"
     echo "0. 退出"
     echo "=========================================="
-    
-    echo "此功能只对Debian系统生效，如果不是Debian系统请退出！！！"
 }
 
 # 主循环
@@ -200,11 +200,12 @@ while true; do
     read -p "请输入操作编号 (0-5): " choice
     case $choice in
         1) configure_reverse_proxy_and_ssl ;;
-        2) ls /etc/nginx/sites-available/ ;;
-        3) sudo certbot certificates ;;
-        4) delete_reverse_proxy ;;
+        2) ls /etc/nginx/sites-available/; read -p "按任意键返回主菜单..." ;;
+        3) sudo certbot certificates; read -p "按任意键返回主菜单..." ;;
+        4) delete_reverse_proxy; read -p "按任意键返回主菜单..." ;;
         5) delete_certificate ;;
         0) 
+            echo -e "\033[31m此功能只对Debian系统生效，如果不是Debian系统请退出！！！\033[0m"
             exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
