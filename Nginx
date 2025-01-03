@@ -157,8 +157,9 @@ configure_reverse_proxy_and_ssl() {
     # 移除 default_server 防止冲突
     sudo sed -i '/default_server/d' "$nginx_conf"
 
+    # 更新 server_name 和 location / 配置
     sudo sed -i "s/server_name _;/server_name $yuming;/g" "$nginx_conf"
-    sudo sed -i "s|root /var/www/html;|proxy_pass http://$reverseproxy:$port;|g" "$nginx_conf"
+    sudo sed -i "/location \/ {/a \\\n        proxy_pass http://$reverseproxy:$port;\n" "$nginx_conf"
     sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$yuming.conf"
 
     if sudo nginx -t; then
