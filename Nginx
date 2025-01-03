@@ -1,5 +1,8 @@
 #!/bin/bash
 
+LIGHTCYAN='\033[1;36m'
+NC='\033[0m' # No Color
+
 # 清屏
 clear
 
@@ -32,12 +35,12 @@ check_installed() {
 install_packages() {
     case $OS in
         debian | ubuntu)
-            sudo apt update
-            sudo apt install -y nginx certbot python3-certbot-nginx curl
+            sudo apt update || { echo "更新失败"; exit 1; }
+            sudo apt install -y nginx certbot python3-certbot-nginx curl || { echo "安装失败"; exit 1; }
             ;;
         centos | rocky | almalinux)
-            sudo yum install -y epel-release
-            sudo yum install -y nginx certbot python3-certbot-nginx curl
+            sudo yum install -y epel-release || { echo "安装 EPEL 失败"; exit 1; }
+            sudo yum install -y nginx certbot python3-certbot-nginx curl || { echo "安装失败"; exit 1; }
             ;;
         *)
             echo "暂不支持的操作系统: $OS"
@@ -63,23 +66,41 @@ fix_certbot_path() {
 
 # 创建验证路径并更新配置
 setup_validation_path() {
-    # 提前创建 .well-known/acme-challenge 路径
     sudo mkdir -p /var/www/html/.well-known/acme-challenge
     sudo chmod -R 755 /var/www/html/.well-known
 
-    # 修改 Nginx 配置文件以支持验证路径
     nginx_conf="/etc/nginx/sites-available/default"
     if [ -f "$nginx_conf" ]; then
+        # 检查是否已经存在 .well-known 的 location 块
         if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
+            # 确保 server 块存在
+            if ! grep -q "server {" "$nginx_conf"; then
+                echo "未找到 server 块，正在创建..."
+                sudo tee -a "$nginx_conf" <<EOF
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        root /var/www/html;
+        index index.html;
+    }
+}
+EOF
+            fi
+
+            # 在 server 块中添加 location 块
             sudo sed -i '/server_name/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type "text/plain";\n\ \ \ \ }\n' "$nginx_conf"
             log "验证路径已添加到 Nginx 配置: $nginx_conf"
+        else
+            log "验证路径已存在于 Nginx 配置中，无需重复添加。"
         fi
     else
         echo "默认 Nginx 配置文件缺失，无法添加验证路径。"
         exit 1
     fi
 
-    # 重启 Nginx
+    # 测试 Nginx 配置并重启
     if sudo nginx -t; then
         sudo systemctl reload nginx
         log "Nginx 配置已重启以应用验证路径。"
@@ -110,6 +131,22 @@ delete_certificate() {
     else
         echo "未能成功删除证书，检查域名拼写是否正确。"
     fi
+    read -p "按任意键返回主菜单..." 
+}
+
+# 删除反向代理配置
+delete_reverse_proxy() {
+    echo "删除反向代理配置..."
+    read -e -p "请输入要删除的域名: " domain_to_delete
+    if [ -f "/etc/nginx/sites-available/$domain_to_delete.conf" ]; then
+        sudo rm "/etc/nginx/sites-available/$domain_to_delete.conf"
+        sudo rm "/etc/nginx/sites-enabled/$domain_to_delete.conf"
+        sudo nginx -t && sudo systemctl reload nginx
+        echo "反向代理配置已删除: $domain_to_delete"
+        log "删除反向代理配置: $domain_to_delete"
+    else
+        echo "未找到配置文件: $domain_to_delete"
+    fi
 }
 
 # 检查 Nginx 状态
@@ -119,6 +156,103 @@ check_nginx_status() {
     else
         echo "Nginx 状态: 未安装或未运行"
     fi
+}
+
+# 配置反向代理并申请证书
+configure_reverse_proxy_and_ssl() {
+    echo "配置反向代理并申请 SSL/TLS 证书..."
+    read -e -p "请输入你的域名: " yuming
+    if [[ ! "$yuming" =~ ^[a-zA-Z0-9.-]+$ ]]; then
+        echo "无效的域名格式。"
+        exit 1
+    fi
+
+    read -e -p "请输入你的反代 IP 或 IPv6 地址 (默认: 127.0.0.1): " reverseproxy
+    reverseproxy="${reverseproxy:-127.0.0.1}"
+    [[ "$reverseproxy" =~ : && "$reverseproxy" != \[*\] ]] && reverseproxy="[$reverseproxy]"
+
+    read -e -p "请输入你的反代端口 (默认: 80): " port
+    port="${port:-80}"
+
+    read -p "请输入用于 Certbot 注册的电子邮件地址: " user_email
+    if [[ ! "$user_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        echo "无效的电子邮件地址。"
+        exit 1
+    fi
+
+    # 创建 Nginx 配置文件
+    nginx_conf="/etc/nginx/sites-available/$yuming.conf"
+    sudo tee "$nginx_conf" <<EOF
+server {
+    listen 80;
+    server_name $yuming;
+
+    location / {
+        proxy_pass http://$reverseproxy:$port;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+        default_type "text/plain";
+    }
+}
+EOF
+
+    # 启用配置文件
+    sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$yuming.conf"
+
+    # 测试并重启 Nginx
+    if sudo nginx -t; then
+        sudo systemctl reload nginx
+        echo "Nginx 配置已生效。"
+        log "Nginx 配置已成功应用。"
+    else
+        echo "Nginx 配置有误，无法生效。"
+        exit 1
+    fi
+
+    # 申请 SSL 证书
+    if sudo certbot certonly --webroot -w /var/www/html -d "$yuming" --non-interactive --agree-tos --email "$user_email"; then
+        echo "SSL/TLS 证书申请成功。"
+        log "SSL/TLS 证书申请成功: $yuming"
+
+        # 添加 HTTPS 配置到 Nginx 配置文件
+        sudo tee -a "$nginx_conf" <<EOF
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name $yuming;
+
+    ssl_certificate /etc/letsencrypt/live/$yuming/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$yuming/privkey.pem;
+
+    location / {
+        proxy_pass http://$reverseproxy:$port;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+        # 重启 Nginx
+        if sudo nginx -t; then
+            sudo systemctl reload nginx
+            log "HTTPS 配置已应用到 Nginx 配置文件。"
+        else
+            echo "Nginx 配置测试失败，请检查配置文件。"
+            exit 1
+        fi
+    else
+        echo "证书申请失败，请检查域名和网络配置。"
+        exit 1
+    fi
+    read -p "按任意键返回主菜单..."
 }
 
 # 主菜单显示
@@ -156,11 +290,13 @@ while true; do
     read -p "请输入操作编号 (0-5): " choice
     case $choice in
         1) configure_reverse_proxy_and_ssl ;;
-        2) ls /etc/nginx/sites-available/ ;;
-        3) sudo certbot certificates ;;
-        4) delete_reverse_proxy ;;
+        2) ls /etc/nginx/sites-available/; read -p "按任意键返回主菜单..." ;;
+        3) sudo certbot certificates; read -p "按任意键返回主菜单..." ;;
+        4) delete_reverse_proxy; read -p "按任意键返回主菜单..." ;;
         5) delete_certificate ;;
-        0) exit 0 ;;
+        0) 
+            echo -e "${LIGHTCYAN}此项目只对Debian系统生效，如果不是Debian系统请退出！！。${NC}"
+            exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
 done
