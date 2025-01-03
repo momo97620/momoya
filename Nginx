@@ -160,7 +160,9 @@ while true; do
         3) sudo certbot certificates ;;
         4) delete_reverse_proxy ;;
         5) delete_certificate ;;
-        0) exit 0 ;;
+        0) 
+            echo "此功能只对Debian系统生效，如果不是Debian系统请退出！！！"
+            exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
 done
