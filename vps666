@@ -890,30 +890,35 @@ done
     done
     ;;
             17)
-            # 配置 Caddy 反向代理
-            if [ "$EUID" -ne 0 ]; then
-              echo "请以root权限运行此脚本。"
-              exit
-            fi
 
-            # 安装必要的软件包
-            apt update
-            apt install -y debian-keyring debian-archive-keyring apt-transport-https
+if [ "$EUID" -ne 0 ]; then
+  echo "请以root权限运行此脚本。"
+  exit
+fi
 
-            # 添加 Caddy 的 GPG 密钥和软件源
-            curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-            curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+# 安装必要的软件包
+apt update
+apt install -y debian-keyring debian-archive-keyring apt-transport-https
 
-            # 更新软件包列表并安装 Caddy
-            apt update
-            apt install -y caddy
+# 添加 Caddy 的 GPG 密钥和软件源
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
 
-            # 获取用户输入
-            read -p "请输入你的反代机的域名: " domain
-            read -p "请输入你要反代的 IP:端口: " proxy_target
+# 更新软件包列表并安装 Caddy
+apt update
+apt install -y caddy
 
-            # 追加到 Caddy 配置文件
-            cat <<EOF >> /etc/caddy/Caddyfile
+# 获取用户输入
+read -p "请输入你的反代域名: " domain
+read -p "请输入你要反代的 IP:端口: " proxy_target
+
+# 检查是否为 IPv6 地址并添加方括号
+if [[ "$proxy_target" =~ : ]]; then
+  proxy_target="[$proxy_target]"
+fi
+
+# 追加到 Caddy 配置文件
+cat <<EOF >> /etc/caddy/Caddyfile
 
 $domain {
     tls mail@mail.com
@@ -926,11 +931,11 @@ $domain {
 }
 EOF
 
-            # 重启并检查 Caddy 服务
-            systemctl restart caddy
-            systemctl status caddy
-            ;;
-                
+# 重启并检查 Caddy 服务
+systemctl restart caddy
+systemctl status caddy
+             ;;
+
             0)
               echo -e "${GREEN}退出程序...${NC}"
             exit 0
