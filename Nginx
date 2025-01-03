@@ -1,6 +1,7 @@
 #!/bin/bash
 
 LIGHTCYAN='\033[1;36m'
+NC='\033[0m' # No Color
 
 # 清屏
 clear
@@ -34,12 +35,12 @@ check_installed() {
 install_packages() {
     case $OS in
         debian | ubuntu)
-            sudo apt update
-            sudo apt install -y nginx certbot python3-certbot-nginx curl
+            sudo apt update || { echo "更新失败"; exit 1; }
+            sudo apt install -y nginx certbot python3-certbot-nginx curl || { echo "安装失败"; exit 1; }
             ;;
         centos | rocky | almalinux)
-            sudo yum install -y epel-release
-            sudo yum install -y nginx certbot python3-certbot-nginx curl
+            sudo yum install -y epel-release || { echo "安装 EPEL 失败"; exit 1; }
+            sudo yum install -y nginx certbot python3-certbot-nginx curl || { echo "安装失败"; exit 1; }
             ;;
         *)
             echo "暂不支持的操作系统: $OS"
@@ -109,6 +110,21 @@ delete_certificate() {
         echo "未能成功删除证书，检查域名拼写是否正确。"
     fi
     read -p "按任意键返回主菜单..." 
+}
+
+# 删除反向代理配置
+delete_reverse_proxy() {
+    echo "删除反向代理配置..."
+    read -e -p "请输入要删除的域名: " domain_to_delete
+    if [ -f "/etc/nginx/sites-available/$domain_to_delete.conf" ]; then
+        sudo rm "/etc/nginx/sites-available/$domain_to_delete.conf"
+        sudo rm "/etc/nginx/sites-enabled/$domain_to_delete.conf"
+        sudo nginx -t && sudo systemctl reload nginx
+        echo "反向代理配置已删除: $domain_to_delete"
+        log "删除反向代理配置: $domain_to_delete"
+    else
+        echo "未找到配置文件: $domain_to_delete"
+    fi
 }
 
 # 检查 Nginx 状态
@@ -223,6 +239,7 @@ while true; do
         4) delete_reverse_proxy; read -p "按任意键返回主菜单..." ;;
         5) delete_certificate ;;
         0) 
+            echo -e "${LIGHTCYAN}此项目只对Debian系统生效，如果不是Debian系统请退出！！。${NC}"
             exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
