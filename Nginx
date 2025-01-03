@@ -117,13 +117,13 @@ setup_validation_path() {
 request_certificate() {
     local domain="$1"
     local email="$2"
+    local nginx_conf="/etc/nginx/sites-available/$domain.conf"
 
     if sudo certbot certonly --webroot -w /var/www/html -d "$domain" --non-interactive --agree-tos --email "$email"; then
         echo "SSL/TLS 证书申请成功: $domain"
         log "SSL/TLS 证书申请成功: $domain"
-        
-        # 添加 SSL 配置到 Nginx
-        local nginx_conf="/etc/nginx/sites-available/$domain.conf"
+
+        # 更新 Nginx 配置以使用 SSL
         sudo tee "$nginx_conf" >/dev/null <<EOF
 server {
     listen 80;
@@ -137,12 +137,11 @@ server {
 
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
-
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 
     location / {
-        proxy_pass http://127.0.0.1:80;
+        proxy_pass http://$reverseproxy:$port;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -151,33 +150,25 @@ server {
 }
 EOF
 
-        sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
-        sudo nginx -t && sudo systemctl reload nginx
+        # 测试并重载 Nginx 配置
+        if sudo nginx -t; then
+            sudo systemctl reload nginx
+            echo "Nginx 配置已更新为使用 SSL。"
+            log "Nginx 配置已更新为使用 SSL。"
+        else
+            echo "Nginx 配置测试失败，请检查配置文件。"
+            exit 1
+        fi
     else
         echo "证书申请失败，请检查域名或网络配置。"
         exit 1
     fi
-}
-
-# 查询证书到期时间
-check_certificate_expiration() {
-    sudo certbot certificates | grep -E "Certificate Name|Expiry Date"
-    read -p "按任意键返回上一页..." temp
-}
-
-# 删除证书
-delete_certificate() {
-    read -p "请输入要删除证书的域名: " domain_to_delete
-    sudo certbot delete --cert-name "$domain_to_delete"
-    sudo rm -f "/etc/nginx/sites-available/$domain_to_delete.conf"
-    sudo rm -f "/etc/nginx/sites-enabled/$domain_to_delete.conf"
-    sudo systemctl reload nginx
-    echo "已删除证书和相关配置: $domain_to_delete"
     read -p "按任意键返回上一页..." temp
 }
 
 # 配置反向代理并申请 SSL
 configure_reverse_proxy_and_ssl() {
+    # 确保必要组件已安装
     detect_os
     install_packages
     fix_certbot_path
@@ -189,10 +180,55 @@ configure_reverse_proxy_and_ssl() {
         exit 1
     fi
 
+    # 检查是否已配置
+    if [ -f "/etc/nginx/sites-available/$domain.conf" ]; then
+        echo "域名 $domain 已配置。无需重复配置。"
+        return
+    fi
+
+    # 输入反向代理地址
+    read -e -p "请输入你的反代 IP 或 IPv6 地址 (默认: 127.0.0.1): " reverseproxy
+    reverseproxy="${reverseproxy:-127.0.0.1}"
+    [[ "$reverseproxy" =~ : && "$reverseproxy" != \[*\] ]] && reverseproxy="[$reverseproxy]"
+
+    # 输入端口
+    read -e -p "请输入你的反代端口 (默认: 80): " port
+    port="${port:-80}"
+
     # 输入邮箱
     read -p "请输入用于 Certbot 注册的电子邮件地址: " user_email
     if [[ ! "$user_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
         echo "无效的电子邮件地址。"
+        exit 1
+    fi
+
+    # 配置 Nginx 文件
+    local nginx_conf="/etc/nginx/sites-available/$domain.conf"
+    sudo tee "$nginx_conf" >/dev/null <<EOF
+server {
+    listen 80;
+    server_name $domain;
+
+    location / {
+        proxy_pass http://$reverseproxy:$port;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+    # 链接到启用配置
+    sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
+
+    # 测试 Nginx 配置
+    if sudo nginx -t; then
+        sudo systemctl reload nginx
+        echo "Nginx 配置已生效。"
+        log "Nginx 配置已成功应用。"
+    else
+        echo "Nginx 配置有误，无法生效。"
         exit 1
     fi
 
@@ -201,6 +237,8 @@ configure_reverse_proxy_and_ssl() {
 
     # 申请证书
     request_certificate "$domain" "$user_email"
+
+    read -p "按任意键返回上一页..." temp
 }
 
 # 主菜单
@@ -211,11 +249,10 @@ while true; do
     echo "1. 配置反向代理并申请 SSL 证书"
     echo "2. 查询已配置的反向代理"
     echo "3. 查询已申请的证书"
-    echo "4. 查询证书到期时间"
-    echo "5. 删除证书和相关配置"
+    echo "4. 删除反向代理配置"
     echo "0. 退出"
     echo "=========================================="
-    read -p "请输入操作编号 (0-5): " choice
+    read -p "请输入操作编号 (0-4): " choice
     case $choice in
         1) configure_reverse_proxy_and_ssl ;;
         2) 
@@ -226,8 +263,14 @@ while true; do
             sudo certbot certificates
             read -p "按任意键返回上一页..." temp
             ;;
-        4) check_certificate_expiration ;;
-        5) delete_certificate ;;
+        4) 
+            read -p "请输入要删除的域名: " domain_to_delete
+            sudo rm -f "/etc/nginx/sites-available/$domain_to_delete.conf"
+            sudo rm -f "/etc/nginx/sites-enabled/$domain_to_delete.conf"
+            sudo systemctl reload nginx
+            echo "已删除反向代理配置: $domain_to_delete"
+            read -p "按任意键返回上一页..." temp
+            ;;
         0) exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
