@@ -940,6 +940,7 @@ sudo systemctl status caddy
 
 # 等待用户输入任意键返回上一页菜单
 read -n 1 -s -r -p "按任意键返回上一页菜单"
+             ;;
 
             0)
               echo -e "${GREEN}退出程序...${NC}"
