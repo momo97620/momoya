@@ -1,13 +1,17 @@
 #!/bin/bash
 
+# 清屏
+clear
+
+# 日志文件
 LOGFILE="/var/log/reverse_proxy_setup.log"
 
+# 记录日志的函数
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOGFILE"
 }
 
-clear
-
+# 动态获取操作系统
 detect_os() {
     if [ -f /etc/os-release ]; then
         . /etc/os-release
@@ -19,225 +23,142 @@ detect_os() {
     fi
 }
 
-check_and_install_packages() {
-    if ! which nginx &>/dev/null || ! which certbot &>/dev/null || ! which curl &>/dev/null; then
-        echo "正在安装必要的软件包..."
-        export DEBIAN_FRONTEND=noninteractive
-        case $OS in
-            debian | ubuntu)
-                sudo apt update
-                sudo apt install -y nginx certbot python3-certbot-nginx curl || {
-                    echo "软件包安装失败，请检查网络或源配置。"
-                    exit 1
-                }
-                ;;
-            centos | rocky | almalinux)
-                sudo yum install -y epel-release
-                sudo yum install -y nginx certbot python3-certbot-nginx curl || {
-                    echo "软件包安装失败，请检查网络或源配置。"
-                    exit 1
-                }
-                ;;
-            *)
-                echo "暂不支持的操作系统: $OS"
-                exit 1
-                ;;
-        esac
+# 检查软件包是否已安装
+check_installed() {
+    which nginx &>/dev/null && which certbot &>/dev/null
+}
 
-        ensure_permissions
-        log "必要软件包安装完成。"
-    else
-        log "必要软件包已安装。"
+# 安装必要的软件包
+install_packages() {
+    case $OS in
+        debian | ubuntu)
+            sudo apt update
+            sudo apt install -y nginx certbot python3-certbot-nginx curl
+            ;;
+        centos | rocky | almalinux)
+            sudo yum install -y epel-release
+            sudo yum install -y nginx certbot python3-certbot-nginx curl
+            ;;
+        *)
+            echo "暂不支持的操作系统: $OS"
+            exit 1
+            ;;
+    esac
+    log "必要软件包安装完成。"
+}
+
+# 修复 Certbot 路径
+fix_certbot_path() {
+    if ! which certbot &>/dev/null; then
+        echo "Certbot 未找到，尝试修复路径..."
+        if [ -d "/usr/local/bin" ]; then
+            sudo ln -s /usr/bin/certbot /usr/local/bin/certbot
+            echo "已修复 Certbot 路径到 /usr/local/bin/"
+        else
+            echo "无法找到适当的路径修复 Certbot。"
+            exit 1
+        fi
     fi
 }
 
-ensure_permissions() {
-    sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /var/www/html
-    sudo chmod -R 755 /etc/nginx /var/www/html
-    sudo chown -R www-data:www-data /var/www/html
-    log "权限已正确赋予：/etc/nginx 和 /var/www/html"
-}
-
+# 创建验证路径并更新配置
 setup_validation_path() {
-    local domain="$1"
-    local nginx_conf="/etc/nginx/sites-available/$domain.conf"
-
+    # 提前创建 .well-known/acme-challenge 路径
     sudo mkdir -p /var/www/html/.well-known/acme-challenge
     sudo chmod -R 755 /var/www/html/.well-known
 
+    # 修改 Nginx 配置文件以支持验证路径
+    nginx_conf="/etc/nginx/sites-available/default"
     if [ -f "$nginx_conf" ]; then
         if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
-            sudo sed -i "/server_name/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type \"text/plain\";\n\ \ \ \ }\n" "$nginx_conf"
+            sudo sed -i '/server_name/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type "text/plain";\n\ \ \ \ }\n' "$nginx_conf"
             log "验证路径已添加到 Nginx 配置: $nginx_conf"
         fi
     else
-        echo "未找到 Nginx 配置文件: $nginx_conf"
+        echo "默认 Nginx 配置文件缺失，无法添加验证路径。"
         exit 1
     fi
 
+    # 重启 Nginx
     if sudo nginx -t; then
         sudo systemctl reload nginx
-        log "Nginx 配置已重新加载。"
+        log "Nginx 配置已重启以应用验证路径。"
     else
-        echo "Nginx 配置测试失败，请检查配置文件。"
+        echo "Nginx 配置测试失败，检查配置文件。"
         exit 1
     fi
 }
 
-request_certificate() {
-    local domain="$1"
-    local email="$2"
-    local nginx_conf="/etc/nginx/sites-available/$domain.conf"
-
-    if sudo certbot certonly --webroot -w /var/www/html -d "$domain" --non-interactive --agree-tos --email "$email"; then
-        echo "SSL/TLS 证书申请成功: $domain"
-        log "SSL/TLS 证书申请成功: $domain"
-
-        sudo tee "$nginx_conf" >/dev/null <<EOF
-server {
-    listen 80;
-    server_name $domain;
-    return 301 https://\$host\$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name $domain;
-
-    ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
-
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-
-    location / {
-        proxy_pass http://127.0.0.1:80;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
-
-        sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
-        if sudo nginx -t; then
-            sudo systemctl reload nginx
-            echo "Nginx 配置已更新并加载 SSL 支持。"
-            log "Nginx 配置已更新并加载 SSL 支持。"
-        else
-            echo "Nginx 配置测试失败，请检查配置文件。"
-            exit 1
-        fi
+# 获取证书到期时间
+get_cert_expiry() {
+    cert_info=$(sudo certbot certificates 2>/dev/null)
+    if [[ $? -eq 0 && $cert_info ]]; then
+        echo "当前证书列表："
+        echo "$cert_info" | awk '/Certificate Name:|Expiry Date/ {print}'
     else
-        echo "证书申请失败，请检查域名或网络配置。"
-        exit 1
+        echo "没有找到有效的 SSL/TLS 证书。"
     fi
-
-    read -p "按任意键返回上一页..." temp
 }
 
-configure_reverse_proxy_and_ssl() {
-    detect_os
-    check_and_install_packages
-
-    read -e -p "请输入你的域名: " domain
-    if [[ ! "$domain" =~ ^[a-zA-Z0-9.-]+$ ]]; then
-        echo "无效的域名格式。"
-        exit 1
-    fi
-
-    if [ -f "/etc/nginx/sites-available/$domain.conf" ]; then
-        echo "域名 $domain 已配置。无需重复配置。"
-        return
-    fi
-
-    read -e -p "请输入你的反代 IP 或 IPv6 地址 (默认: 127.0.0.1): " reverseproxy
-    reverseproxy="${reverseproxy:-127.0.0.1}"
-    [[ "$reverseproxy" =~ : && "$reverseproxy" != \[*\] ]] && reverseproxy="[$reverseproxy]"
-
-    read -e -p "请输入你的反代端口 (默认: 80): " port
-    port="${port:-80}"
-
-    read -p "请输入用于 Certbot 注册的电子邮件地址: " user_email
-    if [[ ! "$user_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-        echo "无效的电子邮件地址。"
-        exit 1
-    fi
-
-    local nginx_conf="/etc/nginx/sites-available/$domain.conf"
-    sudo tee "$nginx_conf" >/dev/null <<EOF
-server {
-    listen 80;
-    server_name $domain;
-
-    location / {
-        proxy_pass http://$reverseproxy:$port;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
-
-    sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
-    if sudo nginx -t; then
-        sudo systemctl reload nginx
-        echo "Nginx 配置已生效。"
-        log "Nginx 配置已成功应用。"
-    else
-        echo "Nginx 配置有误，无法生效。"
-        exit 1
-    fi
-
-    setup_validation_path "$domain"
-    request_certificate "$domain" "$user_email"
-}
-
+# 删除证书
 delete_certificate() {
-    read -p "请输入要删除证书的域名: " domain_to_delete
+    echo "删除证书..."
+    read -e -p "请输入要删除的域名: " domain_to_delete
     if sudo certbot delete --cert-name "$domain_to_delete"; then
         echo "证书删除成功: $domain_to_delete"
-        log "证书删除成功: $domain_to_delete"
+        log "删除证书: $domain_to_delete"
     else
-        echo "证书删除失败，请检查域名是否正确。"
-        exit 1
+        echo "未能成功删除证书，检查域名拼写是否正确。"
     fi
-
-    read -p "按任意键返回上一页..." temp
 }
 
-while true; do
+# 检查 Nginx 状态
+check_nginx_status() {
+    if systemctl is-active --quiet nginx; then
+        echo "Nginx 状态: 运行中"
+    else
+        echo "Nginx 状态: 未安装或未运行"
+    fi
+}
+
+# 主菜单显示
+show_menu() {
     clear
+    check_nginx_status
+    echo ""
+    get_cert_expiry
+    echo ""
     echo "=========================================="
     echo "请选择操作："
     echo "1. 配置反向代理并申请 SSL 证书"
-    echo "2. 查询已配置的反向代理"
+    echo "2. 查询已配置的反向代理域名或 IP"
     echo "3. 查询已申请的证书"
     echo "4. 删除反向代理配置"
     echo "5. 删除证书"
     echo "0. 退出"
     echo "=========================================="
+}
+
+# 主循环
+if [ ! -f /etc/reverse_proxy_setup_done ]; then
+    detect_os
+    if ! check_installed; then
+        install_packages
+    fi
+    fix_certbot_path
+    setup_validation_path
+    sudo touch /etc/reverse_proxy_setup_done
+    echo "首次安装已完成，跳过后续安装步骤。"
+fi
+
+while true; do
+    show_menu
     read -p "请输入操作编号 (0-5): " choice
     case $choice in
         1) configure_reverse_proxy_and_ssl ;;
-        2) 
-            ls /etc/nginx/sites-available/
-            read -p "按任意键返回上一页..." temp
-            ;;
-        3) 
-            sudo certbot certificates
-            read -p "按任意键返回上一页..." temp
-            ;;
-        4) 
-            read -p "请输入要删除的域名: " domain_to_delete
-            sudo rm -f "/etc/nginx/sites-available/$domain_to_delete.conf"
-            sudo rm -f "/etc/nginx/sites-enabled/$domain_to_delete.conf"
-            sudo systemctl reload nginx
-            echo "已删除反向代理配置: $domain_to_delete"
-            read -p "按任意键返回上一页..." temp
-            ;;
+        2) ls /etc/nginx/sites-available/ ;;
+        3) sudo certbot certificates ;;
+        4) delete_reverse_proxy ;;
         5) delete_certificate ;;
         0) exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
