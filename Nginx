@@ -158,6 +158,22 @@ configure_reverse_proxy_and_ssl() {
     if sudo certbot certonly --webroot -w /var/www/html -d "$yuming" --non-interactive --agree-tos --email "$user_email"; then
         echo "SSL/TLS 证书申请成功。"
         log "SSL/TLS 证书申请成功: $yuming"
+        
+        # 添加 HTTPS 配置到 Nginx 配置文件
+        sudo sed -i "/server_name $yuming/a \
+        listen 443 ssl;\n\
+        listen [::]:443 ssl;\n\
+        ssl_certificate /etc/letsencrypt/live/$yuming/fullchain.pem;\n\
+        ssl_certificate_key /etc/letsencrypt/live/$yuming/privkey.pem;\n" "$nginx_conf"
+
+        # 重启 Nginx
+        if sudo nginx -t; then
+            sudo systemctl reload nginx
+            log "HTTPS 配置已应用到 Nginx 配置文件。"
+        else
+            echo "Nginx 配置测试失败，请检查配置文件。"
+            exit 1
+        fi
     else
         echo "证书申请失败，请检查域名和网络配置。"
         exit 1
