@@ -917,8 +917,14 @@ read -p "请输入你的反代域名: " domain
 read -p "请输入你要反代的 IP:端口: " proxy_target
 
 # 第七步：检查是否为 IPv6 地址并添加方括号
-if [[ "$proxy_target" =~ : ]]; then
-  proxy_target="[$proxy_target]"
+if [[ "$proxy_target" =~ \[.*\] ]]; then
+  # Already has brackets
+  true
+elif [[ "$proxy_target" =~ : ]]; then
+  # Split IP and port
+  ip="${proxy_target%:*}"
+  port="${proxy_target##*:}"
+  proxy_target="[$ip]:$port"
 fi
 
 # 第八步：写入 Caddy 配置文件
@@ -940,7 +946,7 @@ sudo systemctl status caddy
 
 # 等待用户输入任意键返回上一页菜单
 read -n 1 -s -r -p "按任意键返回上一页菜单"
-             ;;
+            ;;
 
             0)
               echo -e "${GREEN}退出程序...${NC}"
