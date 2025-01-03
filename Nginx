@@ -90,6 +90,10 @@ EOF
         log "验证路径已添加到 Nginx 配置: $nginx_conf"
     fi
 
+    # 自动注释掉 .well-known/acme-challenge 部分
+    sudo sed -i '/location \^~ \/\.well-known\/acme-challenge\//,/\}/s/^\(.*\)/# \1/' "$nginx_conf"
+    log "已注释掉 Nginx 配置中的 .well-known/acme-challenge 部分。"
+
     if sudo nginx -t; then
         sudo systemctl reload nginx
         log "Nginx 配置已重启以应用验证路径。"
