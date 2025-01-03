@@ -84,15 +84,8 @@ EOF
         log "创建了新的默认配置文件: $nginx_conf"
     fi
 
-    # 确保 .well-known/acme-challenge 配置存在
-    if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
-        sudo sed -i '/server {/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type "text/plain";\n\ \ \ \ }\n' "$nginx_conf"
-        log "验证路径已添加到 Nginx 配置: $nginx_conf"
-    fi
-
-    # 自动注释掉 .well-known/acme-challenge 部分
-    sudo sed -i '/location \^~ \/\.well-known\/acme-challenge\//,/\}/s/^\(.*\)/# \1/' "$nginx_conf"
-    log "已注释掉 Nginx 配置中的 .well-known/acme-challenge 部分。"
+    # 注释 .well-known/acme-challenge 配置
+    sudo sed -i '/location \^~ \/\.well-known\/acme-challenge/,+3 s/^/# /' "$nginx_conf"
 
     if sudo nginx -t; then
         sudo systemctl reload nginx
@@ -160,6 +153,10 @@ configure_reverse_proxy_and_ssl() {
 
     nginx_conf="/etc/nginx/sites-available/$yuming.conf"
     sudo cp "/etc/nginx/sites-available/default" "$nginx_conf"
+
+    # 移除 default_server 防止冲突
+    sudo sed -i '/default_server/d' "$nginx_conf"
+
     sudo sed -i "s/server_name _;/server_name $yuming;/g" "$nginx_conf"
     sudo sed -i "s|root /var/www/html;|proxy_pass http://$reverseproxy:$port;|g" "$nginx_conf"
     sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$yuming.conf"
