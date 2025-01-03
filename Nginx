@@ -223,9 +223,6 @@ while true; do
         4) delete_reverse_proxy; read -p "按任意键返回主菜单..." ;;
         5) delete_certificate ;;
         0) 
-            # 提示用户当前会话不会失效
-echo -e "${LIGHTCYAN}此项目只对Debian系统生效，如果不是Debian系统请退出！！。${NC}"
-
             exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
