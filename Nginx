@@ -63,11 +63,8 @@ fix_certbot_path() {
 
 # 创建验证路径并更新配置
 setup_validation_path() {
-    # 提前创建 .well-known/acme-challenge 路径
     sudo mkdir -p /var/www/html/.well-known/acme-challenge
     sudo chmod -R 755 /var/www/html/.well-known
-
-    # 修改 Nginx 配置文件以支持验证路径
     nginx_conf="/etc/nginx/sites-available/default"
     if [ -f "$nginx_conf" ]; then
         if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
@@ -79,7 +76,6 @@ setup_validation_path() {
         exit 1
     fi
 
-    # 重启 Nginx
     if sudo nginx -t; then
         sudo systemctl reload nginx
         log "Nginx 配置已重启以应用验证路径。"
@@ -121,6 +117,52 @@ check_nginx_status() {
     fi
 }
 
+# 配置反向代理并申请证书
+configure_reverse_proxy_and_ssl() {
+    echo "配置反向代理并申请 SSL/TLS 证书..."
+    read -e -p "请输入你的域名: " yuming
+    if [[ ! "$yuming" =~ ^[a-zA-Z0-9.-]+$ ]]; then
+        echo "无效的域名格式。"
+        exit 1
+    fi
+
+    read -e -p "请输入你的反代 IP 或 IPv6 地址: " reverseproxy
+    reverseproxy="${reverseproxy:-127.0.0.1}"
+    [[ "$reverseproxy" =~ : && "$reverseproxy" != \[*\] ]] && reverseproxy="[$reverseproxy]"
+
+    read -e -p "请输入你的反代端口: " port
+    port="${port:-80}"
+
+    read -p "请输入用于 Certbot 注册的电子邮件地址: " user_email
+    if [[ ! "$user_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        echo "无效的电子邮件地址。"
+        exit 1
+    fi
+
+    nginx_conf="/etc/nginx/sites-available/$yuming.conf"
+    sudo cp "/etc/nginx/sites-available/template.conf" "$nginx_conf"
+    sudo sed -i "s/example.com/$yuming/g" "$nginx_conf"
+    sudo sed -i "s|127.0.0.1:80|$reverseproxy:$port|g" "$nginx_conf"
+    sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$yuming.conf"
+
+    if sudo nginx -t; then
+        sudo systemctl reload nginx
+        echo "Nginx 配置已生效。"
+        log "Nginx 配置已成功应用。"
+    else
+        echo "Nginx 配置有误，无法生效。"
+        exit 1
+    fi
+
+    if sudo certbot certonly --webroot -w /var/www/html -d "$yuming" --non-interactive --agree-tos --email "$user_email"; then
+        echo "SSL/TLS 证书申请成功。"
+        log "SSL/TLS 证书申请成功: $yuming"
+    else
+        echo "证书申请失败，请检查域名和网络配置。"
+        exit 1
+    fi
+}
+
 # 主菜单显示
 show_menu() {
     clear
@@ -137,6 +179,8 @@ show_menu() {
     echo "5. 删除证书"
     echo "0. 退出"
     echo "=========================================="
+    
+    echo "此功能只对Debian系统生效，如果不是Debian系统请退出！！！"
 }
 
 # 主循环
@@ -161,7 +205,6 @@ while true; do
         4) delete_reverse_proxy ;;
         5) delete_certificate ;;
         0) 
-            echo "此功能只对Debian系统生效，如果不是Debian系统请退出！！！"
             exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
