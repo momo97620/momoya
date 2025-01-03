@@ -21,44 +21,48 @@ detect_os() {
     fi
 }
 
-# 安装必要的软件包
-install_packages() {
-    echo "正在安装必要的软件包..."
-    export DEBIAN_FRONTEND=noninteractive
-    case $OS in
-        debian | ubuntu)
-            sudo apt install -y nginx certbot python3-certbot-nginx curl || {
-                echo "软件包安装失败，请检查网络或源配置。"
+# 检查并安装必要的软件包
+check_and_install_packages() {
+    if ! which nginx &>/dev/null || ! which certbot &>/dev/null || ! which curl &>/dev/null; then
+        echo "正在安装必要的软件包..."
+        export DEBIAN_FRONTEND=noninteractive
+        case $OS in
+            debian | ubuntu)
+                sudo apt install -y nginx certbot python3-certbot-nginx curl || {
+                    echo "软件包安装失败，请检查网络或源配置。"
+                    exit 1
+                }
+                sudo dpkg --configure -a
+                sudo apt clean
+                ;;
+            centos | rocky | almalinux)
+                sudo yum install -y epel-release
+                sudo yum install -y nginx certbot python3-certbot-nginx curl || {
+                    echo "软件包安装失败，请检查网络或源配置。"
+                    exit 1
+                }
+                ;;
+            *)
+                echo "暂不支持的操作系统: $OS"
                 exit 1
-            }
-            sudo dpkg --configure -a
-            sudo apt clean
-            ;;
-        centos | rocky | almalinux)
-            sudo yum install -y epel-release
-            sudo yum install -y nginx certbot python3-certbot-nginx curl || {
-                echo "软件包安装失败，请检查网络或源配置。"
-                exit 1
-            }
-            ;;
-        *)
-            echo "暂不支持的操作系统: $OS"
+                ;;
+        esac
+
+        # 验证安装结果
+        if ! which nginx &>/dev/null; then
+            echo "Nginx 安装失败。"
             exit 1
-            ;;
-    esac
+        fi
+        if ! which certbot &>/dev/null; then
+            echo "Certbot 安装失败。"
+            exit 1
+        fi
 
-    # 验证安装结果
-    if ! which nginx &>/dev/null; then
-        echo "Nginx 安装失败。"
-        exit 1
+        ensure_permissions
+        log "必要软件包安装完成。"
+    else
+        log "必要软件包已安装。"
     fi
-    if ! which certbot &>/dev/null; then
-        echo "Certbot 安装失败。"
-        exit 1
-    fi
-
-    ensure_permissions
-    log "必要软件包安装完成。"
 }
 
 # 修复 Certbot 路径问题
@@ -172,7 +176,7 @@ EOF
 # 配置反向代理并申请 SSL
 configure_reverse_proxy_and_ssl() {
     detect_os
-    install_packages
+    check_and_install_packages
     fix_certbot_path
 
     read -e -p "请输入你的域名: " domain
@@ -229,6 +233,20 @@ EOF
     request_certificate "$domain" "$user_email"
 }
 
+# 删除证书
+delete_certificate() {
+    read -p "请输入要删除证书的域名: " domain_to_delete
+    if sudo certbot delete --cert-name "$domain_to_delete"; then
+        echo "证书删除成功: $domain_to_delete"
+        log "证书删除成功: $domain_to_delete"
+    else
+        echo "证书删除失败，请检查域名是否正确。"
+        exit 1
+    fi
+
+    read -p "按任意键返回上一页..." temp
+}
+
 # 主菜单
 while true; do
     clear
@@ -238,9 +256,10 @@ while true; do
     echo "2. 查询已配置的反向代理"
     echo "3. 查询已申请的证书"
     echo "4. 删除反向代理配置"
+    echo "5. 删除证书"
     echo "0. 退出"
     echo "=========================================="
-    read -p "请输入操作编号 (0-4): " choice
+    read -p "请输入操作编号 (0-5): " choice
     case $choice in
         1) configure_reverse_proxy_and_ssl ;;
         2) 
@@ -259,6 +278,7 @@ while true; do
             echo "已删除反向代理配置: $domain_to_delete"
             read -p "按任意键返回上一页..." temp
             ;;
+        5) delete_certificate ;;
         0) exit 0 ;;
         *) echo "无效的选择，请重新输入。" ;;
     esac
