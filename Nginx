@@ -46,11 +46,12 @@ install_packages() {
 setup_validation_path() {
     sudo mkdir -p /var/www/html/.well-known/acme-challenge
     sudo chmod -R 755 /var/www/html/.well-known
-    nginx_conf="/etc/nginx/sites-available/default"
 
-    if [ ! -f "$nginx_conf" ]; then
-        echo "默认 Nginx 配置文件缺失，正在创建..."
-        sudo tee "$nginx_conf" > /dev/null <<EOF
+    # 停用默认站点，避免端口冲突
+    sudo rm -f /etc/nginx/sites-enabled/default
+
+    nginx_conf="/etc/nginx/sites-available/default"
+    sudo tee "$nginx_conf" > /dev/null <<EOF
 server {
     listen 80 default_server;
     server_name _;
@@ -58,16 +59,14 @@ server {
         root /var/www/html;
         index index.html;
     }
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+        default_type "text/plain";
+    }
 }
 EOF
-        log "创建了新的默认配置文件: $nginx_conf"
-    fi
 
-    # 确保 .well-known/acme-challenge 配置存在
-    if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
-        sudo sed -i '/server {/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type "text/plain";\n\ \ \ \ }\n' "$nginx_conf"
-        log "验证路径已添加到 Nginx 配置: $nginx_conf"
-    fi
+    sudo ln -sf "$nginx_conf" /etc/nginx/sites-enabled/default
 
     if sudo nginx -t; then
         sudo systemctl reload nginx
@@ -111,6 +110,11 @@ server {
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+        default_type "text/plain";
     }
 }
 EOF
@@ -163,3 +167,27 @@ EOF
     fi
     read -p "按任意键返回主菜单..."
 }
+
+# 主菜单
+main_menu() {
+    echo "============================="
+    echo "1) 安装必要软件"
+    echo "2) 配置验证路径"
+    echo "3) 配置反向代理和 SSL/TLS"
+    echo "0) 退出"
+    echo "============================="
+    read -p "请输入操作编号 (0-3): " choice
+    case $choice in
+        1) install_packages ;;
+        2) setup_validation_path ;;
+        3) configure_reverse_proxy_and_ssl ;;
+        0) exit 0 ;;
+        *) echo "无效选项，请重试。" ;;
+    esac
+}
+
+# 脚本入口
+detect_os
+while true; do
+    main_menu
+done
