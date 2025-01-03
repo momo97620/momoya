@@ -525,7 +525,7 @@ check_ldnmp() {
 check_ldnmp 
     echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}2.${NC} ${PINK}NextChatGPT${NC}"
     echo -e "----------------------------"
-    echo -e "${BLUE}3.${NC} ${LIGHTCYAN}部署RSSHub${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}Lsky-Pro图床${NC}"
+    echo -e "${BLUE}3.${NC} ${LIGHTCYAN}RSSHub部署${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}简单图床2.0${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}5.${NC} ${RED}增加1G空间${NC}"
     echo -e "----------------------------"
