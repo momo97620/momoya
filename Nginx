@@ -79,6 +79,11 @@ server {
         root /var/www/html;
         index index.html;
     }
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+        default_type "text/plain";
+    }
 }
 EOF
         log "创建了新的默认配置文件: $nginx_conf"
@@ -88,6 +93,12 @@ EOF
     if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
         sudo sed -i '/server {/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type "text/plain";\n\ \ \ \ }\n' "$nginx_conf"
         log "验证路径已添加到 Nginx 配置: $nginx_conf"
+    fi
+
+    # 移除可能导致冲突的默认配置文件
+    if [ -f "/etc/nginx/sites-enabled/default.save" ]; then
+        sudo mv /etc/nginx/sites-enabled/default.save /etc/nginx/sites-available/
+        log "已移动冲突配置文件 default.save 到 sites-available。"
     fi
 
     if sudo nginx -t; then
@@ -130,69 +141,6 @@ check_nginx_status() {
     else
         echo "Nginx 状态: 未安装或未运行"
     fi
-}
-
-# 配置反向代理并申请证书
-configure_reverse_proxy_and_ssl() {
-    echo "配置反向代理并申请 SSL/TLS 证书..."
-    read -e -p "请输入你的域名: " yuming
-    if [[ ! "$yuming" =~ ^[a-zA-Z0-9.-]+$ ]]; then
-        echo "无效的域名格式。"
-        exit 1
-    fi
-
-    read -e -p "请输入你的反代 IP 或 IPv6 地址 (默认: 127.0.0.1): " reverseproxy
-    reverseproxy="${reverseproxy:-127.0.0.1}"
-    [[ "$reverseproxy" =~ : && "$reverseproxy" != \[*\] ]] && reverseproxy="[$reverseproxy]"
-
-    read -e -p "请输入你的反代端口 (默认: 80): " port
-    port="${port:-80}"
-
-    read -p "请输入用于 Certbot 注册的电子邮件地址: " user_email
-    if [[ ! "$user_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-        echo "无效的电子邮件地址。"
-        exit 1
-    fi
-
-    nginx_conf="/etc/nginx/sites-available/$yuming.conf"
-    sudo cp "/etc/nginx/sites-available/default" "$nginx_conf"
-    sudo sed -i "s/server_name _;/server_name $yuming;/g" "$nginx_conf"
-    sudo sed -i "s|root /var/www/html;|proxy_pass http://$reverseproxy:$port;|g" "$nginx_conf"
-    sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$yuming.conf"
-
-    if sudo nginx -t; then
-        sudo systemctl reload nginx
-        echo "Nginx 配置已生效。"
-        log "Nginx 配置已成功应用。"
-    else
-        echo "Nginx 配置有误，无法生效。"
-        exit 1
-    fi
-
-    if sudo certbot certonly --webroot -w /var/www/html -d "$yuming" --non-interactive --agree-tos --email "$user_email"; then
-        echo "SSL/TLS 证书申请成功。"
-        log "SSL/TLS 证书申请成功: $yuming"
-
-        # 添加 HTTPS 配置到 Nginx 配置文件
-        sudo sed -i "/server_name $yuming/a \
-        listen 443 ssl;\n\
-        listen [::]:443 ssl;\n\
-        ssl_certificate /etc/letsencrypt/live/$yuming/fullchain.pem;\n\
-        ssl_certificate_key /etc/letsencrypt/live/$yuming/privkey.pem;\n" "$nginx_conf"
-
-        # 重启 Nginx
-        if sudo nginx -t; then
-            sudo systemctl reload nginx
-            log "HTTPS 配置已应用到 Nginx 配置文件。"
-        else
-            echo "Nginx 配置测试失败，请检查配置文件。"
-            exit 1
-        fi
-    else
-        echo "证书申请失败，请检查域名和网络配置。"
-        exit 1
-    fi
-    read -p "按任意键返回主菜单..."
 }
 
 # 主菜单显示
