@@ -113,7 +113,7 @@ setup_validation_path() {
     fi
 }
 
-# 申请证书
+# 申请证书并更新配置
 request_certificate() {
     local domain="$1"
     local email="$2"
@@ -123,7 +123,7 @@ request_certificate() {
         echo "SSL/TLS 证书申请成功: $domain"
         log "SSL/TLS 证书申请成功: $domain"
 
-        # 更新 Nginx 配置以使用 SSL
+        # 添加 SSL 配置到 Nginx 文件
         sudo tee "$nginx_conf" >/dev/null <<EOF
 server {
     listen 80;
@@ -137,11 +137,12 @@ server {
 
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
+
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 
     location / {
-        proxy_pass http://$reverseproxy:$port;
+        proxy_pass http://127.0.0.1:80;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -150,11 +151,12 @@ server {
 }
 EOF
 
-        # 测试并重载 Nginx 配置
+        # 链接到启用配置并重新加载 Nginx
+        sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
         if sudo nginx -t; then
             sudo systemctl reload nginx
-            echo "Nginx 配置已更新为使用 SSL。"
-            log "Nginx 配置已更新为使用 SSL。"
+            echo "Nginx 配置已更新并加载 SSL 支持。"
+            log "Nginx 配置已更新并加载 SSL 支持。"
         else
             echo "Nginx 配置测试失败，请检查配置文件。"
             exit 1
@@ -163,46 +165,40 @@ EOF
         echo "证书申请失败，请检查域名或网络配置。"
         exit 1
     fi
+
     read -p "按任意键返回上一页..." temp
 }
 
 # 配置反向代理并申请 SSL
 configure_reverse_proxy_and_ssl() {
-    # 确保必要组件已安装
     detect_os
     install_packages
     fix_certbot_path
 
-    # 输入域名
     read -e -p "请输入你的域名: " domain
     if [[ ! "$domain" =~ ^[a-zA-Z0-9.-]+$ ]]; then
         echo "无效的域名格式。"
         exit 1
     fi
 
-    # 检查是否已配置
     if [ -f "/etc/nginx/sites-available/$domain.conf" ]; then
         echo "域名 $domain 已配置。无需重复配置。"
         return
     fi
 
-    # 输入反向代理地址
     read -e -p "请输入你的反代 IP 或 IPv6 地址 (默认: 127.0.0.1): " reverseproxy
     reverseproxy="${reverseproxy:-127.0.0.1}"
     [[ "$reverseproxy" =~ : && "$reverseproxy" != \[*\] ]] && reverseproxy="[$reverseproxy]"
 
-    # 输入端口
     read -e -p "请输入你的反代端口 (默认: 80): " port
     port="${port:-80}"
 
-    # 输入邮箱
     read -p "请输入用于 Certbot 注册的电子邮件地址: " user_email
     if [[ ! "$user_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
         echo "无效的电子邮件地址。"
         exit 1
     fi
 
-    # 配置 Nginx 文件
     local nginx_conf="/etc/nginx/sites-available/$domain.conf"
     sudo tee "$nginx_conf" >/dev/null <<EOF
 server {
@@ -219,10 +215,7 @@ server {
 }
 EOF
 
-    # 链接到启用配置
     sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
-
-    # 测试 Nginx 配置
     if sudo nginx -t; then
         sudo systemctl reload nginx
         echo "Nginx 配置已生效。"
@@ -232,13 +225,8 @@ EOF
         exit 1
     fi
 
-    # 设置验证路径
     setup_validation_path "$domain"
-
-    # 申请证书
     request_certificate "$domain" "$user_email"
-
-    read -p "按任意键返回上一页..." temp
 }
 
 # 主菜单
