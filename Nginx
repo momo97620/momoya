@@ -1,15 +1,13 @@
 #!/bin/bash
 
-# 日志记录
 LOGFILE="/var/log/reverse_proxy_setup.log"
+
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOGFILE"
 }
 
-# 清屏
 clear
 
-# 动态检测操作系统
 detect_os() {
     if [ -f /etc/os-release ]; then
         . /etc/os-release
@@ -21,19 +19,17 @@ detect_os() {
     fi
 }
 
-# 检查并安装必要的软件包
 check_and_install_packages() {
     if ! which nginx &>/dev/null || ! which certbot &>/dev/null || ! which curl &>/dev/null; then
         echo "正在安装必要的软件包..."
         export DEBIAN_FRONTEND=noninteractive
         case $OS in
             debian | ubuntu)
+                sudo apt update
                 sudo apt install -y nginx certbot python3-certbot-nginx curl || {
                     echo "软件包安装失败，请检查网络或源配置。"
                     exit 1
                 }
-                sudo dpkg --configure -a
-                sudo apt clean
                 ;;
             centos | rocky | almalinux)
                 sudo yum install -y epel-release
@@ -48,16 +44,6 @@ check_and_install_packages() {
                 ;;
         esac
 
-        # 验证安装结果
-        if ! which nginx &>/dev/null; then
-            echo "Nginx 安装失败。"
-            exit 1
-        fi
-        if ! which certbot &>/dev/null; then
-            echo "Certbot 安装失败。"
-            exit 1
-        fi
-
         ensure_permissions
         log "必要软件包安装完成。"
     else
@@ -65,21 +51,6 @@ check_and_install_packages() {
     fi
 }
 
-# 修复 Certbot 路径问题
-fix_certbot_path() {
-    if ! which certbot &>/dev/null; then
-        echo "Certbot 未找到，尝试修复路径..."
-        if [ -d "/usr/local/bin" ]; then
-            sudo ln -s /usr/bin/certbot /usr/local/bin/certbot
-            echo "已修复 Certbot 路径到 /usr/local/bin/"
-        else
-            echo "无法找到适当的路径修复 Certbot。"
-            exit 1
-        fi
-    fi
-}
-
-# 确保权限正确
 ensure_permissions() {
     sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /var/www/html
     sudo chmod -R 755 /etc/nginx /var/www/html
@@ -87,16 +58,13 @@ ensure_permissions() {
     log "权限已正确赋予：/etc/nginx 和 /var/www/html"
 }
 
-# 配置验证路径和 Nginx 配置
 setup_validation_path() {
     local domain="$1"
     local nginx_conf="/etc/nginx/sites-available/$domain.conf"
 
-    # 提前创建验证路径
     sudo mkdir -p /var/www/html/.well-known/acme-challenge
     sudo chmod -R 755 /var/www/html/.well-known
 
-    # 确保验证路径配置在 Nginx 文件中
     if [ -f "$nginx_conf" ]; then
         if ! grep -q ".well-known/acme-challenge" "$nginx_conf"; then
             sudo sed -i "/server_name/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type \"text/plain\";\n\ \ \ \ }\n" "$nginx_conf"
@@ -107,7 +75,6 @@ setup_validation_path() {
         exit 1
     fi
 
-    # 测试并重载 Nginx 配置
     if sudo nginx -t; then
         sudo systemctl reload nginx
         log "Nginx 配置已重新加载。"
@@ -117,7 +84,6 @@ setup_validation_path() {
     fi
 }
 
-# 申请证书并更新配置
 request_certificate() {
     local domain="$1"
     local email="$2"
@@ -127,7 +93,6 @@ request_certificate() {
         echo "SSL/TLS 证书申请成功: $domain"
         log "SSL/TLS 证书申请成功: $domain"
 
-        # 添加 SSL 配置到 Nginx 文件
         sudo tee "$nginx_conf" >/dev/null <<EOF
 server {
     listen 80;
@@ -155,7 +120,6 @@ server {
 }
 EOF
 
-        # 链接到启用配置并重新加载 Nginx
         sudo ln -sf "$nginx_conf" "/etc/nginx/sites-enabled/$domain.conf"
         if sudo nginx -t; then
             sudo systemctl reload nginx
@@ -173,11 +137,9 @@ EOF
     read -p "按任意键返回上一页..." temp
 }
 
-# 配置反向代理并申请 SSL
 configure_reverse_proxy_and_ssl() {
     detect_os
     check_and_install_packages
-    fix_certbot_path
 
     read -e -p "请输入你的域名: " domain
     if [[ ! "$domain" =~ ^[a-zA-Z0-9.-]+$ ]]; then
@@ -233,7 +195,6 @@ EOF
     request_certificate "$domain" "$user_email"
 }
 
-# 删除证书
 delete_certificate() {
     read -p "请输入要删除证书的域名: " domain_to_delete
     if sudo certbot delete --cert-name "$domain_to_delete"; then
@@ -247,7 +208,6 @@ delete_certificate() {
     read -p "按任意键返回上一页..." temp
 }
 
-# 主菜单
 while true; do
     clear
     echo "=========================================="
