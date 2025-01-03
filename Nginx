@@ -90,7 +90,7 @@ EOF
             fi
 
             # 在 server 块中添加 location 块
-            sudo sed -i '/server_name/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type "text/plain";\n\ \ \ \ }\n' "$nginx_conf"
+            sudo sed -i '/server {/a \ \ \ \ location ^~ /.well-known/acme-challenge/ {\n\ \ \ \ \ \ \ \ root /var/www/html;\n\ \ \ \ \ \ \ \ default_type "text/plain";\n\ \ \ \ }\n' "$nginx_conf"
             log "验证路径已添加到 Nginx 配置: $nginx_conf"
         else
             log "验证路径已存在于 Nginx 配置中，无需重复添加。"
