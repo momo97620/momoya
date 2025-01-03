@@ -42,6 +42,16 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+# 封装 sudo 检查和安装的函数
+check_and_install_sudo() {
+    if ! command -v sudo &> /dev/null; then
+        echo "sudo 未安装，正在后台安装..."
+        apt update &> /dev/null
+        apt install -y sudo &> /dev/null
+    fi
+    echo "sudo 已安装或已存在。"
+}
+
 # 安装主脚本
 install_script() {
     # 隐藏所有输出，创建安装目录并安装脚本
@@ -909,6 +919,7 @@ main() {
     fi
 
     # 调用主菜单
+    check_and_install_sudo
     while true; do
         show_main_menu
     done
