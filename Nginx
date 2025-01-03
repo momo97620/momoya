@@ -133,6 +133,33 @@ EOF
     read -p "按任意键返回主菜单..."
 }
 
+# 删除证书
+delete_cert() {
+    read -p "请输入要删除证书的域名: " domain
+    if [ -d "/etc/letsencrypt/live/$domain" ]; then
+        sudo certbot delete --cert-name "$domain"
+        echo "证书已删除。"
+        log "证书已删除: $domain"
+    else
+        echo "证书不存在或域名错误。"
+    fi
+}
+
+# 删除反向代理配置
+delete_reverse_proxy() {
+    read -p "请输入要删除的域名配置: " domain
+    nginx_conf="/etc/nginx/sites-available/$domain.conf"
+    if [ -f "$nginx_conf" ]; then
+        sudo rm "$nginx_conf"
+        sudo rm "/etc/nginx/sites-enabled/$domain.conf"
+        sudo systemctl reload nginx
+        echo "反向代理配置已删除。"
+        log "反向代理配置已删除: $domain"
+    else
+        echo "配置文件不存在。"
+    fi
+}
+
 # 主菜单
 main_menu() {
     while true; do
@@ -142,7 +169,9 @@ main_menu() {
         echo "========================="
         echo "1) 安装必要软件包"
         echo "2) 配置反向代理和 SSL/TLS"
-        echo "3) 退出"
+        echo "3) 删除证书"
+        echo "4) 删除反向代理配置"
+        echo "5) 退出"
         echo "========================="
         read -p "请输入操作编号: " choice
         case $choice in
@@ -154,6 +183,12 @@ main_menu() {
                 configure_reverse_proxy_and_ssl
                 ;;
             3)
+                delete_cert
+                ;;
+            4)
+                delete_reverse_proxy
+                ;;
+            5)
                 exit 0
                 ;;
             *)
