@@ -292,7 +292,7 @@ read -n 1 -s -r -p "按任意键返回..."
             done
         }
 
-# 主菜单
+# 
 main_menu() {
     while true; do
     clear
