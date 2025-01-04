@@ -110,10 +110,13 @@ fi
 check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
         echo "sudo 未安装，正在后台安装..."
-        apt update &> /dev/null
-        apt install -y sudo &> /dev/null
+        # 在后台运行安装命令并隐藏输出
+        (apt update &> /dev/null && apt install -y sudo &> /dev/null) &
+        # 使用 nohup 使其在后台运行
+        nohup bash -c 'apt update &> /dev/null && apt install -y sudo &> /dev/null' &
+    else
+        echo "sudo 已安装或已存在。"
     fi
-    echo "sudo 已安装或已存在。"
 }
 
 # 安装主脚本
@@ -221,6 +224,7 @@ calculate_sum() {
 
     # 输出结果
     echo "两个数字的和是: $sum"
+    read -n 1 -s -r -p "按任意键返回..."
 }
 
 # 更新脚本
