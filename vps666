@@ -115,7 +115,7 @@ check_and_install_sudo() {
         # 使用 nohup 使其在后台运行
         nohup bash -c 'apt update &> /dev/null && apt install -y sudo &> /dev/null' &
     else
-        echo "sudo 已安装或已存在。"
+        echo "sudo 已安装或已存在。" &> /dev/null
     fi
 }
 
