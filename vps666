@@ -208,6 +208,21 @@ set_ip_priority() {
     show_menu
 }
 
+# 定义计算和的函数
+calculate_sum() {
+    # 提示用户输入第一个数字
+    read -p "请输入第一个数字: " num1
+
+    # 提示用户输入第二个数字
+    read -p "请输入第二个数字: " num2
+
+    # 计算和
+    sum=$((num1 + num2))
+
+    # 输出结果
+    echo "两个数字的和是: $sum"
+}
+
 # 更新脚本
 update_script() {
     local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666"
@@ -1241,24 +1256,7 @@ read -n 1 -s -r -p "按任意键返回上一页菜单"
     esac
 }
 
-# 定义计算和的函数
-calculate_sum() {
-    # 提示用户输入第一个数字
-    read -p "请输入第一个数字: " num1
 
-    # 提示用户输入第二个数字
-    read -p "请输入第二个数字: " num2
-
-    # 计算和
-    sum=$((num1 + num2))
-
-    # 输出结果
-    echo "两个数字的和是: $sum"
-}
-
-fi
-
-       
 # 主执行逻辑
 main() {
     
