@@ -601,7 +601,7 @@ check_ldnmp() {
 check_ldnmp 
     echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}2.${NC} ${PINK}NextChatGPT${NC}"
     echo -e "----------------------------"
-    echo -e "${BLUE}3.${NC} ${LIGHTCYAN}RSSHub部署${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}简单图床2.0${NC}"
+    echo -e "${BLUE}3.${NC} ${LIGHTCYAN}容器管理${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}简单图床2.0${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}5.${NC} ${RED}增加1G空间${NC}"
     echo -e "----------------------------"
@@ -688,43 +688,124 @@ setup_nextchat
         ;;
         
         3)
-            # 创建一个 1GB 的交换文件
-sudo fallocate -l 1G /swapfile
-# 设置正确的权限
-sudo chmod 600 /swapfile
-# 将文件设置为交换空间
-sudo mkswap /swapfile
-# 启用交换空间
-sudo swapon /swapfile
-# 确保在重启后自动启用交换空间
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-
-echo "开始部署 RSSHub..."
-hostname=$(hostname)
-echo "本机名: $hostname"
-
-# 检查是否已安装 RSSHub
-if docker ps -a --format '{{.Names}}' | grep -qw rsshub; then
-    echo "RSSHub 已安装。"
-    echo
-    read -n 1 -s -r -p "按任意键返回菜单..."
+            # 容器管理
+container_management() {
+    while true; do
+    clear
+    echo -e "${BLUE}\n===== 容器管理 =====${NC}"
+    
+    # 第一排选项
+    echo -e "${RED}1.${NC} ${BOLD_GREEN}列出所有容器${NC}      ${RED}2.${NC} ${BOLD_GREEN}启动容器${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}3.${NC} ${BOLD_GREEN}停止容器${NC}          ${RED}4.${NC} ${BOLD_GREEN}重启容器${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}5.${NC} ${BOLD_GREEN}删除容器${NC}          ${RED}6.${NC} ${BOLD_GREEN}查看容器日志${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}7.${NC} ${BOLD_GREEN}停止所有容器${NC}     ${RED}8.${NC} ${BOLD_GREEN}启动所有容器${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}0.${NC} ${BOLD_GREEN}返回主菜单${NC}"
+    echo -e "---------------------------"  # 添加分隔线
+    
+    read -p "请选择操作: " container_choice
+    
+        case $container_choice in
+            1) 
+                echo -e "${BLUE}当前容器列表:${NC}"
+                docker ps -a
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            2) 
+                while true; do
+                    read -p "请输入容器名称或ID（按回车键返回）： " container
+                    if [ -z "$container" ]; then
+                        echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                        break
+                    fi
+                    docker start "$container" && echo -e "${GREEN}容器 $container 已启动！${NC}" || echo -e "${RED}启动失败，请检查容器名称或ID！${NC}"
+                done
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            3) 
+                while true; do
+                    containers=$(docker ps --format '{{.Names}}')
+                    if [ -z "$containers" ]; then
+                        echo -e "${RED}没有运行中的容器！${NC}"
+                        break
+                    fi
+                    echo -e "${BLUE}运行中的容器（按回车键返回）:${NC}"
+                    docker ps --format '容器名: {{.Names}}, 容器ID: {{.ID}}'
+                    read -p "请输入容器名称或ID（按3返回）： " container
+                    if [ -z "$container" ]; then
+                        echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                        break
+                    fi
+                    docker stop "$container" && echo -e "${GREEN}容器 $container 已停止！${NC}" || echo -e "${RED}停止失败，请检查容器名称或ID！${NC}"
+                done
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            4) 
+                read -p "请输入容器名称或ID（按回车键返回）： " container
+                docker restart "$container" && echo -e "${GREEN}容器 $container 已重启！${NC}" || echo -e "${RED}重启失败，请检查容器名称或ID！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            5) 
+                containers=($(docker ps -a --format '{{.Names}}'))
+if [ ${#containers[@]} -eq 0 ]; then
+    echo -e "${RED}没有找到任何容器！${NC}"
 else
-    echo "正在拉取 RSSHub 镜像..."
-    if ! docker pull diygod/rsshub; then
-        echo "拉取 RSSHub 镜像失败，请检查网络连接！"
-        exit 1
-    fi
+    echo -e "${BLUE}请选择要删除的容器（输入3返回菜单）:${NC}"
 
-    echo "正在运行 RSSHub 容器..."
-    if ! docker run -d --name rsshub -p 1200:1200 diygod/rsshub; then
-        echo "运行 RSSHub 容器失败，请检查 Docker 设置！"
-        exit 1
-    fi
-
-    echo "RSSHub 部署完成！端口：1200"
-    echo
-    read -n 1 -s -r -p "操作完成，按任意键返回菜单..."
+    PS3="请输入对应的数字选择："
+    select container in "${containers[@]}" "返回上级菜单"; do
+        if [ "$REPLY" -eq 0 ] || [ "$REPLY" -eq $((${#containers[@]} + 1)) ]; then
+            echo -e "${YELLOW}已返回上级菜单。${NC}"
+            break
+        elif [ -z "$container" ]; then
+            echo -e "${RED}无效的选择，请重试！${NC}"
+        elif [[ "$REPLY" =~ ^[0-9]+$ ]] && [ "$REPLY" -le $((${#containers[@]} + 1)) ]; then
+            if [ "$REPLY" -le "${#containers[@]}" ]; then
+                docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
+            fi
+            break
+        else
+            echo -e "${RED}无效的选择，请重试！${NC}"
+        fi
+    done
 fi
+
+# 添加提示以便返回
+read -n 1 -s -r -p "按任意键返回..."
+           ;;
+            6) 
+                read -p "请输入容器名称或ID（按回车键返回）： " container
+                docker logs "$container" || echo -e "${RED}获取日志失败，请检查容器名称或ID！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            7) 
+                echo -e "${BLUE}正在停止所有容器...${NC}"
+                docker stop $(docker ps -q) && echo -e "${GREEN}所有容器已停止！${NC}" || echo -e "${RED}停止失败！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            8) 
+                echo -e "${BLUE}正在启动所有容器...${NC}"
+                docker start $(docker ps -aq) && echo -e "${GREEN}所有容器已启动！${NC}" || echo -e "${RED}启动失败！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            0) 
+                echo -e "${YELLOW}返回主菜单。${NC}"
+                break
+                ;;
+            *) 
+                echo -e "${RED}无效的选择，请重试！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+        esac
+    done
+}
       ;;
         4)
 # 检查 Docker 是否安装
