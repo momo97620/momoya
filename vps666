@@ -851,9 +851,9 @@ check_ldnmp() {
 }
 # 自动检测 LDNMP 环境
 check_ldnmp 
-    echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}2.${NC} ${PINK}NextChatGPT${NC}"
+    echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}3.${NC} ${PINK}NextChatGPT${NC}"
     echo -e "----------------------------"
-    echo -e "${BLUE}3.${NC} ${LIGHTCYAN}容器管理${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}简单图床2.0${NC}"
+    echo -e "${BLUE}2.${NC} ${LIGHTCYAN}容器管理${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}简单图床2.0${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}5.${NC} ${RED}镜像管理${NC}"
     echo -e "----------------------------"
@@ -868,7 +868,7 @@ echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则
         1)
             install_docker
             ;;
-        2)
+        3)
             clear  # 清除屏幕
 # 颜色定义
 GREEN='\033[0;32m'
@@ -939,7 +939,7 @@ EOL
 setup_nextchat
         ;;
         
-        3)
+        2)
             container_management
                 ;;
 
