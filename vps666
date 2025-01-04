@@ -616,11 +616,13 @@ echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则
             ;;
         2)
             clear  # 清除屏幕
-            # 颜色定义
+# 颜色定义
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+BRIGHT_GREEN='\033[1;32m'
 DEEPRED='\033[1;31m'  # 深红色
 NC='\033[0m'          # 无颜色
+  
 
 # 检查并设置 locale
 if ! grep -q "export LANG=en_US.UTF-8" ~/.bashrc; then
@@ -656,20 +658,9 @@ services:
       - BASE_URL=https://xx.xx.io #第三方代理地址
       - DEFAULT_MODEL=gpt-4o-mini  #默认模型
       - ENABLE_BALANCE_QUERY=1  #启用余额查询
-# 
-# 注意修改换成你的key令牌.然后修改代理地址:
-
-# 修改代理地址(就是你取api key的网站他们要求填他们的第三方地址)
-
-# 后台管理员密码默认(emomomo)  其他不用修改
-
-# 修改完成后按住ctrl不放然后再按x  然后按y回车(保存)
 EOL
 
-    # 使用 nano 编辑器打开 docker-compose.yml 供用户修改
-    nano docker-compose.yml
-
-    # 用户保存退出后，自动运行 docker-compose up -d
+    # 自动运行 docker-compose up -d
     if docker-compose up -d; then
         echo -e "${GREEN}✅ Docker 容器启动成功！${NC}"
     else
@@ -678,8 +669,13 @@ EOL
     fi
 
     # 提示用户
+                echo -e "${BRIGHT_GREEN}✅ 已成功安装！${NC}"
+                
     echo -e "${DEEPRED}1.${NC} ⚠️ ${DEEPRED}请手动放行8842端口！！${NC}"
+    
     echo -e "${DEEPRED}2.${NC} ⚠️ ${DEEPRED}后台登录方式：本机IP+8842！！${NC}"
+    
+    echo -e "${DEEPRED}2.${NC} ⚠️ ${DEEPRED}如遇到需要管理员密码:emomomo！！${NC}"
     
     # 等待用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
@@ -687,7 +683,7 @@ EOL
 
 # 调用函数
 setup_nextchat
-           ;;
+
         3)
             # 创建一个 1GB 的交换文件
 sudo fallocate -l 1G /swapfile
