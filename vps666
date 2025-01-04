@@ -851,13 +851,17 @@ check_ldnmp() {
 }
 # 自动检测 LDNMP 环境
 check_ldnmp 
-    echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}4.${NC} ${PINK}NextChatGPT${NC}"
+    echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}"
     echo -e "----------------------------"
-    echo -e "${BLUE}2.${NC} ${LIGHTCYAN}容器管理${NC}        ${LIGHTBLUE}5.${NC} ${GREEN}简单图床2.0${NC}"
+    echo -e "${BLUE}2.${NC} ${LIGHTCYAN}容器管理${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}3.${NC} ${RED}镜像管理${NC}"
     echo -e "----------------------------"
-    echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
+    echo -e "${YELLOW}4.${NC} ${PINK}NextChatGPT${NC}"
+    echo -e "----------------------------"
+    echo -e "${LIGHTBLUE}5.${NC} ${GREEN}简单图床2.0${NC}"
+    echo -e "----------------------------"
+    echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}" 
     echo -e "============================"
     # 提示用户安装 Docker
 echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
