@@ -1256,8 +1256,8 @@ calculate_sum() {
     echo "两个数字的和是: $sum"
 }
 
-# 调用函数
-calculate_sum
+fi
+
        
 # 主执行逻辑
 main() {
