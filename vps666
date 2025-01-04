@@ -851,11 +851,11 @@ check_ldnmp() {
 }
 # 自动检测 LDNMP 环境
 check_ldnmp 
-    echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}3.${NC} ${PINK}NextChatGPT${NC}"
+    echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}    ${YELLOW}4.${NC} ${PINK}NextChatGPT${NC}"
     echo -e "----------------------------"
-    echo -e "${BLUE}2.${NC} ${LIGHTCYAN}容器管理${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}简单图床2.0${NC}"
+    echo -e "${BLUE}2.${NC} ${LIGHTCYAN}容器管理${NC}        ${LIGHTBLUE}5.${NC} ${GREEN}简单图床2.0${NC}"
     echo -e "----------------------------"
-    echo -e "${DEEPRED}5.${NC} ${RED}镜像管理${NC}"
+    echo -e "${DEEPRED}3.${NC} ${RED}镜像管理${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
     echo -e "============================"
@@ -868,7 +868,7 @@ echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则
         1)
             install_docker
             ;;
-        3)
+        4)
             clear  # 清除屏幕
 # 颜色定义
 GREEN='\033[0;32m'
@@ -943,7 +943,7 @@ setup_nextchat
             container_management
                 ;;
 
-        4)
+        5)
 # 检查 Docker 是否安装
 if ! command -v docker &> /dev/null; then
     echo "Docker 未安装，请先安装 Docker。"
@@ -1004,7 +1004,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
 
             ;;
             
-        5)
+        3)
            image_management #镜像管理
             ;;  
         0)
