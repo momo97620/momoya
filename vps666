@@ -860,6 +860,7 @@ check_ldnmp
     echo -e "${YELLOW}4.${NC} ${PINK}NextChatGPT${NC}"
     echo -e "----------------------------"
     echo -e "${LIGHTBLUE}5.${NC} ${GREEN}简单图床2.0${NC}"
+    echo -e "${LIGHTBLUE}6.${NC} ${GREEN}测试${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}" 
     echo -e "============================"
@@ -1011,6 +1012,11 @@ read -n 1 -s -r -p "按任意键返回上一页..."
         3)
            image_management #镜像管理
             ;;  
+            
+        6)
+           calculate _sum
+            ;;
+            
         0)
             echo "返回主菜单..."
             break
@@ -1234,7 +1240,24 @@ read -n 1 -s -r -p "按任意键返回上一页菜单"
             ;;
     esac
 }
-       
+
+# 定义计算和的函数
+calculate _sum() {
+    # 提示用户输入第一个数字
+    read -p "请输入第一个数字: " num1
+
+    # 提示用户输入第二个数字
+    read -p "请输入第二个数字: " num2
+
+    # 计算和
+    sum=$((num1 + num2))
+
+    # 输出结果
+    echo "两个数字的和是: $sum"
+}
+
+# 调用函数
+calculate_sum
        
 # 主执行逻辑
 main() {
