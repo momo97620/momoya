@@ -806,7 +806,7 @@ read -n 1 -s -r -p "按任意键返回..."
         esac
     done
 }
-      ;;
+
         4)
 # 检查 Docker 是否安装
 if ! command -v docker &> /dev/null; then
