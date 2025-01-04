@@ -669,13 +669,13 @@ EOL
     fi
 
     # 提示用户
-                echo -e "${BRIGHT_GREEN}✅ 已成功安装！${NC}"
+     echo -e "${BRIGHT_GREEN}✅ 已成功安装！${NC}"
                 
     echo -e "${DEEPRED}1.${NC} ⚠️ ${DEEPRED}请手动放行8842端口！！${NC}"
     
     echo -e "${DEEPRED}2.${NC} ⚠️ ${DEEPRED}后台登录方式：本机IP+8842！！${NC}"
     
-    echo -e "${DEEPRED}2.${NC} ⚠️ ${DEEPRED}如遇到需要管理员密码:emomomo！！${NC}"
+    echo -e "${DEEPRED}3.${NC} ⚠️ ${DEEPRED}如遇到需要管理员密码:emomomo！！${NC}"
     
     # 等待用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
@@ -683,7 +683,8 @@ EOL
 
 # 调用函数
 setup_nextchat
-
+        ;;
+        
         3)
             # 创建一个 1GB 的交换文件
 sudo fallocate -l 1G /swapfile
