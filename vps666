@@ -541,6 +541,123 @@ RAINBOW_PROMPT::main() {
     done
 }
 
+# 定义备份存储路径为用户的主目录
+BACKUP_DIR="$HOME/backup"  # 备份存储路径
+BACKUP_SCRIPT="$HOME/backup.sh"  # 脚本自身路径
+
+# 创建备份目录（如果不存在）
+mkdir -p "$BACKUP_DIR"
+
+# 函数：执行备份
+perform_backup() {
+    TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+    echo "Stopping Docker..."
+    systemctl stop docker
+
+    BACKUP_FILE="$BACKUP_DIR/docker_backup_$TIMESTAMP.tar.gz"
+    echo "Backing up Docker data to $BACKUP_FILE..."
+    
+    if tar czvf "$BACKUP_FILE" /var/lib/docker; then
+        echo "Starting Docker..."
+        systemctl start docker
+        echo "Backup completed successfully!"
+        echo "结果：成功" >> "$BACKUP_DIR/backup_log.txt"
+    else
+        echo "Backup failed!"
+        echo "结果：失败 - 备份过程中发生错误" >> "$BACKUP_DIR/backup_log.txt"
+    fi
+}
+
+# 函数：设置定时任务
+setup_cron_job() {
+    # 检查是否已存在定时任务
+    (crontab -l | grep -q "$BACKUP_SCRIPT") && {
+        echo "定时任务已存在，跳过设置。"
+        echo "结果：失败 - 定时任务已存在" >> "$BACKUP_DIR/backup_log.txt"
+        return
+    }
+
+    # 添加定时任务：每 7 天的凌晨 5 点执行
+    (crontab -l 2>/dev/null; echo "0 5 */7 * * $BACKUP_SCRIPT >> $BACKUP_DIR/backup.log 2>&1") | crontab -
+    echo "已设置定时任务：每 7 天凌晨 5 点自动备份。"
+    echo "结果：成功" >> "$BACKUP_DIR/backup_log.txt"
+}
+
+# 函数：恢复备份
+restore_backup() {
+    read -p "请输入备份文件名（例如 docker_backup_YYYYMMDDHHMMSS.tar.gz）： " BACKUP_FILE
+    read -p "请输入新服务器的 IP 地址： " SERVER_IP
+
+    # 复制备份文件到新服务器
+    echo "正在复制备份文件到新服务器..."
+    if scp "$BACKUP_DIR/$BACKUP_FILE" user@"$SERVER_IP":/path/to/backup/; then
+        echo "正在恢复备份..."
+        ssh user@"$SERVER_IP" << EOF
+            cd /path/to/backup/
+            echo "解压备份文件..."
+            if tar xzvf "$BACKUP_FILE"; then
+                echo "停止 Docker 服务..."
+                sudo systemctl stop docker
+                echo "恢复 Docker 数据..."
+                if sudo rsync -a --remove-source-files ./var/lib/docker/ /var/lib/docker/; then
+                    echo "启动 Docker 服务..."
+                    sudo systemctl start docker
+                    echo "备份恢复完成！"
+                    echo "结果：成功" >> "$BACKUP_DIR/backup_log.txt"
+                else
+                    echo "恢复 Docker 数据失败！"
+                    echo "结果：失败 - 恢复过程中发生错误" >> "$BACKUP_DIR/backup_log.txt"
+                fi
+            else
+                echo "解压备份文件失败！"
+                echo "结果：失败 - 解压过程中发生错误" >> "$BACKUP_DIR/backup_log.txt"
+            fi
+EOF
+    else
+        echo "复制备份文件失败！"
+        echo "结果：失败 - 复制过程中发生错误" >> "$BACKUP_DIR/backup_log.txt"
+    fi
+}
+
+# 函数：备份菜单
+backup_menu() {
+    while true; do
+        echo "请选择操作："
+        echo "1. 手动备份"
+        echo "2. 自动备份（每7天一次）"
+        echo "3. 恢复备份"
+        echo "4. 返回主菜单"
+        read -p "请输入选项 (1、2、3或4): " choice
+
+        case $choice in
+            1)
+                echo "开始手动备份..."
+                perform_backup
+                ;;
+            2)
+                echo "开始自动备份..."
+                setup_cron_job
+                echo "请注意，自动备份将在每 7 天的凌晨 5 点执行。"
+                ;;
+            3)
+                echo "开始恢复备份..."
+                restore_backup
+                ;;
+            4)
+                echo "返回主菜单。"
+                return
+                ;;
+            *)
+                echo "无效选项，请选择1、2、3或4。"
+                ;;
+        esac
+
+        read -p "按任意键返回备份菜单..." -n1 -s
+        echo
+    done
+}
+
+
 # 容器管理
 container_management() {
     while true; do
@@ -1032,7 +1149,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
             ;;  
             
         6)
-           calculate_sum
+           backup_menu
             ;;
             
         0)
