@@ -877,6 +877,7 @@ check_ldnmp
     echo -e "${YELLOW}4.${NC} ${PINK}NextChatGPT${NC}"
     echo -e "----------------------------"
     echo -e "${LIGHTBLUE}5.${NC} ${GREEN}简单图床2.0${NC}"
+    echo -e "----------------------------"
     echo -e "${LIGHTBLUE}6.${NC} ${GREEN}测试${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}" 
