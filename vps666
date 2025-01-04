@@ -263,6 +263,126 @@ set_ssh_keepalive() {
     read -n 1 -s -r
 }
 
+# 镜像管理
+image_management() {
+    while true; do
+    clear
+    echo -e "${BLUE}\n===== 镜像管理 =====${NC}"
+    
+    # 第一排选项
+    echo -e "${RED}1.${NC} ${BOLD_GREEN}列出所有镜像${NC}      ${RED}2.${NC} ${BOLD_GREEN}删除镜像${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}3.${NC} ${BOLD_GREEN}启动镜像${NC}          ${RED}4.${NC} ${BOLD_GREEN}停止镜像${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}5.${NC} ${BOLD_GREEN}启动所有镜像${NC}      ${RED}6.${NC} ${BOLD_GREEN}停止所有镜像${NC}"
+    echo -e "---------------------------"
+    
+    echo -e "${RED}7.${NC} ${BOLD_GREEN}重启镜像${NC}          ${RED}0.${NC} ${BOLD_GREEN}返回主菜单${NC}"
+    echo -e "---------------------------"  # 添加分隔线
+    
+    read -p "请选择操作: " image_choice  
+
+        case $image_choice in
+            1) 
+                echo -e "${BLUE}当前镜像列表:${NC}"
+                docker images
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            2) 
+                images=($(docker images --format '{{.Repository}}:{{.Tag}}'))
+                if [ ${#images[@]} -eq 0 ]; then
+                    echo -e "${RED}没有找到任何镜像！${NC}"
+                else
+                    PS3="请输入对应的数字选择："
+                    echo -e "${BLUE}请选择要删除的镜像（按回4返回）:${NC}"
+                    select image in "${images[@]}" "返回"; do
+                        if [ "$REPLY" == "0" ] || [ "$image" == "返回" ]; then
+                            echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                            break
+                        elif [[ " ${images[@]} " =~ " ${image} " ]]; then
+                            docker rmi "$image" && echo -e "${GREEN}镜像 $image 已被删除！${NC}" || echo -e "${RED}删除失败，请检查镜像名称！${NC}"
+                            break
+                        else
+                            echo -e "${RED}无效的选择，请重试！${NC}"
+                        fi
+                    done
+                fi
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            3) 
+                read -p "请输入要启动的镜像（按回车键返回）: " image_to_run
+                docker run -d "$image_to_run" && echo -e "${GREEN}镜像 $image_to_run 已启动！${NC}" || echo -e "${RED}启动失败，请检查镜像名称！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            4) 
+                running_images=$(docker ps --format '{{.ID}}: {{.Image}}')
+                if [ -z "$running_images" ]; then
+                    echo -e "${RED}没有运行中的镜像！${NC}"
+                else
+                    PS3="请输入对应的数字选择（按5返回）："
+                    echo -e "${BLUE}请选择要停止的镜像:${NC}"
+                    select image in $running_images "返回"; do
+                        if [ "$REPLY" == "0" ] || [ "$image" == "返回" ]; then
+                            echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                            break
+                        elif [ -n "$image" ]; then
+                            image_id=$(echo "$image" | cut -d':' -f1)
+                            docker stop "$image_id" && echo -e "${GREEN}镜像 $image_id 已被停止！${NC}" || echo -e "${RED}停止失败！${NC}"
+                            break
+                        else
+                            echo -e "${RED}无效的选择，请重试！${NC}"
+                        fi
+                    done
+                fi
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            5) 
+                echo -e "${BLUE}正在启动所有镜像...${NC}"
+                for image in $(docker images --format '{{.Repository}}:{{.Tag}}'); do
+                    docker run -d "$image"
+                done
+                echo -e "${GREEN}所有镜像已启动！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            6) 
+                echo -e "${BLUE}正在停止所有镜像...${NC}"
+                docker stop $(docker ps -q)
+                echo -e "${GREEN}所有镜像已停止！${NC}"
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            7) 
+                images=($(docker images --format '{{.Repository}}:{{.Tag}}'))
+                if [ ${#images[@]} -eq 0 ]; then
+                    echo -e "${RED}没有找到任何镜像！${NC}"
+                else
+                    PS3="请输入对应的数字选择（按回车键返回）："
+                    echo -e "${BLUE}请选择要重启的镜像:${NC}"
+                    select image in "${images[@]}" "返回"; do
+                        if [ "$image" == "返回" ]; then
+                            break
+                        elif [[ " ${images[@]} " =~ " ${image} " ]]; then
+                            image_id=$(docker ps -q --filter ancestor="$image")
+                            if [ -n "$image_id" ]; then
+                                docker restart "$image_id" && echo -e "${GREEN}镜像 $image 的容器已被重启！${NC}" || echo -e "${RED}重启失败！${NC}"
+                            else
+                                echo -e "${RED}没有运行中的镜像！${NC}"
+                            fi
+                            break
+                        else
+                            echo -e "${RED}无效的选择，请重试！${NC}"
+                        fi
+                    done
+                fi
+                read -n 1 -s -r -p "按任意键返回..."
+                ;;
+            0) break ;;
+            *) echo -e "${RED}无效的选择，请重试！${NC}" ;;
+        esac
+    done
+}
+
 # 定义命名空间
 declare -A RAINBOW_PROMPT
 
@@ -722,7 +842,7 @@ check_ldnmp
     echo -e "----------------------------"
     echo -e "${BLUE}3.${NC} ${LIGHTCYAN}容器管理${NC}    ${LIGHTBLUE}4.${NC} ${GREEN}简单图床2.0${NC}"
     echo -e "----------------------------"
-    echo -e "${DEEPRED}5.${NC} ${RED}增加1G空间${NC}"
+    echo -e "${DEEPRED}5.${NC} ${RED}镜像管理${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}"
     echo -e "============================"
@@ -872,14 +992,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
             ;;
             
         5)
-           echo "正在创建1G的交换空间..."
-            fallocate -l 1G /swapfile
-            chmod 600 /swapfile
-            mkswap /swapfile
-            swapon /swapfile
-            echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
-            echo "1G的交换空间已成功创建并启用。"
-            read -n 1 -s -r -p "按任意键返回菜单..."
+           image_management #镜像管理
             ;;  
         0)
             echo "返回主菜单..."
