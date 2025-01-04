@@ -111,11 +111,9 @@ check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
         echo "sudo 未安装，正在后台安装..."
         # 在后台运行安装命令并隐藏输出
-        (apt update &> /dev/null && apt install -y sudo &> /dev/null) &
-        # 使用 nohup 使其在后台运行
         nohup bash -c 'apt update &> /dev/null && apt install -y sudo &> /dev/null' &
     else
-        echo "sudo 已安装或已存在。" &> /dev/null
+        echo "sudo 已安装或已存在。" > /dev/null  # 确保输出被隐藏
     fi
 }
 
