@@ -853,7 +853,18 @@ echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则
 
     case $sys_choice in
         1)
-            execute_script "https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/docker" "Docker管理完成。"
+            # 安装 Docker 和 Docker Compose
+install_docker() {
+    if command -v docker >/dev/null 2>&1; then
+        echo -e "${GREEN}Docker 已安装，跳过安装步骤。${NC}"
+    else
+        echo -e "${BLUE}正在安装 Docker 和 Docker Compose...${NC}"
+        # 运行用户提供的完整安装命令
+        sudo curl -fsSL https://get.docker.com | bash && sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose && sudo systemctl start docker && sudo systemctl enable docker
+        echo -e "${GREEN}Docker 和 Docker Compose 安装完成！${NC}"
+    fi
+    read -n 1 -s -r -p "按任意键返回..."
+}
             ;;
         2)
             clear  # 清除屏幕
