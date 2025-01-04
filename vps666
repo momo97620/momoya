@@ -1014,7 +1014,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
             ;;  
             
         6)
-           calculate _sum
+           calculate_sum
             ;;
             
         0)
@@ -1242,7 +1242,7 @@ read -n 1 -s -r -p "按任意键返回上一页菜单"
 }
 
 # 定义计算和的函数
-calculate _sum() {
+calculate_sum(){
     # 提示用户输入第一个数字
     read -p "请输入第一个数字: " num1
 
