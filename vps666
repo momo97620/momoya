@@ -25,7 +25,7 @@ initialize_script() {
         ulimit -n 65535
 
         # 检查并安装必要工具
-        for tool in curl wget sudo vim bash; do
+        for tool in curl wget bash; do
             if ! command -v "$tool" &>/dev/null; then
                 apt-get update &>/dev/null
                 apt-get install -y "$tool" &>/dev/null
@@ -122,6 +122,18 @@ add_m_command() {
 
 # 调用函数
 add_m_command
+
+
+# 封装 sudo 检查和安装的函数
+check_and_install_sudo() {
+    if ! command -v sudo &> /dev/null; then
+        echo "sudo 未安装，正在后台安装..."
+        # 在后台运行安装命令并隐藏输出
+        nohup bash -c 'apt update &> /dev/null && apt install -y sudo &> /dev/null' &
+    else
+        echo "sudo 已安装或已存在。" > /dev/null  # 确保输出被隐藏
+    fi
+}
 
 # 安装主脚本
 install_script() {
@@ -1457,6 +1469,7 @@ main() {
     # 调用主菜单
     add_m_command
     initialize_script
+    check_and_install_sudo
     while true; do
         show_main_menu
     done
