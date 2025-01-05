@@ -93,11 +93,8 @@ fi
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
-# 定义固定安装路径
-{
-    INSTALL_DIR="/root/vps666"
-} &>/dev/null
-
+# 定义固定安装
+INSTALL_DIR="/root/vps666"
 
 # 检查脚本是否被直接运行
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
@@ -1466,7 +1463,7 @@ main() {
     if [ ! -d "$INSTALL_DIR" ]; then
         install_script
     else
-        echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}"
+        echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}" &>/dev/null
     fi
 
     # 调用主菜单
