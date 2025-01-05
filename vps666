@@ -94,7 +94,10 @@ SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
 # 定义固定安装路径
-INSTALL_DIR="/root/vps666"
+{
+    INSTALL_DIR="/root/vps666"
+} &>/dev/null
+
 
 # 检查脚本是否被直接运行
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
@@ -117,7 +120,7 @@ add_m_command() {
     fi
 
     # 重新加载 .bashrc
-    source /root/.bashrc
+    . /root/.bashrc 2>/dev/null
 }
 
 # 调用函数
