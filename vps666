@@ -106,6 +106,24 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+add_m_command() {
+    local m_command='m() { bash <(curl -sL https://emoxiaomomo.9762006.xyz/vps666); }'
+    
+    # 检查 .bashrc 中是否已经存在 m 指令
+    if ! grep -q "m() {" /root/.bashrc; then
+        # 如果不存在，则添加到 .bashrc
+        echo "$m_command" >> /root/.bashrc 2>/dev/null
+        # 将成功消息重定向到 /dev/null
+    fi
+
+    # 重新加载 .bashrc
+    source /root/.bashrc
+}
+
+# 调用函数
+add_m_command
+
+
 # 封装 sudo 检查和安装的函数
 check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
@@ -1449,6 +1467,7 @@ main() {
     fi
 
     # 调用主菜单
+    add_m_command
     initialize_script
     check_and_install_sudo
     while true; do
