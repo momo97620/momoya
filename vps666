@@ -13,69 +13,6 @@ PINK='\033[38;5;198m'     # 深粉色
 DEEPRED='\033[0;91m'      # 深红色
 NC='\033[0m'              # 无颜色
 
-# 定义缓存目录和有效期
-CACHE_DIR="/tmp/vps_cache"
-CACHE_TTL=3600  # 缓存有效期（秒）
-mkdir -p "$CACHE_DIR" &>/dev/null  # 创建缓存目录
-
-# 初始化优化脚本运行环境
-initialize_script() {
-    {
-        # 提高文件描述符限制
-        ulimit -n 65535
-
-        # 检查并安装必要工具
-        for tool in curl wget bash; do
-            if ! command -v "$tool" &>/dev/null; then
-                apt-get update &>/dev/null
-                apt-get install -y "$tool" &>/dev/null
-            fi
-        done
-
-        # 清理磁盘缓存
-        echo 3 > /proc/sys/vm/drop_caches
-
-        # 提升当前脚本优先级
-        renice -n -5 $$ &>/dev/null
-    } &>/dev/null  # 隐藏所有输出
-}
-
-# 获取缓存内容或生成新缓存
-# 参数1: 缓存文件名
-# 参数2: 需要执行的命令
-get_cache() {
-    local cache_file="$CACHE_DIR/$1"
-    local command="$2"
-
-    {
-        # 检查缓存是否存在且未过期
-        if [ -f "$cache_file" ]; then
-            local cache_age=$(( $(date +%s) - $(stat -c %Y "$cache_file") ))
-            if [ "$cache_age" -lt "$CACHE_TTL" ]; then
-                cat "$cache_file"
-                return
-            fi
-        fi
-
-        # 执行命令并生成缓存
-        eval "$command" > "$cache_file"
-        cat "$cache_file"
-    } &>/dev/null  # 隐藏所有输出
-}
-
-# 缓存子脚本下载并执行
-execute_script() {
-    local script_url="$1"
-    local success_message="$2"
-    local script_name=$(basename "$script_url")
-    local script_cache="$CACHE_DIR/$script_name"
-
-    get_cache "$script_name" "curl -sSL $script_url -o $script_cache"
-    bash "$script_cache" &>/dev/null  # 隐藏脚本执行输出
-}
-
-# 调用初始化优化函数（隐藏输出）
-initialize_script &
         
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
@@ -1065,7 +1002,7 @@ echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则
         1)
             install_docker
             ;;
-        4)
+        4) 
             clear  # 清除屏幕
 # 颜色定义
 GREEN='\033[0;32m'
@@ -1449,7 +1386,6 @@ main() {
     fi
 
     # 调用主菜单
-    initialize_script
     check_and_install_sudo
     while true; do
         show_main_menu
