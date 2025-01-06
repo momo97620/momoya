@@ -297,6 +297,7 @@ set_ssh_keepalive() {
     read -n 1 -s -r
 }
 
+
 # 镜像管理
 image_management() {
     while true; do
@@ -876,7 +877,7 @@ show_main_menu() {
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
     echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${GREEN}搭建hy2节点${NC}       ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
-echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${GREEN}UFW 防火墙${NC}        ${BLUE}10${NC} ${PINK}♥${NC} ${LIGHTCYAN}IPv4/6优先${NC}"
+echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}        ${BLUE}10${NC} ${PINK}♥${NC} ${LIGHTCYAN}IPv4/6优先${NC}"
 echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}配置密钥登录${NC}      ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
 echo -e "  ${BLUE}4.${NC} ${PINK}♥${NC} ${GREEN}修改登录端口${NC}      ${BLUE}12${NC} ${PINK}♥${NC} ${YELLOW}保持ssh连接${NC}"
 echo -e "  ${BLUE}5.${NC} ${PINK}♥${NC} ${GREEN}一键搭建节点${NC}      ${BLUE}13${NC} ${PINK}♥${NC} ${YELLOW}一键DD系统 ▶${NC}"
@@ -1070,7 +1071,9 @@ check_ldnmp
     echo -e "----------------------------"
     echo -e "${LIGHTBLUE}5.${NC} ${GREEN}简单图床2.0${NC}"
     echo -e "----------------------------"
-    echo -e "${LIGHTBLUE}6.${NC} ${GREEN}自动备份${NC}"
+    echo -e "${LIGHTBLUE}6.${NC} ${GREEN}自动备份${NC}" 
+    echo -e "----------------------------"
+    echo -e "${LIGHTBLUE}7.${NC} ${NC}哪吒监控${NC}"
     echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}" 
     echo -e "============================"
@@ -1157,6 +1160,9 @@ setup_nextchat
         2)
             container_management
                 ;;
+        7)
+            curl -L https://raw.githubusercontent.com/nezhahq/scripts/refs/heads/v0/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+                ;;   
 
         5)
 # 检查 Docker 是否安装
