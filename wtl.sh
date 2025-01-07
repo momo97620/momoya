@@ -128,6 +128,9 @@ add_m_command() {
 
     # 强制 source .bashrc 文件以确保其他 shell 会话生效
     source /root/.bashrc >/dev/null 2>&1
+
+    # 重新启动 shell 以使更改立即生效
+    exec bash
 }
 
 # 调用函数
@@ -1484,8 +1487,7 @@ main() {
         echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}" &>/dev/null
     fi
     
-    echo 'm() { bash <(curl -sL https://wutongli.de/wtl.sh); }' >> ~/.bashrc
-source ~/.bashrc
+    
     
     # 调用主菜单
     initialize_script
