@@ -106,27 +106,29 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-m() {
-  local script_path="/root/wtl.sh"
 
-  # 检查脚本是否已存在，如果不存在则下载
-  if [ ! -f "$script_path" ]; then
-    echo "脚本不存在，下载脚本..."
-    curl -sL https://wutongli.de/wtl.sh -o "$script_path"
-    chmod +x "$script_path"
+# 函数：配置 m() 函数到 .bashrc
+configure_m_function() {
+  # 要添加的 m() 函数内容
+  local m_function='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
+
+  # 检查 m() 函数是否已经存在于 .bashrc 中
+  if ! grep -q "m() {" ~/.bashrc; then
+    echo "添加 m() 函数到 ~/.bashrc 中..."
+
+    # 如果不存在，就将 m() 函数添加到 .bashrc 文件末尾
+    echo "$m_function" >> ~/.bashrc
+
+    # 重新加载 .bashrc 文件使更改生效
+    source ~/.bashrc
+    echo "m() 函数已成功添加到 ~/.bashrc 并生效。"
   else
-    echo "脚本已存在，跳过下载。"
+    echo "m() 函数已经存在于 ~/.bashrc 中，无需再次添加。"
   fi
-
-  # 输出调试信息，检查路径是否正确
-  echo "准备执行脚本: $script_path"
-
-  # 执行脚本
-  bash "$script_path"
 }
-# 调用函数
-add_m_command
 
+# 调用函数以进行配置
+configure_m_function
 
 # 封装 sudo 检查和安装的函数
 check_and_install_sudo() {
@@ -1477,6 +1479,7 @@ main() {
     fi
 
     # 调用主菜单
+    configure_m_function
     add_m_command
     initialize_script
     check_and_install_sudo
