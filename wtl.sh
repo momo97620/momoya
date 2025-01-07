@@ -112,14 +112,16 @@ m() {
   # 检查脚本是否已存在，如果不存在则下载
   if [ ! -f "$script_path" ]; then
     echo "脚本不存在，下载脚本..."
-    curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh -o "$script_path"
+    curl -sL https://wutongli.de/wtl.sh -o "$script_path"
     chmod +x "$script_path"
   else
     echo "脚本已存在，跳过下载。"
   fi
 
-  # 执行脚本，确保直接调用文件路径
-  echo "执行脚本..."
+  # 输出调试信息，检查路径是否正确
+  echo "准备执行脚本: $script_path"
+
+  # 执行脚本
   bash "$script_path"
 }
 # 调用函数
