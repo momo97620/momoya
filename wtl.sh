@@ -106,22 +106,18 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# 函数：配置 m() 函数到 .bashrc
-configure_m_function() {
-  # 要添加的 m() 函数内容
-  local m_function='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
+add_m_command() {
+    local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
+    
+    # 检查 .bashrc 中是否已经存在 m 指令
+    if ! grep -q "m() {" /root/.bashrc; then
+        # 如果不存在，则添加到 .bashrc
+        echo "$m_command" >> /root/.bashrc 2>/dev/null
+        # 将成功消息重定向到 /dev/null
+    fi
 
-  # 检查 m() 函数是否已经存在于 .bashrc 中
-  if ! grep -q "m() {" ~/.bashrc; then
-    # 如果不存在，则将 m() 函数添加到 .bashrc 文件末尾
-    echo "$m_function" >> ~/.bashrc
-  fi
-
-  # 重新加载 .bashrc 文件并隐藏输出
-  source ~/.bashrc > /dev/null 2>&1
-
-  # 使用 exec 来重新加载当前 shell 环境，使更改立即生效
-  exec bash -l > /dev/null 2>&1
+    # 重新加载 .bashrc
+    . /root/.bashrc 2>/dev/null
 }
 
 # 调用函数以进行配置
@@ -1476,10 +1472,9 @@ main() {
     fi
 
     # 调用主菜单
-    configure_m_function
-    add_m_command
     initialize_script
     check_and_install_sudo
+    add_m_command
     while true; do
         show_main_menu
     done
