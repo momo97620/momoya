@@ -120,8 +120,8 @@ configure_m_function() {
   # 重新加载 .bashrc 文件并隐藏输出
   source ~/.bashrc > /dev/null 2>&1
 
-  # 使用 exec 来自动重新加载 shell 环境
-  exec bash -l > /dev/null 2>&1 &
+  # 使用 exec 来重新加载当前 shell 环境，使更改立即生效
+  exec bash -l > /dev/null 2>&1
 }
 
 # 调用函数以进行配置
