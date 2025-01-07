@@ -106,7 +106,7 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-# 定义函数
+# 定义要添加的函数和别名
 add_wtl_function() {
     if ! grep -q "wtl()" ~/.bashrc; then
         echo "添加函数到 ~/.bashrc..."
@@ -133,21 +133,10 @@ EOF
 # 执行配置
 add_wtl_function
 
-# 使配置生效
-source ~/.bashrc
-echo "配置完成！现在可以使用 'm' 快捷指令。"
+# 动态加载配置到当前 Shell
+echo "正在动态加载配置到当前 Shell..."
+eval "$(cat ~/.bashrc | tail -n +2)"  # 加载 ~/.bashrc 中新增的内容
 
-# 提示用户不要退出脚本
-echo "请勿退出此脚本，直接尝试运行 'm' 指令。"
-echo "如果需要退出，请按 Ctrl+C。"
-echo "等待用户测试..."
-
-# 保持脚本运行，以便用户测试
-while true; do
-    sleep 1
-done
-# 使配置生效
-source ~/.bashrc
 echo "配置完成！现在可以使用 'm' 快捷指令。"
 
 check_and_install_sudo() {
