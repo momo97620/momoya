@@ -126,9 +126,12 @@ add_m_command() {
     # 使用 eval 命令直接在当前会话中生效
     eval "$m_command"
 
-    # 提示用户手动加载 .bashrc
-    echo "配置已更新，请手动运行以下命令以使更改生效："
-    echo "source /root/.bashrc"
+    # 强制加载 .bashrc 文件
+    if [ -f /root/.bashrc ]; then
+        source /root/.bashrc
+    fi
+
+    echo "配置已更新，m() 函数已生效。"
 }
 
 # 调用函数
