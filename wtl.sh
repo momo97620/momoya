@@ -133,11 +133,9 @@ EOF
 # 执行配置
 add_wtl_function
 
-# 动态加载配置到当前 Shell
-echo "正在动态加载配置到当前 Shell..."
-eval "$(cat ~/.bashrc | tail -n +2)"  # 加载 ~/.bashrc 中新增的内容
-
-echo "配置完成！现在可以使用 'm' 快捷指令。"
+# 替换当前 Shell
+echo "配置完成！正在重新加载 Shell 以使配置生效..."
+exec bash
 
 check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
