@@ -78,7 +78,7 @@ execute_script() {
 initialize_script &
         
 # 自动设置 m 指令快捷启动脚本
-# echo "正在设置 m 指令快捷启动脚本..." > /dev/null 2>&1
+echo "正在设置 m 指令快捷启动脚本..." > /dev/null 2>&1
 
 # 设置主脚本路径
 target_script="/root/wtl.sh"
@@ -97,7 +97,7 @@ fi
 
 # 检查是否已设置正确的符号链接
 if [ -L "/usr/local/bin/m" ] && [ "$(readlink /usr/local/bin/m)" == "$target_script" ]; then
-  #echo "m 指令已正确设置，无需重复设置。" > /dev/null 2>&1
+  # echo "m 指令已正确设置，无需重复设置。" > /dev/null 2>&1
 else
   # 创建或更新符号链接并确保目标脚本可执行
   ln -sf "$target_script" /usr/local/bin/m > /dev/null 2>&1
