@@ -137,6 +137,19 @@ add_wtl_function
 source ~/.bashrc
 echo "配置完成！现在可以使用 'm' 快捷指令。"
 
+# 提示用户不要退出脚本
+echo "请勿退出此脚本，直接尝试运行 'm' 指令。"
+echo "如果需要退出，请按 Ctrl+C。"
+echo "等待用户测试..."
+
+# 保持脚本运行，以便用户测试
+while true; do
+    sleep 1
+done
+# 使配置生效
+source ~/.bashrc
+echo "配置完成！现在可以使用 'm' 快捷指令。"
+
 check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
         echo "sudo 未安装，正在后台安装..."
