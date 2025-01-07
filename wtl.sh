@@ -1,4 +1,4 @@
-#!/bin/bash
+  #!/bin/bash
 
 # 定义颜色
 RED='\033[0;31m'          # 红色
@@ -109,20 +109,32 @@ fi
 
 add_m_command() {
     local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
+
+    # 确保 /root/.bashrc 文件存在
     if [ ! -f /root/.bashrc ]; then
         touch /root/.bashrc
     fi
+
+    # 如果 .bashrc 已经存在 m() 函数定义，则删除旧的定义
     if grep -q "m() {" /root/.bashrc; then
-        # 删除旧的 m() 定义
         sed -i '/m() {/d' /root/.bashrc
     fi
 
-    # 添加新的 m() 函数定义
+    # 添加新的 m() 函数定义到 .bashrc
     echo "$m_command" >> /root/.bashrc
 
-    # 使用 source 命令重新加载 .bashrc
-    source ~/.bashrc
+    # 使用 eval 命令直接在当前会话中生效
+    eval "$m_command"
+
+    # 强制 source .bashrc 文件以确保其他 shell 会话生效
+    source /root/.bashrc >/dev/null 2>&1
 }
+
+# 调用函数
+add_m_command
+
+# 输出提示
+echo "m() 函数已添加并立即生效，无需重新连接 SSH。"
 
 # 封装 sudo 检查和安装的函数
 check_and_install_sudo() {
