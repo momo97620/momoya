@@ -78,31 +78,31 @@ execute_script() {
 initialize_script &
         
 # 自动设置 m 指令快捷启动脚本
-echo "正在设置 m 指令快捷启动脚本..."
+# echo "正在设置 m 指令快捷启动脚本..." > /dev/null 2>&1
 
 # 设置主脚本路径
 target_script="/root/wtl.sh"
 
 # 检查目标脚本是否存在
 if [ ! -f "$target_script" ]; then
-  echo "错误：主脚本文件未找到！路径：$target_script"
+  echo "错误：主脚本文件未找到！路径：$target_script" > /dev/null 2>&1
   exit 1
 fi
 
 # 检查是否具有符号链接权限
 if [ ! -w "/usr/local/bin" ]; then
-  echo "错误：需要管理员权限来创建符号链接。请使用 sudo 运行此脚本。"
+  echo "错误：需要管理员权限来创建符号链接。请使用 sudo 运行此脚本。" > /dev/null 2>&1
   exit 1
 fi
 
 # 检查是否已设置正确的符号链接
 if [ -L "/usr/local/bin/m" ] && [ "$(readlink /usr/local/bin/m)" == "$target_script" ]; then
-  echo "m 指令已正确设置，无需重复设置。"
+  #echo "m 指令已正确设置，无需重复设置。" > /dev/null 2>&1
 else
   # 创建或更新符号链接并确保目标脚本可执行
-  ln -sf "$target_script" /usr/local/bin/m
-  chmod +x "$target_script"
-  echo "成功设置 m 指令快捷启动脚本。现在可以通过 'm' 命令运行主脚本：$target_script"
+  ln -sf "$target_script" /usr/local/bin/m > /dev/null 2>&1
+  chmod +x "$target_script" > /dev/null 2>&1
+  echo "成功设置 m 指令快捷启动脚本。现在可以通过 'm' 命令运行主脚本：$target_script" > /dev/null 2>&1
 fi
 
 check_and_install_sudo() {
