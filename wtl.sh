@@ -212,7 +212,7 @@ set_ip_priority() {
 # 更新脚本
 update_script() {
     local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh"
-    local local_path="/root/wtl.ah"
+    local local_path="/root/wtl.sh"
 
     echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
 
