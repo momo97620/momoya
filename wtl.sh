@@ -123,6 +123,18 @@ add_m_command() {
     # 添加新的 m() 函数定义到 .bashrc
     echo "$m_command" >> /root/.bashrc
 
+    # 确保 /root/.profile 文件存在
+    if [ ! -f /root/.profile ]; then
+        touch /root/.profile
+    fi
+
+    # 如果 .profile 没有加载 .bashrc 的逻辑，则添加
+    if ! grep -q "source ~/.bashrc" /root/.profile; then
+        echo 'if [ -f ~/.bashrc ]; then' >> /root/.profile
+        echo '    source ~/.bashrc' >> /root/.profile
+        echo 'fi' >> /root/.profile
+    fi
+
     # 使用 eval 命令直接在当前会话中生效
     eval "$m_command"
 
@@ -136,6 +148,7 @@ add_m_command() {
 
 # 调用函数
 add_m_command
+
 
 # 封装 sudo 检查和安装的函数
 check_and_install_sudo() {
