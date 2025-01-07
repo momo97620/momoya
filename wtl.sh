@@ -121,7 +121,7 @@ add_m_command() {
     echo "$m_command" >> /root/.bashrc
 
     # 使用 source 命令重新加载 .bashrc
-    source /root/.bashrc
+    source ~/.bashrc
 }
 
 # 封装 sudo 检查和安装的函数
