@@ -97,7 +97,7 @@ fi
 
 # 检查是否已设置正确的符号链接
 if [ -L "/usr/local/bin/m" ] && [ "$(readlink /usr/local/bin/m)" == "$target_script" ]; then
-  # echo "m 指令已正确设置，无需重复设置。" > /dev/null 2>&1
+  echo "m 指令已正确设置，无需重复设置。" > /dev/null 2>&1
 else
   # 创建或更新符号链接并确保目标脚本可执行
   ln -sf "$target_script" /usr/local/bin/m > /dev/null 2>&1
