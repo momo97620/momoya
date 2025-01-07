@@ -118,9 +118,9 @@ m() {
     echo "脚本已存在，跳过下载。"
   fi
 
-  # 执行脚本
+  # 执行脚本，确保直接调用文件路径
   echo "执行脚本..."
-  "$script_path"
+  bash "$script_path"
 }
 # 调用函数
 add_m_command
