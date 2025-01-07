@@ -126,14 +126,13 @@ add_m_command() {
     # 使用 eval 命令直接在当前会话中生效
     eval "$m_command"
 
-    # 提示用户重新加载 shell
-    echo "配置已更新，正在重新加载 shell..."
-    exec bash
+    # 提示用户手动加载 .bashrc
+    echo "配置已更新，请手动运行以下命令以使更改生效："
+    echo "source /root/.bashrc"
 }
 
 # 调用函数
 add_m_command
-
 
 # 封装 sudo 检查和安装的函数
 check_and_install_sudo() {
