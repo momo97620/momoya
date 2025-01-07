@@ -14,7 +14,7 @@ DEEPRED='\033[0;91m'      # 深红色
 NC='\033[0m'              # 无颜色
 
 # 定义缓存目录和有效期
-CACHE_DIR="/tmp/vps_cache"
+CACHE_DIR="/root/vps_cache"
 CACHE_TTL=3600  # 缓存有效期（秒）
 mkdir -p "$CACHE_DIR" &>/dev/null  # 创建缓存目录
 
@@ -79,7 +79,7 @@ initialize_script &
         
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
-SCRIPT_PATH="/tmp/wtl.sh"
+SCRIPT_PATH="/root/wtl.sh"
 
 # 检查符号链接是否已经存在
 if [ ! -L "$LINK_NAME" ]; then
@@ -94,7 +94,7 @@ SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
 # 定义固定安装
-INSTALL_DIR="/tmp/wtl.sh"
+INSTALL_DIR="/root/wtl.sh"
 
 # 检查脚本是否被直接运行
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
@@ -107,15 +107,19 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 m() {
-  local script_path="/tmp/wtl.sh"
+  local script_path="/root/wtl.sh"
 
-  # 检查脚本是否已存在，如果存在则跳过下载
+  # 检查脚本是否已存在，如果不存在则下载
   if [ ! -f "$script_path" ]; then
+    echo "脚本不存在，下载脚本..."
     curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh -o "$script_path"
     chmod +x "$script_path"
+  else
+    echo "脚本已存在，跳过下载。"
   fi
 
   # 执行脚本
+  echo "执行脚本..."
   "$script_path"
 }
 # 调用函数
