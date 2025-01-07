@@ -79,7 +79,7 @@ initialize_script &
         
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
-SCRIPT_PATH="/root/vps666"
+SCRIPT_PATH="/root/wtl.sh"
 
 # 检查符号链接是否已经存在
 if [ ! -L "$LINK_NAME" ]; then
@@ -94,7 +94,7 @@ SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
 # 定义固定安装
-INSTALL_DIR="/root/vps666"
+INSTALL_DIR="/root/wtl.sh"
 
 # 检查脚本是否被直接运行
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
@@ -107,7 +107,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 add_m_command() {
-    local m_command='m() { bash <(curl -sL https://emoxiaomomo.9762006.xyz/vps666); }'
+    local m_command='m() { bash <(curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh); }'
     
     # 检查 .bashrc 中是否已经存在 m 指令
     if ! grep -q "m() {" /root/.bashrc; then
@@ -119,7 +119,6 @@ add_m_command() {
     # 重新加载 .bashrc
     . /root/.bashrc 2>/dev/null
 }
-
 # 调用函数
 add_m_command
 
@@ -231,8 +230,8 @@ set_ip_priority() {
 
 # 更新脚本
 update_script() {
-    local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/vps666"
-    local local_path="/root/vps666"
+    local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh"
+    local local_path="/root/wtl.ah"
 
     echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
 
