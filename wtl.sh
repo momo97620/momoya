@@ -108,10 +108,10 @@ fi
 
 
 add_m_command() {
-    local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'确保 .bashrc 文件存在
+    local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
     if [ ! -f /root/.bashrc ]; then
         touch /root/.bashrc
-    fi检查是否已经存在 m() 函数定义
+    fi
     if grep -q "m() {" /root/.bashrc; then
         # 删除旧的 m() 定义
         sed -i '/m() {/d' /root/.bashrc
