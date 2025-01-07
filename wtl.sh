@@ -106,23 +106,27 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+        
+# 添加 m() 函数到 .bashrc
 add_m_command() {
     local m_command='m() { bash <(curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh); }'
     
-    # 检查 .bashrc 中是否已经存在 m 指令
+    # 检查 .bashrc 中是否已经存在 m() 函数
     if ! grep -q "m() {" /root/.bashrc; then
-        # 如果不存在，则添加到 .bashrc
+        # 如果不存在，则将 m() 函数添加到 .bashrc 文件末尾
         echo "$m_command" >> /root/.bashrc 2>/dev/null
-        # 将成功消息重定向到 /dev/null
     fi
 
-    # 重新加载 .bashrc
-    . /root/.bashrc 2>/dev/null
+    # 重新加载 .bashrc 配置
+    source /root/.bashrc
+
+    # 使用 exec 来重新加载当前 shell，使更改立即生效
+    exec bash -l
 }
 
 # 调用函数以进行配置
-configure_m_function
-
+add_m_command
+    
 # 封装 sudo 检查和安装的函数
 check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
