@@ -126,18 +126,14 @@ add_m_command() {
     # 使用 eval 命令直接在当前会话中生效
     eval "$m_command"
 
-    # 强制 source .bashrc 文件以确保其他 shell 会话生效
-    source /root/.bashrc >/dev/null 2>&1
-
-    # 重新启动 shell 以使更改立即生效
+    # 提示用户重新加载 shell
+    echo "配置已更新，正在重新加载 shell..."
     exec bash
 }
 
 # 调用函数
 add_m_command
 
-# 输出提示
-echo "m() 函数已添加并立即生效，无需重新连接 SSH。"
 
 # 封装 sudo 检查和安装的函数
 check_and_install_sudo() {
