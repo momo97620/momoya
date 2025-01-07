@@ -106,7 +106,6 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-
 # 函数：配置 m() 函数到 .bashrc
 configure_m_function() {
   # 要添加的 m() 函数内容
@@ -114,17 +113,15 @@ configure_m_function() {
 
   # 检查 m() 函数是否已经存在于 .bashrc 中
   if ! grep -q "m() {" ~/.bashrc; then
-    echo "添加 m() 函数到 ~/.bashrc 中..."
-
-    # 如果不存在，就将 m() 函数添加到 .bashrc 文件末尾
+    # 如果不存在，则将 m() 函数添加到 .bashrc 文件末尾
     echo "$m_function" >> ~/.bashrc
-
-    # 重新加载 .bashrc 文件使更改生效
-    source ~/.bashrc
-    echo "m() 函数已成功添加到 ~/.bashrc 并生效。"
-  else
-    echo "m() 函数已经存在于 ~/.bashrc 中，无需再次添加。"
   fi
+
+  # 重新加载 .bashrc 文件并隐藏输出
+  source ~/.bashrc > /dev/null 2>&1
+
+  # 使用 exec 来自动重新加载 shell 环境
+  exec bash -l > /dev/null 2>&1 &
 }
 
 # 调用函数以进行配置
