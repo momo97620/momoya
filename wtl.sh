@@ -89,54 +89,6 @@ else
     :
 fi
 
-# 获取脚本路径
-SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
-SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
-
-# 定义固定安装
-INSTALL_DIR="/root/wtl.sh"
-
-# 检查脚本是否被直接运行
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-    exit 1
-fi
-
-# 检查是否以 root 用户运行
-if [ "$(id -u)" != "0" ]; then
-    exit 1
-fi
-
-# 定义要添加的函数和别名
-add_wtl_function() {
-    if ! grep -q "wtl()" ~/.bashrc; then
-        echo "添加函数到 ~/.bashrc..."
-        cat << 'EOF' >> ~/.bashrc
-# 封装函数：wtl
-wtl() {
-    if [ -f /root/wtl.sh ]; then
-        echo "正在运行 /root/wtl.sh..."
-        bash /root/wtl.sh "$@"
-    else
-        echo "错误：/root/wtl.sh 不存在！"
-    fi
-}
-
-# 绑定快捷指令
-alias m='wtl'
-EOF
-        echo "函数添加完成！"
-    else
-        echo "函数已存在，无需添加。"
-    fi
-}
-
-# 执行配置
-add_wtl_function
-
-# 替换当前 Shell
-echo "配置完成！正在重新加载 Shell 以使配置生效..."
-exec bash
-
 check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
         echo "sudo 未安装，正在后台安装..."
@@ -1489,7 +1441,6 @@ main() {
     # 调用主菜单
     initialize_script
     check_and_install_sudo
-    add_wtl_function
     while true; do
         show_main_menu
     done
