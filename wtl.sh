@@ -209,22 +209,31 @@ set_ip_priority() {
 
 
 
-# 更新脚本
 update_script() {
     local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh"
-    local local_path="/root/wtl.sh"
+    local local_path="/root/wtl.sh"  # 确保文件名是正确的
 
     echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
 
-    if curl -sSL "$remote_url" -o "$local_path"; then
-        chmod +x "$local_path"
-        echo -e "${GREEN}脚本更新成功！最新版本已保存到 $local_path。${NC}"
+    # 检查远程 URL 是否可访问
+    if curl -s --head "$remote_url" | grep "200 OK" > /dev/null; then
+        if curl -sSL "$remote_url" -o "$local_path"; then
+            chmod +x "$local_path"
+            echo -e "${GREEN}脚本更新成功！最新版本已保存到 $local_path。${NC}"
+
+            # 立即执行更新后的脚本
+            echo -e "${YELLOW}正在执行更新后的脚本...${NC}"
+            exec "$local_path"  # 使用 exec 替换当前进程
+        else
+            echo -e "${RED}脚本更新失败，请检查远程 URL 是否正确。${NC}"
+        fi
     else
-        echo -e "${RED}脚本更新失败，请检查远程 URL 是否正确。${NC}"
+        echo -e "${RED}无法访问远程 URL，请检查网络连接或 URL 是否正确。${NC}"
     fi
 
     read -p "按任意键返回主菜单..."
 }
+
 
 set_ssh_keepalive() {
     local config_file="/etc/ssh/sshd_config"
