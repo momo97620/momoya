@@ -80,8 +80,8 @@ initialize_script &
 # 自动设置 m 指令快捷启动脚本
 echo "正在设置 m 指令快捷启动脚本..."
 
-# 获取当前脚本的绝对路径
-target_script="$(pwd)/$(basename "$0")"
+# 设置主脚本路径
+target_script="/root/wtl.sh"
 
 # 检查目标脚本是否存在
 if [ ! -f "$target_script" ]; then
