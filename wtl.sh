@@ -79,7 +79,7 @@ initialize_script &
         
 # 定义符号链接的目标和链接名称
 LINK_NAME="/usr/local/bin/m"
-SCRIPT_PATH="/root/wtl.sh"
+SCRIPT_PATH="/tmp/wtl.sh"
 
 # 检查符号链接是否已经存在
 if [ ! -L "$LINK_NAME" ]; then
@@ -94,7 +94,7 @@ SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
 # 定义固定安装
-INSTALL_DIR="/root/wtl.sh"
+INSTALL_DIR="/tmp/wtl.sh"
 
 # 检查脚本是否被直接运行
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
@@ -106,17 +106,17 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-add_m_command() {
-    local m_command='m() { curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh -o /tmp/wtl.sh && bash /tmp/wtl.sh; }'
-    
-    # 检查 .bashrc 中是否已经存在 m 指令
-    if ! grep -q "m() {" /root/.bashrc; then
-        # 如果不存在，则添加到 .bashrc
-        echo "$m_command" >> /root/.bashrc 2>/dev/null
-    fi
+m() {
+  local script_path="/tmp/wtl.sh"
 
-    # 重新加载 .bashrc
-    . /root/.bashrc 2>/dev/null
+  # 检查脚本是否已存在，如果存在则跳过下载
+  if [ ! -f "$script_path" ]; then
+    curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh -o "$script_path"
+    chmod +x "$script_path"
+  fi
+
+  # 执行脚本
+  "$script_path"
 }
 # 调用函数
 add_m_command
