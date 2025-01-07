@@ -106,11 +106,16 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-        
+
+# 创建 .bashrc 文件（如果不存在）
+if [ ! -f /root/.bashrc ]; then
+    touch /root/.bashrc
+fi
+
 # 添加 m() 函数到 .bashrc
 add_m_command() {
     local m_command='m() { bash <(curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh); }'
-    
+
     # 检查 .bashrc 中是否已经存在 m() 函数
     if ! grep -q "m() {" /root/.bashrc; then
         # 如果不存在，则将 m() 函数添加到 .bashrc 文件末尾
@@ -126,7 +131,7 @@ add_m_command() {
 
 # 调用函数以进行配置
 add_m_command
-    
+
 # 封装 sudo 检查和安装的函数
 check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
