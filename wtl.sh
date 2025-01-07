@@ -143,7 +143,9 @@ add_m_command() {
         source /root/.bashrc
     fi
 
-    echo "配置已更新，m() 函数已生效。"
+    # 强制重新加载 shell（模拟登录过程）
+    echo "配置已更新，正在重新加载 shell..."
+    exec bash --login
 }
 
 # 调用函数
