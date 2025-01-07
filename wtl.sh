@@ -115,7 +115,7 @@ fi
 add_m_command() {
     local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
 
-    # 确保 /root/.bashrc 文件存在
+    # 确保 .bashrc 文件存在
     if [ ! -f /root/.bashrc ]; then
         touch /root/.bashrc
     fi
@@ -129,9 +129,9 @@ add_m_command() {
     # 添加新的 m() 函数定义
     echo "$m_command" >> /root/.bashrc
 
-    # 让新的定义立即生效
+    # 强制立即重新加载 .bashrc
     if [ "$SHELL" = "/bin/bash" ]; then
-        source /root/.bashrc
+        exec bash
     fi
 }
 
