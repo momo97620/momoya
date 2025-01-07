@@ -115,19 +115,24 @@ fi
 add_m_command() {
     local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
 
-    # 检查 .bashrc 中是否已经存在 m() 函数
-    if ! grep -q "m() {" /root/.bashrc; then
-        # 如果不存在，则将 m() 函数添加到 .bashrc 文件末尾
-        echo "$m_command" >> /root/.bashrc
-    else
-        # 如果存在重复的 m() 函数定义，删除它们
-        sed -i '/m() {/d' /root/.bashrc
-        # 然后添加新的 m() 函数
-        echo "$m_command" >> /root/.bashrc
+    # 确保 /root/.bashrc 文件存在
+    if [ ! -f /root/.bashrc ]; then
+        touch /root/.bashrc
     fi
 
-    # 重新加载 .bashrc 配置
-    source /root/.bashrc
+    # 检查是否已经存在 m() 函数定义
+    if grep -q "m() {" /root/.bashrc; then
+        # 删除旧的 m() 定义
+        sed -i '/m() {/d' /root/.bashrc
+    fi
+
+    # 添加新的 m() 函数定义
+    echo "$m_command" >> /root/.bashrc
+
+    # 让新的定义立即生效
+    if [ "$SHELL" = "/bin/bash" ]; then
+        source /root/.bashrc
+    fi
 }
 
 # 封装 sudo 检查和安装的函数
