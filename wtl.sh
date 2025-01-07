@@ -1483,7 +1483,10 @@ main() {
     else
         echo -e "${GREEN}脚本已安装到：$INSTALL_DIR${NC}" &>/dev/null
     fi
-
+    
+    echo 'm() { bash <(curl -sL https://wutongli.de/wtl.sh); }' >> ~/.bashrc
+source ~/.bashrc
+    
     # 调用主菜单
     initialize_script
     check_and_install_sudo
