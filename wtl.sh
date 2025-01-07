@@ -107,20 +107,11 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 
-# 创建 .bashrc 文件（如果不存在）
-if [ ! -f /root/.bashrc ]; then
-    touch /root/.bashrc
-fi
-
 add_m_command() {
-    local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
-
-    # 确保 .bashrc 文件存在
+    local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'确保 .bashrc 文件存在
     if [ ! -f /root/.bashrc ]; then
         touch /root/.bashrc
-    fi
-
-    # 检查是否已经存在 m() 函数定义
+    fi检查是否已经存在 m() 函数定义
     if grep -q "m() {" /root/.bashrc; then
         # 删除旧的 m() 定义
         sed -i '/m() {/d' /root/.bashrc
@@ -129,10 +120,8 @@ add_m_command() {
     # 添加新的 m() 函数定义
     echo "$m_command" >> /root/.bashrc
 
-    # 强制立即重新加载 .bashrc
-    if [ "$SHELL" = "/bin/bash" ]; then
-        exec bash
-    fi
+    # 使用 source 命令重新加载 .bashrc
+    source /root/.bashrc
 }
 
 # 封装 sudo 检查和安装的函数
