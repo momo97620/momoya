@@ -107,13 +107,12 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 add_m_command() {
-    local m_command='m() { bash <(curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh); }'
+    local m_command='m() { curl -sL https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh | bash; }'
     
     # 检查 .bashrc 中是否已经存在 m 指令
     if ! grep -q "m() {" /root/.bashrc; then
         # 如果不存在，则添加到 .bashrc
         echo "$m_command" >> /root/.bashrc 2>/dev/null
-        # 将成功消息重定向到 /dev/null
     fi
 
     # 重新加载 .bashrc
