@@ -106,53 +106,37 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-
-add_m_command() {
-    local m_command='m() { bash <(curl -sL https://wutongli.de/wtl.sh); }'
-
-    # 确保 /root/.bashrc 文件存在
-    if [ ! -f /root/.bashrc ]; then
-        touch /root/.bashrc
+# 定义函数
+add_wtl_function() {
+    if ! grep -q "wtl()" ~/.bashrc; then
+        echo "添加函数到 ~/.bashrc..."
+        cat << 'EOF' >> ~/.bashrc
+# 封装函数：wtl
+wtl() {
+    if [ -f /root/wtl.sh ]; then
+        echo "正在运行 /root/wtl.sh..."
+        bash /root/wtl.sh "$@"
+    else
+        echo "错误：/root/wtl.sh 不存在！"
     fi
-
-    # 如果 .bashrc 已经存在 m() 函数定义，则删除旧的定义
-    if grep -q "m() {" /root/.bashrc; then
-        sed -i '/m() {/d' /root/.bashrc
-    fi
-
-    # 添加新的 m() 函数定义到 .bashrc
-    echo "$m_command" >> /root/.bashrc
-
-    # 确保 /root/.profile 文件存在
-    if [ ! -f /root/.profile ]; then
-        touch /root/.profile
-    fi
-
-    # 如果 .profile 没有加载 .bashrc 的逻辑，则添加
-    if ! grep -q "source ~/.bashrc" /root/.profile; then
-        echo 'if [ -f ~/.bashrc ]; then' >> /root/.profile
-        echo '    source ~/.bashrc' >> /root/.profile
-        echo 'fi' >> /root/.profile
-    fi
-
-    # 使用 eval 命令直接在当前会话中生效
-    eval "$m_command"
-
-    # 强制加载 .bashrc 文件
-    if [ -f /root/.bashrc ]; then
-        source /root/.bashrc
-    fi
-
-    # 强制重新加载 shell（模拟登录过程）
-    echo "配置已更新，正在重新加载 shell..."
-    exec bash --login
 }
 
-# 调用函数
-add_m_command
+# 绑定快捷指令
+alias m='wtl'
+EOF
+        echo "函数添加完成！"
+    else
+        echo "函数已存在，无需添加。"
+    fi
+}
 
+# 执行配置
+add_wtl_function
 
-# 封装 sudo 检查和安装的函数
+# 使配置生效
+source ~/.bashrc
+echo "配置完成！现在可以使用 'm' 快捷指令。"
+
 check_and_install_sudo() {
     if ! command -v sudo &> /dev/null; then
         echo "sudo 未安装，正在后台安装..."
@@ -1505,7 +1489,7 @@ main() {
     # 调用主菜单
     initialize_script
     check_and_install_sudo
-    add_m_command
+    add_wtl_function
     while true; do
         show_main_menu
     done
