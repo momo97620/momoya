@@ -1474,8 +1474,9 @@ while true; do
   echo "1. 配置反向代理"
   echo "2. 查看已配置的 IP 和证书"
   echo "3. 删除反向代理配置"
-  echo "4. 退出"
-  read -p "请输入选项 (1/2/3/4): " option
+  echo "0. 退出"
+  
+  read -p "请输入选项 (1/2/3/0): " option
 
   case $option in
     1)
@@ -1487,7 +1488,7 @@ while true; do
     3)
       delete_proxy
       ;;
-    4)
+    0)
       echo "退出程序。"
       exit 0
       ;;
@@ -1496,8 +1497,8 @@ while true; do
       ;;
   esac
 
-  # 等待用户输入任意键返回菜单
-  read -n 1 -s -r -p "按任意键返回菜单"
+  echo -e "\n按任意键返回菜单..."
+  read -n 1 -s
   echo
 done
             ;;
