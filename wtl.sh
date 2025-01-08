@@ -1384,56 +1384,122 @@ if [ "$EUID" -ne 0 ]; then
   exit
 fi
 
-# 第一步：安装必要的软件包
-sudo apt update
-sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+# 安装必要的软件包
+install_caddy() {
+  sudo apt update
+  sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
 
-# 第二步：添加 Caddy 的 GPG 密钥
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  # 添加 Caddy 的 GPG 密钥
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 
-# 第三步：添加 Caddy 的软件源
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+  # 添加 Caddy 的软件源
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
 
-# 第四步：更新软件包列表
-sudo apt update
-
-# 第五步：安装 Caddy
-sudo apt install -y caddy
-
-# 第六步：获取用户输入
-read -p "请输入你的反代域名: " domain
-read -p "请输入你要反代的 IP:端口: " proxy_target
-
-# 第七步：检查是否为 IPv6 地址并添加方括号
-if [[ "$proxy_target" =~ \[.*\] ]]; then
-  # Already has brackets
-  true
-elif [[ "$proxy_target" =~ : ]]; then
-  # Split IP and port
-  ip="${proxy_target%:*}"
-  port="${proxy_target##*:}"
-  proxy_target="[$ip]:$port"
-fi
-
-# 第八步：写入 Caddy 配置文件
-sudo bash -c "cat > /etc/caddy/Caddyfile <<EOF
-$domain {
-    tls mail@mail.com
-    encode gzip
-    reverse_proxy $proxy_target {
-        header_up Host {host}
-        header_up X-Real-IP {remote}
-        header_up X-Forwarded-For {remote}
-    }
+  # 更新软件包列表并安装 Caddy
+  sudo apt update
+  sudo apt install -y caddy
 }
-EOF"
 
-# 最后一步：重启并检查 Caddy 服务
-sudo systemctl restart caddy
-sudo systemctl status caddy
+# 配置反向代理
+configure_proxy() {
+  read -p "请输入你的反代域名: " domain
+  read -p "请输入你要反代的 IP:端口: " proxy_target
 
-# 等待用户输入任意键返回上一页菜单
-read -n 1 -s -r -p "按任意键返回上一页菜单"
+  # 检查是否为 IPv6 地址并添加方括号
+  if [[ "$proxy_target" =~ \[.*\] ]]; then
+    true
+  elif [[ "$proxy_target" =~ : ]]; then
+    ip="${proxy_target%:*}"
+    port="${proxy_target##*:}"
+    proxy_target="[$ip]:$port"
+  fi
+
+  # 写入 Caddy 配置文件
+  if grep -q "$domain" /etc/caddy/Caddyfile; then
+    echo "域名 $domain 已存在，跳过添加。"
+  else
+    sudo bash -c "echo '$domain {' >> /etc/caddy/Caddyfile"
+    sudo bash -c "echo '    tls mail@mail.com' >> /etc/caddy/Caddyfile"
+    sudo bash -c "echo '    encode gzip' >> /etc/caddy/Caddyfile"
+    sudo bash -c "echo '    reverse_proxy $proxy_target {' >> /etc/caddy/Caddyfile"
+    sudo bash -c "echo '        header_up Host {host}' >> /etc/caddy/Caddyfile"
+    sudo bash -c "echo '        header_up X-Real-IP {remote}' >> /etc/caddy/Caddyfile"
+    sudo bash -c "echo '        header_up X-Forwarded-For {remote}' >> /etc/caddy/Caddyfile"
+    sudo bash -c "echo '    }' >> /etc/caddy/Caddyfile"
+    sudo bash -c "echo '}' >> /etc/caddy/Caddyfile"
+    echo "已添加域名 $domain 的反向代理配置。"
+  fi
+
+  # 重新加载 Caddy 配置
+  sudo systemctl reload caddy
+}
+
+# 查看已配置的 IP 和证书
+view_configurations() {
+  echo "已配置的反向代理:"
+  grep -E '^\S+' /etc/caddy/Caddyfile | awk '{print $1}' | sort -u
+
+  echo -e "\n已配置的证书:"
+  sudo ls /etc/letsencrypt/live
+}
+
+# 删除反向代理配置
+delete_proxy() {
+  echo "已配置的反向代理:"
+  domains=( $(grep -E '^\S+' /etc/caddy/Caddyfile | awk '{print $1}' | sort -u) )
+  
+  if [ ${#domains[@]} -eq 0 ]; then
+    echo "没有可删除的反向代理配置。"
+    return
+  fi
+
+  select domain in "${domains[@]}"; do
+    if [ -n "$domain" ]; then
+      echo "正在删除域名 $domain 的反向代理配置..."
+      sudo sed -i "/^$domain {/,/^}/d" /etc/caddy/Caddyfile
+      echo "已删除域名 $domain 的反向代理配置。"
+      break
+    else
+      echo "无效选择，请重新选择。"
+    fi
+  done
+
+  # 重新加载 Caddy 配置
+  sudo systemctl reload caddy
+}
+
+# 主菜单
+while true; do
+  echo "请选择一个功能:"
+  echo "1. 配置反向代理"
+  echo "2. 查看已配置的 IP 和证书"
+  echo "3. 删除反向代理配置"
+  echo "4. 退出"
+  read -p "请输入选项 (1/2/3/4): " option
+
+  case $option in
+    1)
+      configure_proxy
+      ;;
+    2)
+      view_configurations
+      ;;
+    3)
+      delete_proxy
+      ;;
+    4)
+      echo "退出程序。"
+      exit 0
+      ;;
+    *)
+      echo "无效选项，请重新选择。"
+      ;;
+  esac
+
+  # 等待用户输入任意键返回菜单
+  read -n 1 -s -r -p "按任意键返回菜单"
+  echo
+done
             ;;
 
             0)
