@@ -1069,7 +1069,7 @@ check_ldnmp
     # 提示用户安装 Docker
 echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
 
-    read -p "请输入你的选择 [1-4, 0]: " sys_choice
+    read -p "请输入你的选择 [1-7, 0]: " sys_choice
 
     case $sys_choice in
         1)
@@ -1150,7 +1150,7 @@ setup_nextchat
             container_management
                 ;;
         7)
-            curl -L https://raw.githubusercontent.com/nezhahq/scripts/refs/heads/v0/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+            curl -L https://raw.githubusercontent.com/nezhahq/scripts/refs/heads/main/install.sh -o nezha.sh && chmod +x nezha.sh && ./nezha.sh
                 ;;   
 
         5)
