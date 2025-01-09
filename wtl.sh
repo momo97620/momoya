@@ -25,7 +25,7 @@ initialize_script() {
         ulimit -n 65535
 
         # 检查并安装必要工具
-        for tool in curl wget bash unzip; do
+        for tool in curl wget bash unzip sudo; do
             if ! command -v "$tool" &>/dev/null; then
                 apt-get update &>/dev/null
                 apt-get install -y "$tool" &>/dev/null
@@ -104,16 +104,6 @@ else
   chmod +x "$target_script" > /dev/null 2>&1
   echo "成功设置 m 指令快捷启动脚本。现在可以通过 'm' 命令运行主脚本：$target_script" > /dev/null 2>&1
 fi
-
-check_and_install_sudo() {
-    if ! command -v sudo &> /dev/null; then
-        echo "sudo 未安装，正在后台安装..."
-        # 在后台运行安装命令并隐藏输出
-        nohup bash -c 'apt update &> /dev/null && apt install -y sudo &> /dev/null' &
-    else
-        echo "sudo 已安装或已存在。" > /dev/null  # 确保输出被隐藏
-    fi
-}
 
 # 安装主脚本
 install_script() {
@@ -1532,7 +1522,6 @@ main() {
     
     # 调用主菜单
     initialize_script
-    check_and_install_sudo
     while true; do
         show_main_menu
     done
