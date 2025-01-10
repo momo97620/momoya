@@ -40,7 +40,7 @@ function run_container() {
 
         echo '开始执行脚本...';
 
-        # 执行脚本，允许菜单和交互式操作
+        # 执行脚本
         bash /tmp/$SCRIPT_NAME
     "
 }
@@ -51,7 +51,7 @@ function main() {
     check_docker
     get_script_url
     run_container
-    echo "测试完成，环境已自动清理！"
+    echo "测试完成，您可以手动清理容器。"
 }
 
 # 执行主流程
