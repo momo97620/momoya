@@ -1673,7 +1673,6 @@ remote = \"$ip:$port\"" >> /root/realm/config.toml
     esac
     read -p "按任意键返回主菜单..." key
 done
-            ;;
             0)
               echo -e "${GREEN}退出程序...${NC}"
             exit 0
