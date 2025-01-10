@@ -1523,6 +1523,7 @@ done
             ;;
      18)
            wget -N --no-check-certificate https://git.io/realm.sh && chmod +x realm.sh && ./realm.sh
+           ;;
             0)
               echo -e "${GREEN}退出程序...${NC}"
             exit 0
