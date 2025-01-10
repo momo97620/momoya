@@ -859,7 +859,7 @@ show_main_menu() {
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}     ${BLUE}10${NC} ${PINK}♥${NC} ${LIGHTCYAN}IPv4/6优先${NC}"
+echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}      ${BLUE}10${NC} ${PINK}♥${NC} ${LIGHTCYAN}IPv4/6优先${NC}"
 
 echo "-------------------------------------"
 
@@ -879,7 +879,7 @@ echo -e "  ${BLUE}6.${NC} ${PINK}♥${NC} ${GREEN}一键配置WARP${NC}    ${BLU
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速       ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
+echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速      ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
 
 echo "-------------------------------------"
 
