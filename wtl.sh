@@ -899,34 +899,53 @@ read -p "请输入选项 (0-18): " choice
   case "$choice" in
         1)
     
+clear_screen() {
+    clear
+}
+
+# 执行脚本的函数
+execute_script() {
+    local url="$1"
+    local message="$2"
+    
+    echo "正在执行: $message"
+    curl -s "$url" | bash
+}
+
 while true; do
+    clear_screen
     echo "子菜单"
-    echo "1)  Hy2搭建"
-echo "-----------------------"
+    echo "1) Hy2搭建"
+    echo "-----------------------"
     echo "2) 多协议搭建"
-echo "-----------------------"
+    echo "-----------------------"
     echo "3) realm2转发"
-echo "-----------------------"
+    echo "-----------------------"
     echo "0) 返回主菜单"
 
     read -p "输入选项 (1-0): " sub_choice
 
     case $sub_choice in
         1)
-         execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
+            execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
+            read -p "按任意键返回子菜单..."
             ;;
         2)
-         execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
+            execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
+            read -p "按任意键返回子菜单..."
             ;;
         3)
-          wget -N https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh && chmod +x realm.sh && ./realm.sh
-           ;;
+            echo "正在下载并执行 realm.sh..."
+            wget -N https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh && chmod +x realm.sh && ./realm.sh
+            read -p "按任意键返回子菜单..."
+            ;;
         0)
             echo "返回主菜单。"
             break
             ;;
         *)
             echo "无效选项，请重试。"
+            read -p "按任意键继续..."
             ;;
     esac
 done
