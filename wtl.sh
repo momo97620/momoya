@@ -887,13 +887,14 @@ echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}    $
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}"
+echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}"      ${BLUE}18${NC} ${PINK}♥${NC} ${RED}realm2转发${NC}"
+
 
 echo "-------------------------------------"
 
 echo -e "  ${BLUE}00${NC} ${PINK}♥${NC} ${RED}退出${NC}"
 
-read -p "请输入选项 (0-17): " choice
+read -p "请输入选项 (0-18): " choice
 
   case "$choice" in
         1)
@@ -1520,7 +1521,159 @@ while true; do
   echo
 done
             ;;
+     18)
+        clear
+            echo "正在启动 realm 一键管理功能..."
+            
+            # 嵌入 realm-manager.sh 的代码
+            if [ -f "/root/realm/realm" ]; then
+                echo "检测到realm已安装。"
+                realm_status="已安装"
+                realm_status_color="\033[0;32m" # 绿色
+            else
+                echo "realm未安装。"
+                realm_status="未安装"
+                realm_status_color="\033[0;31m" # 红色
+            fi
 
+            check_realm_service_status() {
+                if systemctl is-active --quiet realm; then
+                    echo -e "\033[0;32m启用\033[0m" # 绿色
+                else
+                    echo -e "\033[0;31m未启用\033[0m" # 红色
+                fi
+            }
+
+            while true; do
+                clear
+                echo "欢迎使用realm一键转发脚本"
+                echo "================="
+                echo "1. 部署环境"
+                echo "2. 添加转发"
+                echo "3. 删除转发"
+                echo "4. 启动服务"
+                echo "5. 停止服务"
+                echo "6. 一键卸载"
+                echo "================="
+                echo -e "realm 状态：${realm_status_color}${realm_status}\033[0m"
+                echo -n "realm 转发状态："
+                check_realm_service_status
+                
+                read -p "请选择一个选项: " realm_choice
+                case $realm_choice in
+                    1)
+                        mkdir -p /root/realm
+                        cd /root/realm
+                        wget -O realm.tar.gz https://github.com/zhboner/realm/releases/download/v2.6.0/realm-x86_64-unknown-linux-gnu.tar.gz
+                        tar -xvf realm.tar.gz
+                        chmod +x realm
+                        echo "[Unit]
+Description=realm
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+Type=simple
+User=root
+Restart=on-failure
+RestartSec=5s
+DynamicUser=true
+WorkingDirectory=/root/realm
+ExecStart=/root/realm/realm -c /root/realm/config.toml
+
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/realm.service
+                        systemctl daemon-reload
+                        realm_status="已安装"
+                        realm_status_color="\033[0;32m" # 绿色
+                        echo "部署完成。"
+                        ;;
+                    2)
+                        while true; do
+                            read -p "请输入IP: " ip
+                            read -p "请输入端口: " port
+                            echo "[[endpoints]]
+listen = \"0.0.0.0:$port\"
+remote = \"$ip:$port\"" >> /root/realm/config.toml
+                            
+                            read -p "是否继续添加(Y/N)? " answer
+                            if [[ $answer != "Y" && $answer != "y" ]]; then
+                                break
+                            fi
+                        done
+                        ;;
+                    3)
+                        echo "当前转发规则："
+                        local IFS=$'\n'
+                        local lines=($(grep -n 'remote =' /root/realm/config.toml))
+                        if [ ${#lines[@]} -eq 0 ]; then
+                            echo "没有发现任何转发规则。"
+                            continue
+                        fi
+                        local index=1
+                        for line in "${lines[@]}"; do
+                            echo "${index}. $(echo $line | cut -d '"' -f 2)"
+                            let index+=1
+                        done
+
+                        read -p "请输入要删除的转发规则序号，直接按回车返回主菜单: " choice
+                        if [ -z "$choice" ]; then
+                            continue
+                        fi
+
+                        if ! [[ $choice =~ ^[0-9]+$ ]]; then
+                            echo "无效输入，请输入数字。"
+                            continue
+                        fi
+
+                        if [ $choice -lt 1 ] || [ $choice -gt ${#lines[@]} ]; then
+                            echo "选择超出范围，请输入有效序号。"
+                            continue
+                        fi
+
+                        local chosen_line=${lines[$((choice-1))]}
+                        local line_number=$(echo $chosen_line | cut -d ':' -f 1)
+                        local start_line=$line_number
+                        local end_line=$(($line_number + 2))
+                        sed -i "${start_line},${end_line}d" /root/realm/config.toml
+
+                        echo "转发规则已删除。"
+                        ;;
+                    4)
+                        systemctl unmask realm.service
+                        systemctl daemon-reload
+                        systemctl restart realm.service
+                        systemctl enable realm.service
+                        echo "realm服务已启动并设置为开机自启。"
+                        ;;
+                    5)
+                        systemctl stop realm
+                        echo "realm服务已停止。"
+                        ;;
+                    6)
+                        systemctl stop realm
+                        systemctl disable realm
+                        rm -f /etc/systemd/system/realm.service
+                        systemctl daemon-reload
+                        rm -rf /root/realm
+                        realm_status="未安装"
+                        realm_status_color="\033[0;31m" # 红色
+                        echo "realm已被卸载。"
+                        ;;
+                    *)
+                        echo "无效选项: $realm_choice"
+                        ;;
+                esac
+                read -p "按任意键返回..." key
+            done
+            ;;
+        *)
+            echo "无效选项，请重新输入。"
+            ;;
+    esac
+    read -p "按任意键返回主菜单..." key
+done
+            ;;
             0)
               echo -e "${GREEN}退出程序...${NC}"
             exit 0
