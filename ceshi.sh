@@ -28,7 +28,7 @@ function get_script_url() {
 function run_container() {
     echo "启动 Docker 容器并测试脚本..."
 
-    docker run -it --rm --name "$CONTAINER_NAME" "$IMAGE_NAME" bash -c "
+    docker run -it --name "$CONTAINER_NAME" "$IMAGE_NAME" bash -c "
         echo '正在设置测试环境...';
         apt-get update && apt-get install -y curl expect;
 
@@ -39,8 +39,8 @@ function run_container() {
         cat /tmp/$SCRIPT_NAME;
 
         echo '开始执行脚本...';
-        
-        # 交互式运行脚本，允许用户手动输入并模拟执行
+
+        # 执行脚本，允许菜单和交互式操作
         bash /tmp/$SCRIPT_NAME
     "
 }
