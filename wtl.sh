@@ -887,8 +887,7 @@ echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}    $
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}   ${BLUE}18${NC} ${PINK}♥${NC} ${RED}realm2转发${NC}"
-
+echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}"
 
 echo "-------------------------------------"
 
@@ -1574,9 +1573,6 @@ while true; do
   echo
 done
             ;;
-     18)
-        wget -N https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh && chmod +x realm.sh && ./realm.sh
-           ;;
             0)
               echo -e "${GREEN}退出程序...${NC}"
             exit 0
