@@ -40,15 +40,8 @@ function run_container() {
 
         echo '开始执行脚本...';
         
-        # 交互式运行脚本并模拟输入（例如输入1）
-        expect << EOF
-        spawn bash /tmp/$SCRIPT_NAME
-        expect \"请输入选项 (1-0): \"
-        send \"1\r\"
-        expect \"返回主菜单。\"
-        send \"0\r\"
-        expect eof
-        EOF
+        # 交互式运行脚本，允许用户手动输入并模拟执行
+        bash /tmp/$SCRIPT_NAME
     "
 }
 
