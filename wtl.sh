@@ -855,35 +855,35 @@ show_main_menu() {
     
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
-    echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${NC}搭建hy2节点${NC}                ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
+    echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${NC}搭建hy2节点${NC}    ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}                  ${BLUE}10${NC} ${PINK}♥${NC} ${LIGHTCYAN}IPv4/6优先${NC}"
-
-echo "-------------------------------------"                                         "-------------------------------------"
-
-echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}配置密钥登录${NC}              ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
+echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}         ${BLUE}10${NC} ${PINK}♥${NC} ${LIGHTCYAN}IPv4/6优先${NC}"
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}4.${NC} ${PINK}♥${NC} ${GREEN}修改登录端口${NC}              ${BLUE}12${NC} ${PINK}♥${NC} ${YELLOW}保持ssh连接${NC}"
+echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}配置密钥登录${NC}    ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}5.${NC} ${PINK}♥${NC} ${GREEN}一键搭建节点${NC}              ${BLUE}13${NC} ${PINK}♥${NC} ${YELLOW}一键DD系统 ▶${NC}"
+echo -e "  ${BLUE}4.${NC} ${PINK}♥${NC} ${GREEN}修改登录端口${NC}    ${BLUE}12${NC} ${PINK}♥${NC} ${YELLOW}保持ssh连接${NC}"
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}6.${NC} ${PINK}♥${NC} ${GREEN}一键配置WARP${NC}              ${BLUE}14${NC} ${PINK}♥${NC} ${RED}监控TG关键词 ▶${NC}"
+echo -e "  ${BLUE}5.${NC} ${PINK}♥${NC} ${GREEN}一键搭建节点${NC}    ${BLUE}13${NC} ${PINK}♥${NC} ${YELLOW}一键DD系统 ▶${NC}"
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速               ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
+echo -e "  ${BLUE}6.${NC} ${PINK}♥${NC} ${GREEN}一键配置WARP${NC}    ${BLUE}14${NC} ${PINK}♥${NC} ${RED}监控TG关键词 ▶${NC}"
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}          ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
+echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速          ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
+
+echo "-------------------------------------"
+
+echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}  ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
 
 echo "-------------------------------------"
 
