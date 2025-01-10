@@ -879,7 +879,7 @@ echo -e "  ${BLUE}6.${NC} ${PINK}♥${NC} ${GREEN}一键配置WARP${NC}    ${BLU
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速      ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
+echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速     ${BLUE}15${NC} ${PINK}♥${NC} ${RED}主机名颜色${NC}"
 
 echo "-------------------------------------"
 
@@ -887,7 +887,7 @@ echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}    $
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}      ${BLUE}18${NC} ${PINK}♥${NC} ${RED}realm2转发${NC}"
+echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}   ${BLUE}18${NC} ${PINK}♥${NC} ${RED}realm2转发${NC}"
 
 
 echo "-------------------------------------"
