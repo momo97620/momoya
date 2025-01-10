@@ -30,7 +30,7 @@ function run_container() {
 
     docker run -it --rm --name "$CONTAINER_NAME" "$IMAGE_NAME" bash -c "
         echo '正在设置测试环境...';
-        apt-get update && apt-get install -y curl;
+        apt-get update && apt-get install -y curl expect;
 
         echo '下载脚本...';
         curl -sSL '$SCRIPT_URL' -o /tmp/$SCRIPT_NAME || { echo '脚本下载失败！'; exit 1; }
