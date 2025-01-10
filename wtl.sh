@@ -1522,10 +1522,9 @@ while true; do
 done
             ;;
      18)
-        clear
+       clear
             echo "正在启动 realm 一键管理功能..."
             
-            # 嵌入 realm-manager.sh 的代码
             if [ -f "/root/realm/realm" ]; then
                 echo "检测到realm已安装。"
                 realm_status="已安装"
@@ -1604,16 +1603,16 @@ remote = \"$ip:$port\"" >> /root/realm/config.toml
                         ;;
                     3)
                         echo "当前转发规则："
-                        local IFS=$'\n'
-                        local lines=($(grep -n 'remote =' /root/realm/config.toml))
+                        IFS=$'\n' # 使用换行符作为分隔符
+                        lines=($(grep -n 'remote =' /root/realm/config.toml))
                         if [ ${#lines[@]} -eq 0 ]; then
                             echo "没有发现任何转发规则。"
                             continue
                         fi
-                        local index=1
+                        index=1
                         for line in "${lines[@]}"; do
-                            echo "${index}. $(echo $line | cut -d '"' -f 2)"
-                            let index+=1
+                            echo "${index}. $(echo $line | cut -d ':' -f 2)"
+                            ((index++))
                         done
 
                         read -p "请输入要删除的转发规则序号，直接按回车返回主菜单: " choice
@@ -1631,10 +1630,10 @@ remote = \"$ip:$port\"" >> /root/realm/config.toml
                             continue
                         fi
 
-                        local chosen_line=${lines[$((choice-1))]}
-                        local line_number=$(echo $chosen_line | cut -d ':' -f 1)
-                        local start_line=$line_number
-                        local end_line=$(($line_number + 2))
+                        chosen_line=${lines[$((choice-1))]}
+                        line_number=$(echo $chosen_line | cut -d ':' -f 1)
+                        start_line=$line_number
+                        end_line=$((line_number + 2))
                         sed -i "${start_line},${end_line}d" /root/realm/config.toml
 
                         echo "转发规则已删除。"
@@ -1667,21 +1666,15 @@ remote = \"$ip:$port\"" >> /root/realm/config.toml
                 read -p "按任意键返回..." key
             done
             ;;
-        *)
-            echo "无效选项，请重新输入。"
-            ;;
-    esac
-    read -p "按任意键返回主菜单..." key
-done
-            0)
-              echo -e "${GREEN}退出程序...${NC}"
+        0)
+            echo -e "${GREEN}退出程序...${NC}"
             exit 0
             ;;
         *)
             echo -e "${RED}无效的选择，请重新输入！${NC}"
             ;;
     esac
-}
+done
 
 
 # 主执行逻辑
