@@ -3,8 +3,7 @@
 # 配置
 IMAGE_NAME="debian:11"  # 使用的 Docker 镜像
 CONTAINER_NAME="test_container"  # 容器名称
-SCRIPT_URL=""  # 待测试的脚本链接
-SCRIPT_NAME="test_script.sh"  # 脚本文件名
+USER_COMMAND=""  # 用户输入的命令
 
 # 检查 Docker 是否已安装
 function check_docker() {
@@ -14,34 +13,28 @@ function check_docker() {
     fi
 }
 
-# 获取用户输入的脚本链接
-function get_script_url() {
-    echo "请输入要测试的脚本链接（URL）："
-    read -r SCRIPT_URL
-    if [[ ! "$SCRIPT_URL" =~ ^https?:// ]]; then
-        echo "错误: 无效的链接，请输入以 http:// 或 https:// 开头的 URL！"
+# 获取用户输入的命令
+function get_user_command() {
+    echo "请输入要测试的命令（例如：curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh）："
+    read -r USER_COMMAND
+    if [[ -z "$USER_COMMAND" ]]; then
+        echo "错误: 您没有输入命令！"
         exit 1
     fi
 }
 
-# 在容器中运行脚本并模拟用户输入
+# 在容器中运行用户输入的命令
 function run_container() {
-    echo "启动 Docker 容器并测试脚本..."
+    echo "启动 Docker 容器并测试命令..."
 
     docker run -it --name "$CONTAINER_NAME" "$IMAGE_NAME" bash -c "
         echo '正在设置测试环境...';
         apt-get update && apt-get install -y curl expect;
 
-        echo '下载脚本...';
-        curl -sSL '$SCRIPT_URL' -o /tmp/$SCRIPT_NAME || { echo '脚本下载失败！'; exit 1; }
+        echo '开始执行用户命令...';
 
-        echo '检查下载的脚本内容...';
-        cat /tmp/$SCRIPT_NAME;
-
-        echo '开始执行脚本...';
-
-        # 执行脚本
-        bash /tmp/$SCRIPT_NAME
+        # 执行用户输入的命令
+        $USER_COMMAND
     "
 }
 
@@ -49,9 +42,9 @@ function run_container() {
 function main() {
     echo "==== Docker 快速测试环境 ===="
     check_docker
-    get_script_url
+    get_user_command
     run_container
-    echo "测试完成，您可以手动清理容器。"
+    echo "测试完成，环境已自动清理！"
 }
 
 # 执行主流程
