@@ -902,7 +902,11 @@ read -p "请输入选项 (0-18): " choice
 while true; do
     echo "子菜单"
     echo "1)  Hy2搭建"
+echo "-----------------------"
     echo "2) 多协议搭建"
+echo "-----------------------"
+    echo "3) realm2转发"
+echo "-----------------------"
     echo "0) 返回主菜单"
 
     read -p "输入选项 (1-0): " sub_choice
@@ -914,6 +918,9 @@ while true; do
         2)
          execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
             ;;
+        3)
+          wget -N https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh && chmod +x realm.sh && ./realm.sh
+           ;;
         0)
             echo "返回主菜单。"
             break
