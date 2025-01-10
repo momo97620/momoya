@@ -855,7 +855,7 @@ show_main_menu() {
     
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
-    echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${NC}搭建hy2节点${NC}     ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
+    echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${NC}节点合集${NC}     ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
 
 echo "-------------------------------------"
 
@@ -898,7 +898,27 @@ read -p "请输入选项 (0-18): " choice
 
   case "$choice" in
         1)
-            execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
+    
+while true; do
+    echo "子菜单"
+    echo "1)  Hy2搭建"
+    echo "0) 返回主菜单"
+
+    read -p "输入选项 (1-0): " sub_choice
+
+    case $sub_choice in
+        1)
+          "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
+            ;;
+        0)
+            echo "返回主菜单。"
+            break
+            ;;
+        *)
+            echo "无效选项，请重试。"
+            ;;
+    esac
+done
             ;;
         2)
             execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
