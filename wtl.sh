@@ -1522,7 +1522,7 @@ while true; do
 done
             ;;
      18)
-         wget https://raw.githubusercontent.com/Jaydooooooo/Port-forwarding/main/RealmOneKey.sh && chmod +x RealmOneKey.sh && ./RealmOneKey.sh
+        wget -N https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh && chmod +x realm.sh && ./realm.sh
            ;;
             0)
               echo -e "${GREEN}退出程序...${NC}"
