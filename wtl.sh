@@ -887,7 +887,7 @@ echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}    $
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}"      ${BLUE}18${NC} ${PINK}♥${NC} ${RED}realm2转发${NC}"
+echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}      ${BLUE}18${NC} ${PINK}♥${NC} ${RED}realm2转发${NC}"
 
 
 echo "-------------------------------------"
