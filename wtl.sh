@@ -855,7 +855,7 @@ show_main_menu() {
     
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
-    echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${NC}节点合集${NC}     ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
+    echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${NC}节点合集 ▶${NC}    ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
 
 echo "-------------------------------------"
 
