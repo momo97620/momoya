@@ -953,37 +953,52 @@ while true; do
 done
             ;;
         2)
-    # 颜色定义
-    RED='\033[0;31m'
-    GREEN='\033[0;32m'
-    YELLOW='\033[1;33m'
-    NC='\033[0m'
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-    # 日志文件
-    LOG_FILE="/var/log/ufw_script.log"
+# 日志文件
+LOG_FILE="/var/log/ufw_script.log"
 
-    # 检查是否以root权限运行
-    if [[ $EUID -ne 0 ]]; then
-        echo "此脚本必须以root权限运行 (sudo)" 
+# 检查是否以root权限运行
+if [[ $EUID -ne 0 ]]; then
+    echo "此脚本必须以root权限运行 (sudo)" 
+    exit 1
+fi
+
+# 日志记录函数
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
+}
+
+# 自动设置主机名
+hostnamectl set-hostname $(hostname -s)
+
+# 自动检查并安装 ufw
+if ! command -v ufw &> /dev/null; then
+    echo -e "${YELLOW}UFW 未安装，正在安装...${NC}"
+    log "UFW 未安装，正在安装"
+    if sudo apt install ufw -y; then
+        echo -e "${GREEN}UFW 安装成功！${NC}"
+        log "UFW 安装成功"
+    else
+        echo -e "${RED}UFW 安装失败，请检查网络或源配置！${NC}"
+        log "UFW 安装失败"
         exit 1
     fi
+else
+    echo -e "${GREEN}UFW 已安装，跳过安装步骤。${NC}"
+    log "UFW 已安装，跳过安装步骤"
+fi
 
-    # 检测是否安装 ufw
-    if ! command -v ufw &>/dev/null; then
-        echo -e "${YELLOW}未检测到 ufw，正在安装...${NC}"
-        apt-get update -y && apt-get install -y ufw
-        echo -e "${GREEN}ufw 安装完成！${NC}"
-    else
-        echo -e "${GREEN}ufw 已安装，跳过安装步骤。${NC}"
-    fi
+# 创建工具目录
+mkdir -p ~/tools
 
-    # 日志记录函数
-    log() {
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
-    }
-
-        # 创建UFW管理脚本
-    cat << 'EOF' > ~/tools/ufw_port.sh
+# 创建UFW管理脚本
+cat << 'EOF' > ~/tools/ufw_port.sh
+#!/bin/bash
 
 # 检查是否以root权限运行
 if [[ $EUID -ne 0 ]]; then
@@ -997,122 +1012,115 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# 备注文件路径
-REMARK_FILE="/etc/ufw_port_remarks.txt"
-touch "$REMARK_FILE"
-chmod 644 "$REMARK_FILE"
-
 # 开放端口函数
 open_port() {
     read -p "请输入要开放的端口号: " port
+    read -p "请输入该端口的备注: " comment
     echo "选择协议："
     echo "1. TCP"
     echo "2. UDP"
     echo "3. 所有协议（TCP + UDP）"
-    echo "0. 返回上一页"
-    read -p "请选择协议 (0-3): " protocol_choice
+    read -p "请选择协议 (1-3): " protocol_choice
 
     case $protocol_choice in
         1)
-            sudo ufw allow "$port"/tcp
-            protocol="tcp"
+            sudo ufw allow "$port"/tcp comment "$comment"
+            echo -e "${GREEN}已开放TCP端口 $port，备注: $comment${NC}"
             ;;
         2)
-            sudo ufw allow "$port"/udp
-            protocol="udp"
+            sudo ufw allow "$port"/udp comment "$comment"
+            echo -e "${GREEN}已开放UDP端口 $port，备注: $comment${NC}"
             ;;
         3)
-            sudo ufw allow "$port"/tcp
-            sudo ufw allow "$port"/udp
-            protocol="both"
-            ;;
-        0)
-            return
+            sudo ufw allow "$port"/tcp comment "$comment"
+            sudo ufw allow "$port"/udp comment "$comment"
+            echo -e "${GREEN}已开放端口 $port 的所有协议 (TCP 和 UDP)，备注: $comment${NC}"
             ;;
         *)
             echo -e "${RED}无效的选择${NC}"
             return
             ;;
     esac
-
-    read -p "请输入此端口的备注: " remark
-    echo "$port/$protocol:$remark" >> "$REMARK_FILE"
-    echo -e "${GREEN}已开放端口 $port (${protocol})，备注: ${remark}${NC}"
-    read -p "按任意键返回主菜单..." pause
 }
 
 # 禁用端口函数
 disable_port() {
     read -p "请输入要禁用的端口号: " port
-    echo "选择协议："
-    echo "1. TCP"
-    echo "2. UDP"
-    echo "3. 所有协议（TCP + UDP）"
-    echo "0. 返回上一页"
-    read -p "请选择协议 (0-3): " protocol_choice
+    read -p "选择协议 (1.TCP 2.UDP 3.所有协议): " protocol_choice
 
     case $protocol_choice in
         1)
             sudo ufw delete allow "$port"/tcp
-            sed -i "/^$port\/tcp:/d" "$REMARK_FILE"
-            protocol="tcp"
+            echo -e "${GREEN}已禁用TCP端口 $port${NC}"
             ;;
         2)
             sudo ufw delete allow "$port"/udp
-            sed -i "/^$port\/udp:/d" "$REMARK_FILE"
-            protocol="udp"
+            echo -e "${GREEN}已禁用UDP端口 $port${NC}"
             ;;
         3)
             sudo ufw delete allow "$port"/tcp
             sudo ufw delete allow "$port"/udp
-            sed -i "/^$port\/tcp:/d" "$REMARK_FILE"
-            sed -i "/^$port\/udp:/d" "$REMARK_FILE"
-            protocol="both"
-            ;;
-        0)
-            return
+            echo -e "${GREEN}已禁用端口 $port 的所有协议${NC}"
             ;;
         *)
             echo -e "${RED}无效的选择${NC}"
             return
             ;;
     esac
-
-    echo -e "${GREEN}已禁用端口 $port (${protocol})${NC}"
-    read -p "按任意键返回主菜单..." pause
 }
 
-# 查看已开放端口函数
-view_ports() {
-    echo -e "${YELLOW}===== 已开放端口列表 =====${NC}"
-    while read -r line; do
-        port_info=$(echo "$line" | cut -d':' -f1)
-        remark=$(echo "$line" | cut -d':' -f2-)
-        echo -e "${GREEN}${port_info}${NC} - ${remark}"
-    done < "$REMARK_FILE"
-    read -p "按任意键返回主菜单..." pause
+# 保存规则到文件
+save_rules() {
+    read -p "请输入保存文件的路径 (默认: ./ufw_rules.backup): " file_path
+    file_path=${file_path:-./ufw_rules.backup}
+    ufw status > "$file_path"
+    echo -e "${GREEN}规则已保存到 $file_path${NC}"
+}
+
+# 加载规则文件
+load_rules() {
+    read -p "请输入规则文件的路径 (默认: ./ufw_rules.backup): " file_path
+    file_path=${file_path:-./ufw_rules.backup}
+    if [[ -f "$file_path" ]]; then
+        while read -r rule; do
+            ufw "$rule"
+        done < "$file_path"
+        echo -e "${GREEN}规则已从 $file_path 加载${NC}"
+    else
+        echo -e "${RED}文件不存在：$file_path${NC}"
+    fi
 }
 
 # 主菜单
 main_menu() {
     while true; do
+        # 清屏
         clear
         echo -e "${YELLOW}===== UFW端口管理工具 =====${NC}"
         echo "1. 开放端口"
         echo "2. 查看已开放端口"
         echo "3. 禁用端口"
+        echo "4. 保存当前规则"
+        echo "5. 加载规则文件"
         echo "0. 退出"
-        read -p "请选择操作 (0-3): " choice
+        read -p "请选择操作 (0-5): " choice
 
         case $choice in
             1)
                 open_port
                 ;;
             2)
-                view_ports
+                echo -e "${GREEN}已开放端口列表:${NC}"
+                sudo ufw status numbered
                 ;;
             3)
                 disable_port
+                ;;
+            4)
+                save_rules
+                ;;
+            5)
+                load_rules
                 ;;
             0)
                 echo -e "${GREEN}感谢使用UFW端口管理工具，再见！${NC}"
@@ -1122,6 +1130,9 @@ main_menu() {
                 echo -e "${RED}无效的选择，请重新输入${NC}"
                 ;;
         esac
+
+        # 暂停后重新显示菜单
+        read -p "按回车键继续..." pause_input
     done
 }
 
@@ -1129,24 +1140,48 @@ main_menu() {
 main_menu
 EOF
 
-    # 自动赋予执行权限
-    chmod +x ~/tools/ufw_port.sh
-    echo -e "${GREEN}UFW管理脚本已赋予执行权限。${NC}"
+# 去掉原有的快捷指令n
+if grep -q "alias n='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
+    sed -i "/alias n='sudo ~\/tools\/ufw_port.sh'/d" ~/.bashrc
+    echo -e "${GREEN}快捷命令 'n' 已成功移除。${NC}"
+fi
 
-    # 自动添加 alias 到 .bashrc
-    if ! grep -q "alias n='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
-        echo "alias n='sudo ~/tools/ufw_port.sh'" >> ~/.bashrc
-        echo -e "${GREEN}快捷命令 'n' 已成功添加到 .bashrc${NC}"
-    fi
+# 添加新的快捷指令n
+if ! grep -q "alias n='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
+    echo "alias n='sudo ~/tools/ufw_port.sh'" >> ~/.bashrc
+    echo -e "${GREEN}快捷命令 'n' 已成功添加到 .bashrc${NC}"
+fi
 
-    # 强制立即生效
-    echo -e "${YELLOW}重新加载 .bashrc 配置以使快捷命令生效...${NC}"
-    source ~/.bashrc
-    hash -r
-    exec bash
+# 强制立即生效
+echo -e "${YELLOW}重新加载 .bashrc 配置以使快捷命令生效...${NC}"
+source ~/.bashrc
+hash -r
+exec bash
 
-    # 提示安装完成
-    echo -e "${GREEN}脚本安装完成，快捷命令 'n' 已自动加载并立即生效！${NC}"
+# 启用UFW并添加默认规则
+echo -e "${YELLOW}设置默认防火墙策略...${NC}"
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+echo -e "${GREEN}默认策略已设置：拒绝入站，允许出站${NC}"
+
+if sudo ufw allow ssh; then
+    echo -e "${GREEN}成功添加SSH规则！${NC}"
+else
+    echo -e "${RED}添加SSH规则失败！${NC}"
+    exit 1
+fi
+
+if sudo ufw --force enable; then
+    echo -e "${GREEN}UFW 防火墙已启用！${NC}"
+else
+    echo -e "${RED}启用 UFW 防火墙失败！${NC}"
+    exit 1
+fi
+
+# 提示安装完成
+echo -e "${GREEN}UFW端口管理工具安装完成！${NC}"
+echo -e "您可以使用快捷命令 'n' 来启动UFW端口管理工具。"
+echo -e "如果快捷命令 'n' 无法立即使用，请重新登录您的会话。"  
     ;;
        
         3)
