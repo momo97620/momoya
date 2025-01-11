@@ -989,7 +989,6 @@ if [ "$option" -eq 4 ]; then
 
     # 创建UFW管理脚本
     cat << 'EOF' > ~/tools/ufw_port.sh
-#!/bin/bash
 
 # 检查是否以root权限运行
 if [[ $EUID -ne 0 ]]; then
