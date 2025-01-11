@@ -933,8 +933,7 @@ while true; do
             read -p "按任意键返回子菜单..."
             ;;
         2)
-            execute_script "https://github.com/233boy/sing-box/raw/main/install.sh
-            read -p "按任意键返回子菜单..."
+            execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
             ;;
         3)
             echo "正在下载并执行 realm.sh..."
