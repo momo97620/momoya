@@ -923,8 +923,9 @@ while true; do
             wget -N --no-check-certificate https://raw.githubusercontent.com/flame1ce/hysteria2-install/main/hysteria2-install-main/hy2/hysteria.sh && bash hysteria.sh
             ;;
         2)
-            wget -N --no-check-certificate https://github.com/233boy/sing-box/raw/main/install.sh && bash install.sh
-            ;;
+            wget -N --no-check-certificate https://raw.githubusercontent.com/233boy/sing-box/main/install.sh && bash install.sh
+            read -p "按任意键返回子菜单..."
+            ;; 
         3)
             echo "正在下载并执行 realm.sh..."
             wget -N https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh && chmod +x realm.sh && ./realm.sh
