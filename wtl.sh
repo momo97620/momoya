@@ -953,8 +953,207 @@ while true; do
 done
             ;;
         2)
-            execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/809d88e194fae615668827c0262df49c34e2f90c/ufw_install.sh"
+          
+    # 颜色定义
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    NC='\033[0m'
+
+    # 日志文件
+    LOG_FILE="/var/log/ufw_script.log"
+
+    # 检查是否以root权限运行
+    if [[ $EUID -ne 0 ]]; then
+        echo "此脚本必须以root权限运行 (sudo)" 
+        exit 1
+    fi
+
+    # 检测是否安装 ufw
+    if ! command -v ufw &>/dev/null; then
+        echo -e "${YELLOW}未检测到 ufw，正在安装...${NC}"
+        apt-get update -y && apt-get install -y ufw
+        echo -e "${GREEN}ufw 安装完成！${NC}"
+    else
+        echo -e "${GREEN}ufw 已安装，跳过安装步骤。${NC}"
+    fi
+
+    # 日志记录函数
+    log() {
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
+    }
+
+    # 创建工具目录
+    mkdir -p ~/tools
+
+    # 创建UFW管理脚本
+    cat << 'EOF' > ~/tools/ufw_port.sh
+#!/bin/bash
+
+# 检查是否以root权限运行
+if [[ $EUID -ne 0 ]]; then
+   echo "此脚本必须以root权限运行 (sudo)" 
+   exit 1
+fi
+
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# 备注文件路径
+REMARK_FILE="/etc/ufw_port_remarks.txt"
+touch "$REMARK_FILE"
+chmod 644 "$REMARK_FILE"
+
+# 开放端口函数
+open_port() {
+    read -p "请输入要开放的端口号: " port
+    echo "选择协议："
+    echo "1. TCP"
+    echo "2. UDP"
+    echo "3. 所有协议（TCP + UDP）"
+    echo "0. 返回上一页"
+    read -p "请选择协议 (0-3): " protocol_choice
+
+    case $protocol_choice in
+        1)
+            sudo ufw allow "$port"/tcp
+            protocol="tcp"
             ;;
+        2)
+            sudo ufw allow "$port"/udp
+            protocol="udp"
+            ;;
+        3)
+            sudo ufw allow "$port"/tcp
+            sudo ufw allow "$port"/udp
+            protocol="both"
+            ;;
+        0)
+            return
+            ;;
+        *)
+            echo -e "${RED}无效的选择${NC}"
+            return
+            ;;
+    esac
+
+    read -p "请输入此端口的备注: " remark
+    echo "$port/$protocol:$remark" >> "$REMARK_FILE"
+    echo -e "${GREEN}已开放端口 $port (${protocol})，备注: ${remark}${NC}"
+    read -p "按任意键返回主菜单..." pause
+}
+
+# 禁用端口函数
+disable_port() {
+    read -p "请输入要禁用的端口号: " port
+    echo "选择协议："
+    echo "1. TCP"
+    echo "2. UDP"
+    echo "3. 所有协议（TCP + UDP）"
+    echo "0. 返回上一页"
+    read -p "请选择协议 (0-3): " protocol_choice
+
+    case $protocol_choice in
+        1)
+            sudo ufw delete allow "$port"/tcp
+            sed -i "/^$port\/tcp:/d" "$REMARK_FILE"
+            protocol="tcp"
+            ;;
+        2)
+            sudo ufw delete allow "$port"/udp
+            sed -i "/^$port\/udp:/d" "$REMARK_FILE"
+            protocol="udp"
+            ;;
+        3)
+            sudo ufw delete allow "$port"/tcp
+            sudo ufw delete allow "$port"/udp
+            sed -i "/^$port\/tcp:/d" "$REMARK_FILE"
+            sed -i "/^$port\/udp:/d" "$REMARK_FILE"
+            protocol="both"
+            ;;
+        0)
+            return
+            ;;
+        *)
+            echo -e "${RED}无效的选择${NC}"
+            return
+            ;;
+    esac
+
+    echo -e "${GREEN}已禁用端口 $port (${protocol})${NC}"
+    read -p "按任意键返回主菜单..." pause
+}
+
+# 查看已开放端口函数
+view_ports() {
+    echo -e "${YELLOW}===== 已开放端口列表 =====${NC}"
+    while read -r line; do
+        port_info=$(echo "$line" | cut -d':' -f1)
+        remark=$(echo "$line" | cut -d':' -f2-)
+        echo -e "${GREEN}${port_info}${NC} - ${remark}"
+    done < "$REMARK_FILE"
+    read -p "按任意键返回主菜单..." pause
+}
+
+# 主菜单
+main_menu() {
+    while true; do
+        clear
+        echo -e "${YELLOW}===== UFW端口管理工具 =====${NC}"
+        echo "1. 开放端口"
+        echo "2. 查看已开放端口"
+        echo "3. 禁用端口"
+        echo "0. 退出"
+        read -p "请选择操作 (0-3): " choice
+
+        case $choice in
+            1)
+                open_port
+                ;;
+            2)
+                view_ports
+                ;;
+            3)
+                disable_port
+                ;;
+            0)
+                echo -e "${GREEN}感谢使用UFW端口管理工具，再见！${NC}"
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}无效的选择，请重新输入${NC}"
+                ;;
+        esac
+    done
+}
+
+# 启动主菜单
+main_menu
+EOF
+
+    # 自动赋予执行权限
+    chmod +x ~/tools/ufw_port.sh
+    echo -e "${GREEN}UFW管理脚本已赋予执行权限。${NC}"
+
+    # 自动添加 alias 到 .bashrc
+    if ! grep -q "alias n='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
+        echo "alias n='sudo ~/tools/ufw_port.sh'" >> ~/.bashrc
+        echo -e "${GREEN}快捷命令 'n' 已成功添加到 .bashrc${NC}"
+    fi
+
+    # 强制立即生效
+    echo -e "${YELLOW}重新加载 .bashrc 配置以使快捷命令生效...${NC}"
+    source ~/.bashrc
+    hash -r
+    exec bash
+
+    # 提示安装完成
+    echo -e "${GREEN}脚本安装完成，快捷命令 'n' 已自动加载并立即生效！${NC}"
+fi     
+       ;;
         3)
 # 选项 3: 自动申请密钥并配置密钥登录
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
