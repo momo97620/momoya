@@ -953,7 +953,7 @@ while true; do
 done
             ;;
         2)
-            execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
+            execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/809d88e194fae615668827c0262df49c34e2f90c/ufw_install.sh"
             ;;
         3)
 # 选项 3: 自动申请密钥并配置密钥登录
