@@ -24,14 +24,6 @@ initialize_script() {
         # 提高文件描述符限制
         ulimit -n 65535
 
-        # 检查并安装必要工具
-         curl wget bash sudo; do
-            if ! command -v "$tool" &>/dev/null; then
-                apt-get update &>/dev/null
-                apt-get install -y "$tool" &>/dev/null
-            fi
-        done
-
         # 清理磁盘缓存
         echo 3 > /proc/sys/vm/drop_caches
 
