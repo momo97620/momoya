@@ -855,7 +855,7 @@ echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}      ${BLUE}10
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}改密钥及端口${NC}    ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
+echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}密钥登录${NC}    ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
 
 echo "-------------------------------------"
 
@@ -955,7 +955,7 @@ echo "执行选项 3：自动申请密钥并配置密钥登录..."
 if [ "$(id -u)" -ne 0 ]; then
     echo "请以 root 用户运行此脚本。"
     read -n 1 -s -r -p "按任意键返回菜单..."
-    exit 1
+    continue
 fi
 
 # 定义变量
@@ -975,13 +975,12 @@ ssh-keygen -t rsa -b 4096 -f "$PRIVATE_KEY" -N "" -q
 if [ $? -ne 0 ]; then
     echo "密钥生成失败，请检查系统配置。"
     read -n 1 -s -r -p "按任意键返回菜单..."
-    exit 1
-else
-    echo "密钥生成成功！"
-    echo "密钥文件路径："
-    echo "私钥: $PRIVATE_KEY"
-    echo "公钥: $PUBLIC_KEY"
+    continue
 fi
+echo "密钥生成成功！"
+echo "密钥文件路径："
+echo "私钥: $PRIVATE_KEY"
+echo "公钥: $PUBLIC_KEY"
 
 # 显示公钥的 ASCII 图形化表示
 echo "生成公钥的 ASCII 图形化表示..."
@@ -1045,85 +1044,22 @@ if [ -f "$PAM_SSHD_CONFIG" ]; then
 fi
 
 # 提示用户当前会话不会失效
-echo -e "\033[31m重要提示：\033[0m"
-echo -e "\033[31m‼️  切记要先保存好私钥！！！。\033[0m"
-echo -e "\033[31m‼️  退出菜单输入以下重启命令：\033[0m"
+echo -e "${DARK_RED}重要提示：${NC}"
+echo -e "${DARK_RED}‼️  切记要先保存好私钥！！！。${NC}"
+echo -e "${DARK_RED}‼️  退出菜单输入以下重启命令:${NC}"
 
-echo -e "\033[31m‼️  systemctl restart sshd\033[0m"
+echo -e "${DARK_RED}‼️  systemctl restart sshd${NC}"
 
-echo -e "\033[31m‼️  然后重启SSH禁用密码才会被加载生效、然后用私钥登录\033[0m"
+echo -e "${DARK_RED}‼️  然后重启SSH禁用密码才会被加载生效、然后用私钥登录${NC}"
 
-echo -e "\033[32m公钥路径: $PUBLIC_KEY\033[0m"
-echo -e "\033[32m私钥路径: $PRIVATE_KEY\033[0m"
+echo -e "${BRIGHT_GREEN}公钥路径: $PUBLIC_KEY${NC}"
+echo -e "${BRIGHT_GREEN}私钥路径: $PRIVATE_KEY${NC}"
 
-# 等待用户按任意键继续
-read -n 1 -s -r -p "按任意键继续执行第二段代码..."
+# 等待用户按任意键返回菜单
 echo ""
-
-# 选项 4: 修改 SSH 配置
-echo "执行选项 4：修改 SSH 配置..."
-
-# 检查是否以 root 权限运行
-if [[ $EUID -ne 0 ]]; then
-    echo "请以 root 权限运行此脚本。"
-    read -n 1 -s -r -p "按任意键返回菜单..."
-    exit 1
-fi
-
-# 设置 SSH 配置文件路径
-SSHD_CONFIG="/etc/ssh/sshd_config"
-
-# 获取当前 SSH 服务监听的端口号
-current_port=$(grep -i "^Port" "$SSHD_CONFIG" | awk '{print $2}')
-
-if [[ -z "$current_port" ]]; then
-    current_port="22"
-fi
-
-# 显示当前端口号
-echo "当前 SSH 登录端口号：$current_port"
-
-# 让用户输入新的端口号
-read -p "请输入新的端口号 (留空默认使用 2222): " new_port
-
-# 如果没有输入新的端口号，默认使用 2222
-if [[ -z "$new_port" ]]; then
-    new_port=2222
-fi
-
-# 检查新的端口号是否合法
-if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -lt 1024 ] || [ "$new_port" -gt 65535 ]; then
-    echo "无效的端口号。请输入一个有效的端口号 (1024-65535)。"
-    read -n 1 -s -r -p "按任意键返回菜单..."
-    exit 1
-else
-    # 修改 SSH 配置文件中的端口号
-    echo "正在修改 SSH 端口号为 $new_port..."
-    sed -i.bak "s/^#\?Port .*/Port $new_port/" "$SSHD_CONFIG"
-
-    # 禁用默认的 22 端口
-    echo "正在禁用默认的 22 端口..."
-    sed -i.bak 's/^#\?Port 22/Port 0/' "$SSHD_CONFIG"
-fi
-
-# 防火墙配置
-if command -v ufw &> /dev/null; then
-    echo "更新防火墙设置，允许新的端口并禁用 22 端口..."
-    sudo ufw allow $new_port/tcp
-    sudo ufw deny 22/tcp
-else
-    echo "没有检测到 ufw 防火墙，防火墙设置跳过。"
-fi
-
-# 重启 SSH 服务
-echo "请重启 SSH 服务以使更改生效。"
-systemctl restart sshd
-
-echo "修改完成！"
-
-# 等待用户按任意键返回
-read -n 1 -s -r -p "按任意键返回..."
-            ;;
+read -n 1 -s -r -p "按任意键返回菜单..."
+echo ""
+        ;;
         4)
             execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
             ;;
