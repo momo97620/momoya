@@ -25,7 +25,7 @@ initialize_script() {
         ulimit -n 65535
 
         # 检查并安装必要工具
-        for tool in nano; do
+        for tool in wget nano; do
             if ! command -v "$tool" &>/dev/null; then
                 apt-get update &>/dev/null
                 apt-get install -y "$tool" &>/dev/null
