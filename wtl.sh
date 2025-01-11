@@ -899,11 +899,23 @@ execute_script() {
     local message="$2"
     
     echo "正在执行: $message"
-    curl -s "$url" | bash
+    wget -N --no-check-certificate "$url" -O temp_script.sh
+    chmod +x temp_script.sh
+    
+    # 检查脚本是否存在并具有执行权限
+    if [[ -f temp_script.sh && -x temp_script.sh ]]; then
+        ./temp_script.sh
+        read -p "脚本执行完毕，按任意键返回子菜单..."
+    else
+        echo "下载的脚本无法执行，请检查权限或下载链接。"
+        read -p "按任意键返回子菜单..."
+    fi
+    
+    rm -f temp_script.sh
 }
 
 while true; do
-    clear
+    clear_screen
     echo -e "\e[1;34m=========================\e[0m"
     echo -e "\e[1;32m  多协议节点搭建 + 流量转发  \e[0m"
     echo -e "\e[1;34m=========================\e[0m"
@@ -916,20 +928,23 @@ while true; do
     echo -e "\e[1;30m0) 返回主菜单\e[0m"
     echo -e "\e[1;34m=========================\e[0m"
 
-    read -p "输入选项 (1-3): " sub_choice
+    read -p "输入选项 (0-3): " sub_choice
 
     case $sub_choice in
         1)
-            wget -N --no-check-certificate https://raw.githubusercontent.com/flame1ce/hysteria2-install/main/hysteria2-install-main/hy2/hysteria.sh && bash hysteria.sh
+            clear_screen
+            echo "正在下载并执行 Hy2 搭建脚本..."
+            execute_script "https://raw.githubusercontent.com/flame1ce/hysteria2-install/main/hysteria2-install-main/hy2/hysteria.sh" "Hy2 搭建脚本"
             ;;
         2)
-            wget -N --no-check-certificate https://raw.githubusercontent.com/233boy/sing-box/main/install.sh && bash install.sh
-            read -p "按任意键返回子菜单..."
-            ;; 
+            clear_screen
+            echo "正在下载并执行多协议搭建脚本..."
+            execute_script "https://raw.githubusercontent.com/233boy/sing-box/main/install.sh" "多协议搭建脚本"
+            ;;
         3)
-            echo "正在下载并执行 realm.sh..."
-            wget -N https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh && chmod +x realm.sh && ./realm.sh
-            read -p "按任意键返回子菜单..."
+            clear_screen
+            echo "正在下载并执行 realm2 转发脚本..."
+            execute_script "https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh" "realm2 转发脚本"
             ;;
         0)
             echo "返回主菜单。"
