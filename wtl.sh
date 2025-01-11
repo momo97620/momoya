@@ -904,7 +904,7 @@ execute_script() {
         read -p "脚本执行完毕，按任意键返回子菜单..."
     else
         echo "下载的脚本无法执行，请检查权限或下载链接。"
-        read -p "按任意键返回子菜单..." 
+        
     fi
     
     rm -f temp_script.sh
