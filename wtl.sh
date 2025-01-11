@@ -924,7 +924,7 @@ while true; do
     echo -e "\e[1;30m0) 返回主菜单\e[0m"
     echo -e "\e[1;34m=========================\e[0m"
 
-    read -p "输入选项 (1-0): " sub_choice
+    read -p "输入选项 (1-3): " sub_choice
 
     case $sub_choice in
         1)
