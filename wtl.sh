@@ -956,119 +956,130 @@ done
             execute_script "https://gist.githubusercontent.com/momo97620/2ecbf06ce959fda14b01c0ce9f34f3d8/raw/ebbbdf08a05c890d72902863c53bf80af9531601/ufw_install.sh" "安装并配置 UFW 防火墙完成。"
             ;;
         3)
-# 定义全局变量
-        KEY_DIR="$HOME/.ssh"
-        PRIVATE_KEY="$KEY_DIR/id_rsa"
-        PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
-        SSHD_CONFIG="/etc/ssh/sshd_config"
-        BACKUP_CONFIG="/etc/ssh/sshd_config.bak"
-        CLOUD_INIT_CONFIG="/etc/ssh/sshd_config.d/50-cloud-init.conf"
-        PAM_SSHD_CONFIG="/etc/pam.d/sshd"
+# 检查是否以 root 权限运行
+if [[ $EUID -ne 0 ]]; then
+    echo "请以 root 权限运行此脚本。"
+    read -n 1 -s -r -p "按任意键返回菜单..."
+    continue
+fi
 
-        # 检查是否以 root 权限运行
-        if [[ $EUID -ne 0 ]]; then
-            echo "请以 root 权限运行此脚本。"
-            exit 1
-        fi
+# 定义变量
+KEY_DIR="$HOME/.ssh"
+PRIVATE_KEY="$KEY_DIR/id_rsa"
+PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
+SSHD_CONFIG="/etc/ssh/sshd_config"
+BACKUP_CONFIG="/etc/ssh/sshd_config.bak"
+CLOUD_INIT_CONFIG="/etc/ssh/sshd_config.d/50-cloud-init.conf"
+PAM_SSHD_CONFIG="/etc/pam.d/sshd"
 
-        # 第一步：自动申请密钥并配置密钥登录
-        echo "执行自动申请密钥并配置密钥登录..."
+# 步骤 1：生成密钥对
+echo "如果您选择生成密钥对，将自动为您生成 SSH 密钥对..."
+mkdir -p "$KEY_DIR"
+chmod 700 "$KEY_DIR"
+ssh-keygen -t rsa -b 4096 -f "$PRIVATE_KEY" -N "" -q
+if [ $? -ne 0 ]; then
+    echo "密钥生成失败，请检查系统配置。"
+    read -n 1 -s -r -p "按任意键返回菜单..."
+    continue
+fi
+echo "密钥生成成功！"
+echo "私钥路径: $PRIVATE_KEY"
+echo "公钥路径: $PUBLIC_KEY"
 
-        # 生成密钥对
-        echo "正在生成密钥对..."
-        mkdir -p "$KEY_DIR"
-        chmod 700 "$KEY_DIR"
-        ssh-keygen -t rsa -b 4096 -f "$PRIVATE_KEY" -N "" -q
-        if [ $? -ne 0 ]; then
-            echo "密钥生成失败，请检查系统配置。"
-            exit 1
-        fi
-        echo "密钥生成成功！"
-        echo "私钥路径: $PRIVATE_KEY"
-        echo "公钥路径: $PUBLIC_KEY"
+# 显示公钥的 ASCII 图形化表示
+ssh-keygen -lv -f "$PUBLIC_KEY"
 
-        # 显示公钥的 ASCII 图形化表示
-        ssh-keygen -lv -f "$PUBLIC_KEY"
+# 步骤 2：备份 sshd 配置文件
+if [ ! -f "$BACKUP_CONFIG" ]; then
+    cp "$SSHD_CONFIG" "$BACKUP_CONFIG"
+    echo "sshd 配置文件已备份到 $BACKUP_CONFIG。"
+else
+    echo "sshd 配置文件备份已存在，跳过备份步骤。"
+fi
 
-        # 备份 sshd 配置文件
-        if [ ! -f "$BACKUP_CONFIG" ]; then
-            cp "$SSHD_CONFIG" "$BACKUP_CONFIG"
-            echo "sshd 配置文件已备份到 $BACKUP_CONFIG。"
-        else
-            echo "sshd 配置文件备份已存在，跳过备份步骤。"
-        fi
+# 步骤 3：配置公钥登录
+echo "如果您选择配置公钥登录，将把公钥添加到 authorized_keys..."
+AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
+cat "$PUBLIC_KEY" >> "$AUTHORIZED_KEYS"
+chmod 600 "$AUTHORIZED_KEYS"
+chown -R "$(whoami):$(whoami)" "$KEY_DIR"
+echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-        # 配置公钥登录
-        echo "正在配置公钥登录..."
-        AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
-        cat "$PUBLIC_KEY" >> "$AUTHORIZED_KEYS"
-        chmod 600 "$AUTHORIZED_KEYS"
-        chown -R "$(whoami):$(whoami)" "$KEY_DIR"
-        echo "公钥已添加到 $AUTHORIZED_KEYS。"
+# 步骤 4：修改 SSH 配置以禁用密码登录（生效需要重启 SSH 服务）
+echo "如果您选择禁用密码登录，修改 SSH 配置后需要手动重启 SSH 服务以使更改生效..."
+sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
+sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
+echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
+echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
 
-        # 修改 SSH 配置以禁用密码登录
-        echo "修改 SSH 配置以禁用密码登录..."
-        sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
-        sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
-        echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
-        echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
+# 步骤 5：清空 cloud-init 配置文件
+if [ -f "$CLOUD_INIT_CONFIG" ]; then
+    > "$CLOUD_INIT_CONFIG"
+    echo "PasswordAuthentication no" >> "$CLOUD_INIT_CONFIG"
+fi
 
-        # 清空 cloud-init 配置文件
-        if [ -f "$CLOUD_INIT_CONFIG" ]; then
-            > "$CLOUD_INIT_CONFIG"
-            echo "PasswordAuthentication no" >> "$CLOUD_INIT_CONFIG"
-        fi
+# 步骤 6：注释 PAM 配置中的 @include common-auth
+if [ -f "$PAM_SSHD_CONFIG" ]; then
+    sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
+fi
 
-        # 注释 PAM 配置中的 @include common-auth
-        if [ -f "$PAM_SSHD_CONFIG" ]; then
-            sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
-        fi
+# 提示用户重启 SSH 服务并断开 SSH 会话
+echo -e "\n${DARK_RED}重要提示：${NC}"
+echo -e "${DARK_RED}‼️  切记要先保存好私钥！！！${NC}"
+echo -e "${DARK_RED}‼️  退出菜单输入以下重启命令:${NC}"
+echo -e "${DARK_RED}‼️  systemctl restart sshd${NC}"
+echo -e "${DARK_RED}‼️  然后重启SSH禁用密码才会被加载生效、然后用私钥登录${NC}"
 
-        echo "密钥登录配置完成！请确保已保存私钥。"
+# 等待用户输入
+read -n 1 -s -r -p "按任意键继续，执行下一个步骤..."
 
-        # 第二步：更改 SSH 端口号
-        echo "执行更改 SSH 端口号..."
+# 步骤 7：更改 SSH 端口号
+echo "如果您选择更改 SSH 端口号，将修改配置文件并更新防火墙设置..."
+# 获取当前 SSH 服务监听的端口号
+current_port=$(grep -i "^Port" "$SSHD_CONFIG" | awk '{print $2}')
+current_port=${current_port:-22}
+echo "当前 SSH 登录端口号：$current_port"
 
-        # 获取当前 SSH 服务监听的端口号
-        current_port=$(grep -i "^Port" "$SSHD_CONFIG" | awk '{print $2}')
-        current_port=${current_port:-22}
-        echo "当前 SSH 登录端口号：$current_port"
+# 用户输入新的端口号
+read -p "请输入新的端口号 (默认 2222): " new_port
+new_port=${new_port:-2222}
 
-        # 用户输入新的端口号
-        read -p "请输入新的端口号 (默认 2222): " new_port
-        new_port=${new_port:-2222}
+# 检查端口号是否合法
+if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -lt 1024 ] || [ "$new_port" -gt 65535 ]; then
+    echo "无效的端口号，请输入 1024 到 65535 范围内的数字。"
+    read -n 1 -s -r -p "按任意键返回菜单..."
+    continue
+fi
 
-        # 检查端口号是否合法
-        if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -lt 1024 ] || [ "$new_port" -gt 65535 ]; then
-            echo "无效的端口号，请输入 1024 到 65535 范围内的数字。"
-            exit 1
-        fi
+# 修改 SSH 配置文件
+echo "正在修改 SSH 端口号为 $new_port..."
+sed -i.bak "s/^#\?Port .*/Port $new_port/" "$SSHD_CONFIG"
 
-        # 修改 SSH 配置文件
-        echo "正在修改 SSH 端口号为 $new_port..."
-        sed -i.bak "s/^#\?Port .*/Port $new_port/" "$SSHD_CONFIG"
+# 禁用默认 22 端口
+sed -i.bak 's/^#\?Port 22/Port 0/' "$SSHD_CONFIG"
 
-        # 禁用默认 22 端口
-        sed -i.bak 's/^#\?Port 22/Port 0/' "$SSHD_CONFIG"
+# 配置防火墙
+if command -v ufw &> /dev/null; then
+    echo "配置防火墙规则..."
+    ufw allow "$new_port"/tcp
+    ufw deny 22/tcp
+else
+    echo "未检测到 ufw 防火墙，跳过防火墙配置。"
+fi
 
-        # 配置防火墙
-        if command -v ufw &> /dev/null; then
-            echo "配置防火墙规则..."
-            ufw allow "$new_port"/tcp
-            ufw deny 22/tcp
-        else
-            echo "未检测到 ufw 防火墙，跳过防火墙配置。"
-        fi
+# 重启 SSH 服务
+echo "重启 SSH 服务以使更改生效..."
+systemctl restart sshd
 
-        # 重启 SSH 服务
-        echo "重启 SSH 服务以使更改生效..."
-        systemctl restart sshd
+echo "SSH 配置已完成！"
+echo "新的端口号为: $new_port"
+echo "请确保您可以通过新的端口使用私钥登录。"
 
-        echo "SSH 配置已完成！"
-        echo "新的端口号为: $new_port"
-        echo "注意保存私钥、否则关闭ssh就会登录不了。"
-        echo "请确保您可以通过新的端口使用私钥登录。"
-        ;;
+# 提示用户返回菜单
+echo ""
+read -n 1 -s -r -p "按任意键返回菜单..."
+echo ""
+            ;;
         4)
             execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
             ;;
