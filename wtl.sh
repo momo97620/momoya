@@ -953,30 +953,25 @@ while true; do
 done
             ;;
         2)
-# 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# 日志文件
 LOG_FILE="/var/log/ufw_script.log"
 
-# 检查是否以root权限运行
+
 if [[ $EUID -ne 0 ]]; then
     echo "此脚本必须以root权限运行 (sudo)" 
     exit 1
 fi
 
-# 日志记录函数
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
-# 自动设置主机名
 hostnamectl set-hostname $(hostname -s)
 
-# 自动检查并安装 ufw
 if ! command -v ufw &> /dev/null; then
     echo -e "${YELLOW}UFW 未安装，正在安装...${NC}"
     log "UFW 未安装，正在安装"
@@ -993,7 +988,6 @@ else
     log "UFW 已安装，跳过安装步骤"
 fi
 
-# 启用UFW并添加默认规则
 echo -e "${YELLOW}设置默认防火墙策略...${NC}"
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
@@ -1013,14 +1007,10 @@ else
     exit 1
 fi
 
-# 创建工具目录
 mkdir -p ~/tools
 
-# 创建UFW管理脚本
 cat << 'EOF' > ~/tools/ufw_port.sh
-#!/bin/bash
 
-# 检查是否以root权限运行
 if [[ $EUID -ne 0 ]]; then
    echo "此脚本必须以root权限运行 (sudo)" 
    exit 1
@@ -1032,7 +1022,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# 开放端口函数
 open_port() {
     read -p "请输入要开放的端口号: " port
     read -p "请输入该端口的备注: " comment
@@ -1063,7 +1052,6 @@ open_port() {
     esac
 }
 
-# 禁用端口函数
 disable_port() {
     read -p "请输入要禁用的端口号: " port
     read -p "选择协议 (1.TCP 2.UDP 3.所有协议): " protocol_choice
@@ -1088,8 +1076,6 @@ disable_port() {
             ;;
     esac
 }
-
-# 保存规则到文件
 save_rules() {
     read -p "请输入保存文件的路径 (默认: ./ufw_rules.backup): " file_path
     file_path=${file_path:-./ufw_rules.backup}
@@ -1097,7 +1083,6 @@ save_rules() {
     echo -e "${GREEN}规则已保存到 $file_path${NC}"
 }
 
-# 加载规则文件
 load_rules() {
     read -p "请输入规则文件的路径 (默认: ./ufw_rules.backup): " file_path
     file_path=${file_path:-./ufw_rules.backup}
@@ -1111,7 +1096,6 @@ load_rules() {
     fi
 }
 
-# 主菜单
 main_menu() {
     while true; do
         # 清屏
