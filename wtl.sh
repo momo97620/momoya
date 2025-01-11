@@ -897,7 +897,6 @@ read -p "请输入选项 (0-18): " choice
 
   case "$choice" in
         1)
-    
 clear_screen() {
     clear
 }
@@ -929,11 +928,12 @@ while true; do
 
     case $sub_choice in
         1)
-            execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2
+            execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "Hy2搭建"
             read -p "按任意键返回子菜单..."
             ;;
         2)
-            execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
+            execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "多协议搭建"
+            read -p "按任意键返回子菜单..."
             ;;
         3)
             echo "正在下载并执行 realm.sh..."
@@ -950,7 +950,7 @@ while true; do
             ;;
     esac
 done
-            ;;
+           
         2)
 RED='\033[0;31m'
 GREEN='\033[0;32m'
