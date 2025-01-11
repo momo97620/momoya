@@ -929,11 +929,11 @@ while true; do
 
     case $sub_choice in
         1)
-            execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "搭建 Hysteria 节点完成。"
+            execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2
             read -p "按任意键返回子菜单..."
             ;;
         2)
-            execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
+            execute_script "https://github.com/233boy/sing-box/raw/main/install.sh
             read -p "按任意键返回子菜单..."
             ;;
         3)
