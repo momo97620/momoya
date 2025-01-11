@@ -24,14 +24,6 @@ initialize_script() {
         # 提高文件描述符限制
         ulimit -n 65535
 
-        # 检查并安装必要工具
-        for tool in wget nano; do
-            if ! command -v "$tool" &>/dev/null; then
-                apt-get update &>/dev/null
-                apt-get install -y "$tool" &>/dev/null
-            fi
-        done
-
         # 清理磁盘缓存
         echo 3 > /proc/sys/vm/drop_caches
 
@@ -928,10 +920,10 @@ while true; do
 
     case $sub_choice in
         1)
-            execute_script "https://gist.githubusercontent.com/momo97620/68630501ec62d5f6ece848d5e3ffad4e/raw/203246731cde7f6ca90d8b2e934cf0ffa5127cb4/hy2" "Hy2搭建"
+            wget -N --no-check-certificate https://raw.githubusercontent.com/flame1ce/hysteria2-install/main/hysteria2-install-main/hy2/hysteria.sh && bash hysteria.sh
             ;;
         2)
-            execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "多协议搭建"
+            wget -N --no-check-certificate https://github.com/233boy/sing-box/raw/main/install.sh && bash install.sh
             ;;
         3)
             echo "正在下载并执行 realm.sh..."
