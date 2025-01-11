@@ -953,8 +953,14 @@ while true; do
 done
             ;;
         2)
+        
+        # 确保 option 变量有值
+if [ -z "$option" ]; then
+    echo "错误：选项未设置，请确保在运行脚本时提供选项。"
+    exit 1
+fi
           # 选项 4 - 安装和配置 UFW 管理工具
-if [ "$option" -eq 4 ]; then
+if [ "$option" -eq 2 ]; then
     # 颜色定义
     RED='\033[0;31m'
     GREEN='\033[0;32m'
