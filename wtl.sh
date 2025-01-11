@@ -993,6 +993,26 @@ else
     log "UFW 已安装，跳过安装步骤"
 fi
 
+# 启用UFW并添加默认规则
+echo -e "${YELLOW}设置默认防火墙策略...${NC}"
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+echo -e "${GREEN}默认策略已设置：拒绝入站，允许出站${NC}"
+
+if sudo ufw allow ssh; then
+    echo -e "${GREEN}成功添加SSH规则！${NC}"
+else
+    echo -e "${RED}添加SSH规则失败！${NC}"
+    exit 1
+fi
+
+if sudo ufw --force enable; then
+    echo -e "${GREEN}UFW 防火墙已启用！${NC}"
+else
+    echo -e "${RED}启用 UFW 防火墙失败！${NC}"
+    exit 1
+fi
+
 # 创建工具目录
 mkdir -p ~/tools
 
@@ -1140,11 +1160,8 @@ main_menu() {
 main_menu
 EOF
 
-# 去掉原有的快捷指令n
-if grep -q "alias n='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
-    sed -i "/alias n='sudo ~\/tools\/ufw_port.sh'/d" ~/.bashrc
-    echo -e "${GREEN}快捷命令 'n' 已成功移除。${NC}"
-fi
+# 赋予脚本执行权限
+chmod +x ~/tools/ufw_port.sh
 
 # 添加新的快捷指令n
 if ! grep -q "alias n='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
@@ -1156,32 +1173,12 @@ fi
 echo -e "${YELLOW}重新加载 .bashrc 配置以使快捷命令生效...${NC}"
 source ~/.bashrc
 hash -r
-exec bash
 
-# 启用UFW并添加默认规则
-echo -e "${YELLOW}设置默认防火墙策略...${NC}"
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-echo -e "${GREEN}默认策略已设置：拒绝入站，允许出站${NC}"
-
-if sudo ufw allow ssh; then
-    echo -e "${GREEN}成功添加SSH规则！${NC}"
-else
-    echo -e "${RED}添加SSH规则失败！${NC}"
-    exit 1
-fi
-
-if sudo ufw --force enable; then
-    echo -e "${GREEN}UFW 防火墙已启用！${NC}"
-else
-    echo -e "${RED}启用 UFW 防火墙失败！${NC}"
-    exit 1
-fi
-
-# 提示安装完成
+# 自动启动菜单
 echo -e "${GREEN}UFW端口管理工具安装完成！${NC}"
 echo -e "您可以使用快捷命令 'n' 来启动UFW端口管理工具。"
-echo -e "如果快捷命令 'n' 无法立即使用，请重新登录您的会话。"  
+echo -e "如果快捷命令 'n' 无法立即使用，请重新登录您的会话。"
+sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
     ;;
        
         3)
