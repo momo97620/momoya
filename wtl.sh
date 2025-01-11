@@ -953,7 +953,8 @@ while true; do
 done
             ;;
         2)
-          
+          # 选项 4 - 安装和配置 UFW 管理工具
+if [ "$option" -eq 4 ]; then
     # 颜色定义
     RED='\033[0;31m'
     GREEN='\033[0;32m'
