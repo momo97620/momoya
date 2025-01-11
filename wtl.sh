@@ -953,8 +953,6 @@ while true; do
 done
             ;;
         2)
-        
-       
     # 颜色定义
     RED='\033[0;31m'
     GREEN='\033[0;32m'
@@ -984,10 +982,7 @@ done
         echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
     }
 
-    # 创建工具目录
-    mkdir -p ~/tools
-
-    # 创建UFW管理脚本
+        # 创建UFW管理脚本
     cat << 'EOF' > ~/tools/ufw_port.sh
 
 # 检查是否以root权限运行
@@ -1152,8 +1147,8 @@ EOF
 
     # 提示安装完成
     echo -e "${GREEN}脚本安装完成，快捷命令 'n' 已自动加载并立即生效！${NC}"
-fi     
-       ;;
+    ;;
+       
         3)
 # 选项 3: 自动申请密钥并配置密钥登录
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
