@@ -166,5 +166,4 @@ main() {
         }
 
         # 调用主程序
-        color_echo
         main
