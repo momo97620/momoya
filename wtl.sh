@@ -1089,9 +1089,7 @@ load_rules() {
 }
 
 main_menu() {
-    while true; do
-        # 清屏
-        clear
+    while true; do  
         echo -e "${YELLOW}===== UFW端口管理工具 =====${NC}"
         echo "1. 开放端口"
         echo "2. 查看已开放端口"
@@ -1126,31 +1124,24 @@ main_menu() {
                 echo -e "${RED}无效的选择，请重新输入${NC}"
                 ;;
         esac
-
-        # 暂停后重新显示菜单
         read -p "按回车键继续..." pause_input
     done
 }
 
-# 启动主菜单
 main_menu
 EOF
 
-# 赋予脚本执行权限
 chmod +x ~/tools/ufw_port.sh
 
-# 添加新的快捷指令n
 if ! grep -q "alias n='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
     echo "alias n='sudo ~/tools/ufw_port.sh'" >> ~/.bashrc
     echo -e "${GREEN}快捷命令 'n' 已成功添加到 .bashrc${NC}"
 fi
 
-# 强制立即生效
 echo -e "${YELLOW}重新加载 .bashrc 配置以使快捷命令生效...${NC}"
 source ~/.bashrc
 hash -r
 
-# 自动启动菜单
 echo -e "${GREEN}UFW端口管理工具安装完成！${NC}"
 echo -e "您可以使用快捷命令 'n' 来启动UFW端口管理工具。"
 echo -e "如果快捷命令 'n' 无法立即使用，请重新登录您的会话。"
@@ -1158,7 +1149,6 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
     ;;
        
         3)
-# 选项 3: 自动申请密钥并配置密钥登录
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
 
 # 检查是否以 root 用户运行
