@@ -500,14 +500,12 @@ perform_backup() {
 }
 
 setup_cron_job() {
-    # 检查是否已存在定时任务
     (crontab -l | grep -q "$BACKUP_SCRIPT") && {
         echo "定时任务已存在，跳过设置。"
         echo "结果：失败 - 定时任务已存在" >> "$BACKUP_DIR/backup_log.txt"
         return
     }
 
-    # 添加定时任务：每 7 天的凌晨 5 点执行
     (crontab -l 2>/dev/null; echo "0 5 */7 * * $BACKUP_SCRIPT >> $BACKUP_DIR/backup.log 2>&1") | crontab -
     echo "已设置定时任务：每 7 天凌晨 5 点自动备份。"
     echo "结果：成功" >> "$BACKUP_DIR/backup_log.txt"
@@ -517,7 +515,6 @@ restore_backup() {
     read -p "请输入备份文件名（例如 docker_backup_YYYYMMDDHHMMSS.tar.gz）： " BACKUP_FILE
     read -p "请输入新服务器的 IP 地址： " SERVER_IP
 
-    # 复制备份文件到新服务器
     echo "正在复制备份文件到新服务器..."
     if scp "$BACKUP_DIR/$BACKUP_FILE" user@"$SERVER_IP":/path/to/backup/; then
         echo "正在恢复备份..."
@@ -1102,8 +1099,6 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
        
         3)
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
-
-# 检查是否以 root 用户运行
 if [ "$(id -u)" -ne 0 ]; then
     echo "请以 root 用户运行此脚本。"
     read -n 1 -s -r -p "按任意键返回菜单..."
@@ -1170,7 +1165,6 @@ if [ -f "$CLOUD_INIT_CONFIG" ]; then
     
     > "$CLOUD_INIT_CONFIG"
     
-    # 添加配置
     echo "PasswordAuthentication no" >> "$CLOUD_INIT_CONFIG"
 
     if grep -q "^PasswordAuthentication no" "$CLOUD_INIT_CONFIG"; then
@@ -1180,7 +1174,6 @@ if [ -f "$CLOUD_INIT_CONFIG" ]; then
     fi
 fi
 
-# 步骤 6：注释掉 PAM 配置中的 @include common-auth
 if [ -f "$PAM_SSHD_CONFIG" ]; then
     echo "注释掉 PAM 配置中的 @include common-auth..."
     sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
@@ -1247,7 +1240,6 @@ check_ldnmp() {
     
     echo -e "${DEEPRED}-----------------------------${NC}"
 }
-# 自动检测 LDNMP 环境
 check_ldnmp 
     echo -e "${GREEN}1.${NC} ${LIGHTBLUE}docker安装${NC}"
     echo -e "----------------------------"
@@ -1265,7 +1257,6 @@ check_ldnmp
     echo -e "----------------------------"
     echo -e "${DEEPRED}0.${NC} ${RED}返回主菜单${NC}" 
     echo -e "============================"
-    # 提示用户安装 Docker
 echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则提示安装失败。${NC}"
 
     read -p "请输入你的选择 [1-7, 0]: " sys_choice
@@ -1276,7 +1267,6 @@ echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则
             ;;
         4)
             clear  # 清除屏幕
-# 颜色定义
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 BRIGHT_GREEN='\033[1;32m'
@@ -1284,7 +1274,6 @@ DEEPRED='\033[1;31m'  # 深红色
 NC='\033[0m'          # 无颜色
   
 
-# 检查并设置 locale
 if ! grep -q "export LANG=en_US.UTF-8" ~/.bashrc; then
     echo "export LANG=en_US.UTF-8" >> ~/.bashrc
 fi
@@ -1293,16 +1282,13 @@ if ! grep -q "export LC_ALL=en_US.UTF-8" ~/.bashrc; then
     echo "export LC_ALL=en_US.UTF-8" >> ~/.bashrc
 fi
 
-# 立即生效
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
 setup_nextchat() {
-    # 设置工作目录
     local work="/docker/nextchat"
     mkdir -p "$work" && cd "$work" || { echo "无法进入工作目录"; exit 1; }
 
-    # 创建 docker-compose.yml 文件并写入基础配置
     cat <<EOL > docker-compose.yml
 version: '3'
 services:
@@ -1320,7 +1306,6 @@ services:
       - ENABLE_BALANCE_QUERY=1  #启用余额查询
 EOL
 
-    # 自动运行 docker-compose up -d
     if docker-compose up -d; then
         echo -e "${GREEN}✅ Docker 容器启动成功！${NC}"
     else
@@ -1328,7 +1313,6 @@ EOL
         exit 1
     fi
 
-    # 提示用户
      echo -e "${BRIGHT_GREEN}✅ 已成功安装！${NC}"
                 
     echo -e "${DEEPRED}1.${NC} ⚠️ ${DEEPRED}请手动放行8842端口！！${NC}"
@@ -1337,11 +1321,9 @@ EOL
     
     echo -e "${DEEPRED}3.${NC} ⚠️ ${DEEPRED}如遇到需要管理员密码:emomomo！！${NC}"
     
-    # 等待用户按任意键返回主菜单
     read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
-# 调用函数
 setup_nextchat
         ;;
         
@@ -1353,29 +1335,24 @@ setup_nextchat
                 ;;   
 
         5)
-# 检查 Docker 是否安装
 if ! command -v docker &> /dev/null; then
     echo "Docker 未安装，请先安装 Docker。"
     exit 1
 fi
 
-# 检查 Docker Compose 是否安装
 if ! command -v docker-compose &> /dev/null; then
     echo "Docker Compose 未安装，请先安装 Docker Compose。"
     exit 1
 fi
 
-# 创建目录
 mkdir -p /root/data/docker_data/easyimage
 if [ $? -ne 0 ]; then
     echo "创建目录失败，请检查权限或磁盘空间。"
     exit 1
 fi
 
-# 进入目录
 cd /root/data/docker_data/easyimage || { echo "无法进入目录，请检查路径。"; exit 1; }
 
-# 创建 docker-compose.yml 文件
 cat > docker-compose.yml <<EOF
 version: '3.3'
 services:
@@ -1398,17 +1375,14 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# 启动容器
 docker-compose up -d
 if [ $? -ne 0 ]; then
     echo "启动容器失败，请检查 Docker 和 Compose 的状态。"
     exit 1
 fi
 
-# 提示用户
 echo "已安装成功，请手动放行8080端口，使用IP+8080浏览器登录。"
 
-# 等待用户按任意键返回
 read -n 1 -s -r -p "按任意键返回上一页..."
 
             ;;
@@ -1462,7 +1436,6 @@ echo -e "\n${BLUE}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${NC}\n"  # 美化空�
 echo -e "${GREEN}0.${NC} 返回主菜单"
 echo -e "\n${BLUE}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${NC}\n"  # 美化空行
 echo -e "\n"  # 添加空行
-# 提示用户输入选项
 read -p "请输入选项 [1-3，0]: " sub_choice  
 
     case $sub_choice in
@@ -1486,9 +1459,7 @@ read -p "请输入选项 [1-3，0]: " sub_choice
             ;;
     esac
 
-    # 赋予权限
     chmod +x reinstall.sh
-    # 跳转到下一个子菜单
     while true; do
         clear
         echo -e "${BLUE}----------------------------------------${NC}"
@@ -1577,34 +1548,27 @@ done
     done
     ;;
             17)
-# 检查是否以 root 权限运行
 if [ "$EUID" -ne 0 ]; then
   echo "请以 root 权限运行此脚本。"
   exit
 fi
 
-# 安装必要的软件包
 install_caddy() {
   sudo apt update
   sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
 
-  # 添加 Caddy 的 GPG 密钥
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 
-  # 添加 Caddy 的软件源
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
 
-  # 更新软件包列表并安装 Caddy
   sudo apt update
   sudo apt install -y caddy
 }
 
-# 配置反向代理
 configure_proxy() {
   read -p "请输入你的反代域名: " domain
   read -p "请输入你要反代的 IP:端口: " proxy_target
 
-  # 检查是否为 IPv6 地址并添加方括号
   if [[ "$proxy_target" =~ \[.*\] ]]; then
     true
   elif [[ "$proxy_target" =~ : ]]; then
@@ -1613,7 +1577,6 @@ configure_proxy() {
     proxy_target="[$ip]:$port"
   fi
 
-  # 写入 Caddy 配置文件
   if grep -q "$domain" /etc/caddy/Caddyfile; then
     echo "域名 $domain 已存在，跳过添加。"
   else
@@ -1629,11 +1592,9 @@ configure_proxy() {
     echo "已添加域名 $domain 的反向代理配置。"
   fi
 
-  # 重新加载 Caddy 配置
   sudo systemctl reload caddy
 }
 
-# 查看已配置的 IP 和证书
 view_configurations() {
   echo "已配置的反向代理:"
   grep -E '^\S+' /etc/caddy/Caddyfile | awk '{print $1}' | sort -u
@@ -1642,7 +1603,6 @@ view_configurations() {
   sudo ls /etc/letsencrypt/live
 }
 
-# 删除反向代理配置
 delete_proxy() {
   echo "已配置的反向代理:"
   domains=( $(grep -E '^\S+' /etc/caddy/Caddyfile | awk '{print $1}' | sort -u) )
@@ -1663,11 +1623,9 @@ delete_proxy() {
     fi
   done
 
-  # 重新加载 Caddy 配置
   sudo systemctl reload caddy
 }
 
-# 主菜单
 while true; do
   echo "请选择一个功能:"
   echo "1. 配置反向代理"
@@ -1712,7 +1670,6 @@ done
 }
 
 
-# 主执行逻辑
 main() {
     
     if [[ "$1" == "install" ]]; then
@@ -1728,12 +1685,10 @@ main() {
     
     
     
-    # 调用主菜单
     initialize_script
     while true; do
         show_main_menu
     done
 }
 
-# 执行主逻辑
 main "$@"
