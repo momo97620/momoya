@@ -13,7 +13,27 @@ PINK='\033[38;5;198m'     # 深粉色
 DEEPRED='\033[0;91m'      # 深红色
 NC='\033[0m'              # 无颜色
 
+set_shanghai_time() {
+    # 检查当前时区
+    CURRENT_TIMEZONE=$(timedatectl | grep "Time zone" | awk '{print $3}')
+    
+    # 如果时区不是上海时间，则设置为上海时间
+    if [ "$CURRENT_TIMEZONE" != "Asia/Shanghai" ]; then
+        timedatectl set-timezone Asia/Shanghai &> /dev/null
+    fi
 
+    # 启用网络时间同步
+    timedatectl set-ntp true &> /dev/null
+}
+
+# 检查脚本是否有执行权限，如果没有则自动赋予权限
+SCRIPT_PATH=$(readlink -f "$0")
+if [ ! -x "$SCRIPT_PATH" ]; then
+    chmod +x "$SCRIPT_PATH"
+fi
+
+# 调用函数
+set_shanghai_time
 CACHE_DIR="/root/vps_cache"
 CACHE_TTL=3600
 mkdir -p "$CACHE_DIR" &>/dev/null
@@ -41,7 +61,6 @@ get_cache() {
             fi
         fi
 
-        
         eval "$command" > "$cache_file"
         cat "$cache_file"
     } &>/dev/null 
@@ -1685,6 +1704,7 @@ main() {
     
     initialize_script
     while true; do
+    set_shanghai_time
         show_main_menu
     done
 }
