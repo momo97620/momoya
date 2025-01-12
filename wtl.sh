@@ -54,43 +54,33 @@ execute_script() {
     local script_cache="$CACHE_DIR/$script_name"
 
     get_cache "$script_name" "curl -sSL $script_url -o $script_cache"
-    bash "$script_cache" &>/dev/null  # 隐藏脚本执行输出
+    bash "$script_cache" &>/dev/null
 }
 
-# 调用初始化优化函数（隐藏输出）
 initialize_script &
         
-# 自动设置 m 指令快捷启动脚本
 echo "正在设置 m 指令快捷启动脚本..." > /dev/null 2>&1
 
-# 设置主脚本路径
 target_script="/root/wtl.sh"
 
-# 检查目标脚本是否存在
 if [ ! -f "$target_script" ]; then
   echo "错误：主脚本文件未找到！路径：$target_script" > /dev/null 2>&1
   exit 1
 fi
 
-# 检查是否具有符号链接权限
 if [ ! -w "/usr/local/bin" ]; then
   echo "错误：需要管理员权限来创建符号链接。请使用 sudo 运行此脚本。" > /dev/null 2>&1
   exit 1
 fi
 
-# 检查是否已设置正确的符号链接
 if [ -L "/usr/local/bin/m" ] && [ "$(readlink /usr/local/bin/m)" == "$target_script" ]; then
   echo "m 指令已正确设置，无需重复设置。" > /dev/null 2>&1
 else
-  # 创建或更新符号链接并确保目标脚本可执行
   ln -sf "$target_script" /usr/local/bin/m > /dev/null 2>&1
   chmod +x "$target_script" > /dev/null 2>&1
   echo "成功设置 m 指令快捷启动脚本。现在可以通过 'm' 命令运行主脚本：$target_script" > /dev/null 2>&1
 fi
-
-# 安装主脚本
 install_script() {
-    # 隐藏所有输出，创建安装目录并安装脚本
     if [ ! -d "$INSTALL_DIR" ]; then
         mkdir -p "$INSTALL_DIR" > /dev/null 2>&1
     fi
@@ -98,11 +88,7 @@ install_script() {
     cp "$SCRIPT_PATH" "$INSTALL_DIR" > /dev/null 2>&1
     chmod +x "$INSTALL_DIR/$(basename "$SCRIPT_PATH")" > /dev/null 2>&1
 }
-
-# 在后台运行安装
 install_script &> /dev/null &
-
-# 执行子脚本
 execute_script() {
     local script_url="$1"
     local success_message="$2"
@@ -112,21 +98,17 @@ execute_script() {
     
     read -p "按任意键返回主菜单..."
 }
-
-# 安装 Docker 和 Docker Compose
 install_docker() {
     if command -v docker >/dev/null 2>&1; then
         echo -e "${GREEN}Docker 已安装，跳过安装步骤。${NC}"
     else
         echo -e "${BLUE}正在安装 Docker 和 Docker Compose...${NC}"
-        # 运行用户提供的完整安装命令
         sudo curl -fsSL https://get.docker.com | bash && sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose && sudo systemctl start docker && sudo systemctl enable docker
         echo -e "${GREEN}Docker 和 Docker Compose 安装完成！${NC}"
     fi
     read -n 1 -s -r -p "按任意键返回..."
 }
 
-# 设置 IPv4/6 优先级
 set_ip_priority() {
     check_current_priority() {
         if grep -q "net.ipv6.conf.all.disable_ipv6 = 1" /etc/sysctl.conf; then
@@ -188,13 +170,11 @@ update_script() {
 
     echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
 
-    # 检查远程 URL 是否可访问
     if curl -s --head "$remote_url" | grep "200 OK" > /dev/null; then
         if curl -sSL "$remote_url" -o "$local_path"; then
             chmod +x "$local_path"
             echo -e "${GREEN}脚本更新成功！最新版本已保存到 $local_path。${NC}"
 
-            # 立即执行更新后的脚本
             echo -e "${YELLOW}正在执行更新后的脚本...${NC}"
             exec "$local_path"  # 使用 exec 替换当前进程
         else
@@ -258,15 +238,11 @@ set_ssh_keepalive() {
     echo "按任意键返回主菜单..."
     read -n 1 -s -r
 }
-
-
-# 镜像管理
 image_management() {
     while true; do
     clear
     echo -e "${BLUE}\n===== 镜像管理 =====${NC}"
     
-    # 第一排选项
     echo -e "${RED}1.${NC} ${BOLD_GREEN}列出所有镜像${NC}      ${RED}2.${NC} ${BOLD_GREEN}删除镜像${NC}"
     echo -e "---------------------------"
     
@@ -379,11 +355,8 @@ image_management() {
         esac
     done
 }
-
-# 定义命名空间
 declare -A RAINBOW_PROMPT
 
-# 颜色代码命名空间
 RAINBOW_PROMPT[RED]='\033[0;31m'
 RAINBOW_PROMPT[GREEN]='\033[0;32m'
 RAINBOW_PROMPT[YELLOW]='\033[0;33m'
@@ -393,11 +366,9 @@ RAINBOW_PROMPT[CYAN]='\033[0;36m'
 RAINBOW_PROMPT[WHITE]='\033[0;37m'
 RAINBOW_PROMPT[RESET]='\033[0m'
 
-# 配置命名空间
 RAINBOW_PROMPT[BACKUP_FILE]="$HOME/.bashrc.backup"
 RAINBOW_PROMPT[BASHRC_FILE]="$HOME/.bashrc"
 
-# 工具函数命名空间
 RAINBOW_PROMPT::print_message() {
     local color=$1
     local message=$2
@@ -426,14 +397,11 @@ RAINBOW_PROMPT::press_any_key() {
     read -n 1 -s -r
 }
 
-# 核心功能命名空间
 RAINBOW_PROMPT::create_rainbow_prompt() {
     RAINBOW_PROMPT::create_backup
     
-    # 修改 .bashrc 文件
     sed -i '/^PS1=/d' "${RAINBOW_PROMPT[BASHRC_FILE]}"
     
-    # 构建彩虹PS1
     local rainbow_ps1="PS1=\""
     rainbow_ps1+="\\[${RAINBOW_PROMPT[RED]}\\]r"
     rainbow_ps1+="\\[${RAINBOW_PROMPT[GREEN]}\\]o"
@@ -462,7 +430,6 @@ RAINBOW_PROMPT::create_rainbow_prompt() {
     rainbow_ps1+="\\[${RAINBOW_PROMPT[RED]}\\]4"
     rainbow_ps1+="\\[${RAINBOW_PROMPT[RESET]}\\]:\\w\\$ \""
 
-    # 写入新的PS1设置
     echo "$rainbow_ps1" >> "${RAINBOW_PROMPT[BASHRC_FILE]}"
     
     source "${RAINBOW_PROMPT[BASHRC_FILE]}"
@@ -479,7 +446,6 @@ RAINBOW_PROMPT::restore_default() {
     fi
 }
 
-# 主程序命名空间
 RAINBOW_PROMPT::main() {
     while true; do
         RAINBOW_PROMPT::show_menu
@@ -509,14 +475,11 @@ RAINBOW_PROMPT::main() {
 }
 
 
-# 定义备份存储路径为用户的主目录
 BACKUP_DIR="$HOME/backup"  # 备份存储路径
 BACKUP_SCRIPT="$HOME/backup.sh"  # 脚本自身路径
 
-# 创建备份目录（如果不存在）
 mkdir -p "$BACKUP_DIR"
 
-# 函数：执行备份
 perform_backup() {
     TIMESTAMP=$(date +"%Y%m%d%H%M%S")
     echo "Stopping Docker..."
@@ -536,7 +499,6 @@ perform_backup() {
     fi
 }
 
-# 函数：设置定时任务
 setup_cron_job() {
     # 检查是否已存在定时任务
     (crontab -l | grep -q "$BACKUP_SCRIPT") && {
@@ -551,7 +513,6 @@ setup_cron_job() {
     echo "结果：成功" >> "$BACKUP_DIR/backup_log.txt"
 }
 
-# 函数：恢复备份
 restore_backup() {
     read -p "请输入备份文件名（例如 docker_backup_YYYYMMDDHHMMSS.tar.gz）： " BACKUP_FILE
     read -p "请输入新服务器的 IP 地址： " SERVER_IP
@@ -587,7 +548,6 @@ EOF
     fi
 }
 
-# 函数：备份菜单
 backup_menu() {
     while true; do
         echo "请选择操作："
@@ -630,8 +590,6 @@ backup_menu() {
     done
 }
 
-
-# 容器管理
 container_management() {
     while true; do
     clear
@@ -719,8 +677,6 @@ else
         fi
     done
 fi
-
-# 添加提示以便返回
 read -n 1 -s -r -p "按任意键返回..."
            ;;
             6) 
@@ -750,7 +706,6 @@ read -n 1 -s -r -p "按任意键返回..."
     done
 }
 
-# 定义安装 OneDrive 的函数
 install_onedrive() {
     echo "正在增加交换空间..."
     sudo fallocate -l 2G /swapfile
@@ -821,7 +776,6 @@ show_main_menu() {
     LIGHTCYAN='\033[1;36m'  # 明亮的青色
     NC='\033[0m'           # 重置颜色
 
-    # ASCII 艺术展示 "WUTONGLI" - 修正G的显示
     echo -e "${LIGHTCYAN}"
     echo " ██╗    ██╗██╗   ██╗████████╗ ██████╗ ███╗   ██╗ ██████╗ ██╗     ██╗"
     echo " ██║    ██║██║   ██║╚══██╔══╝██╔═══██╗████╗  ██║██╔════╝ ██║     ██║"
@@ -880,7 +834,6 @@ read -p "请输入选项 (0-18): " choice
 
   case "$choice" in
         1)
-# 执行脚本的函数
 execute_script() {
     local url="$1"
     local message="$2"
@@ -889,7 +842,6 @@ execute_script() {
     wget -N --no-check-certificate "$url" -O temp_script.sh
     chmod +x temp_script.sh
     
-    # 检查脚本是否存在并具有执行权限
     if [[ -f temp_script.sh && -x temp_script.sh ]]; then
         ./temp_script.sh
         read -p "脚本执行完毕，按任意键返回子菜单..."
@@ -1158,7 +1110,6 @@ if [ "$(id -u)" -ne 0 ]; then
     continue
 fi
 
-# 定义变量
 KEY_DIR="$HOME/.ssh"
 PRIVATE_KEY="$KEY_DIR/id_rsa"
 PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
@@ -1167,7 +1118,6 @@ BACKUP_CONFIG="/etc/ssh/sshd_config.bak"
 CLOUD_INIT_CONFIG="/etc/ssh/sshd_config.d/50-cloud-init.conf"
 PAM_SSHD_CONFIG="/etc/pam.d/sshd"
 
-# 步骤 1：生成密钥对
 echo "正在生成密钥对..."
 mkdir -p "$KEY_DIR"
 chmod 700 "$KEY_DIR"
@@ -1182,11 +1132,9 @@ echo "密钥文件路径："
 echo "私钥: $PRIVATE_KEY"
 echo "公钥: $PUBLIC_KEY"
 
-# 显示公钥的 ASCII 图形化表示
 echo "生成公钥的 ASCII 图形化表示..."
 ssh-keygen -lv -f "$PUBLIC_KEY"
 
-# 步骤 2：备份 sshd 配置文件
 if [ ! -f "$BACKUP_CONFIG" ]; then
     cp "$SSHD_CONFIG" "$BACKUP_CONFIG"
     echo "sshd 配置文件已备份到 $BACKUP_CONFIG。"
@@ -1194,7 +1142,6 @@ else
     echo "sshd 配置文件已存在备份，跳过备份步骤。"
 fi
 
-# 步骤 3：配置公钥登录
 echo "正在配置公钥登录..."
 AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
 cat "$PUBLIC_KEY" >> "$AUTHORIZED_KEYS"
@@ -1202,7 +1149,6 @@ chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-# 步骤 4：修改 SSH 配置以禁用密码登录（延迟生效）
 echo "修改 SSH 配置以禁用密码登录..."
 if ! grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
     echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
@@ -1219,17 +1165,14 @@ if grep -q "^UsePAM yes" "$SSHD_CONFIG"; then
     sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
 fi
 
-# 步骤 5：清空 cloud-init 配置文件并添加 PasswordAuthentication no
 if [ -f "$CLOUD_INIT_CONFIG" ]; then
     echo "检测到 $CLOUD_INIT_CONFIG，清空文件并添加 PasswordAuthentication no..."
     
-    # 清空文件内容
     > "$CLOUD_INIT_CONFIG"
     
     # 添加配置
     echo "PasswordAuthentication no" >> "$CLOUD_INIT_CONFIG"
 
-    # 确保修改生效
     if grep -q "^PasswordAuthentication no" "$CLOUD_INIT_CONFIG"; then
         echo "成功修改 $CLOUD_INIT_CONFIG 中的 PasswordAuthentication 为 no。"
     else
@@ -1243,7 +1186,6 @@ if [ -f "$PAM_SSHD_CONFIG" ]; then
     sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
 fi
 
-# 提示用户当前会话不会失效
 echo -e "${DARK_RED}重要提示：${NC}"
 echo -e "${DARK_RED}‼️  切记要先保存好私钥！！！。${NC}"
 echo -e "${DARK_RED}‼️  退出菜单输入以下重启命令:${NC}"
@@ -1255,7 +1197,6 @@ echo -e "${DARK_RED}‼️  然后重启SSH禁用密码才会被加载生效、�
 echo -e "${BRIGHT_GREEN}公钥路径: $PUBLIC_KEY${NC}"
 echo -e "${BRIGHT_GREEN}私钥路径: $PRIVATE_KEY${NC}"
 
-# 等待用户按任意键返回菜单
 echo ""
 read -n 1 -s -r -p "按任意键返回菜单..."
 echo ""
@@ -1273,26 +1214,21 @@ echo ""
             execute_script "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcp.sh" "BBR加速完成。"
             ;;
         8)
-            # 调用系统管理菜单
 while true; do
     clear  # 清除屏幕
-    # 函数：检测 LDNMP 环境
 check_ldnmp() {
-    # 检测 PHP 版本
     if command -v php &> /dev/null; then
         php_version="PHP: $(php -v | head -n 1 | awk '{print $2}')"
     else
         php_version="PHP: 未安装"
     fi
 
-    # 检测 MySQL 版本
     if command -v mysql &> /dev/null; then
         mysql_version="MySQL: $(mysql --version | awk '{print $5}')"
     else
         mysql_version="MySQL: 未安装"
     fi
 
-    # 检测 Nginx 版本
     if command -v nginx &> /dev/null; then
         nginx_version="Nginx: $(nginx -v 2>&1 | awk -F/ '{print $2}')"
     else
