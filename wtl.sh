@@ -1227,8 +1227,6 @@ check_ldnmp() {
     else
         nginx_version="Nginx: 未安装"
     fi
-
-    # 检测 Docker 版本
     if command -v docker &> /dev/null; then
         docker_version="Docker: $(docker --version | awk '{print $3}' | sed 's/,//')"
     else
