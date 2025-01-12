@@ -13,34 +13,26 @@ PINK='\033[38;5;198m'     # 深粉色
 DEEPRED='\033[0;91m'      # 深红色
 NC='\033[0m'              # 无颜色
 
-# 定义缓存目录和有效期
-CACHE_DIR="/root/vps_cache"
-CACHE_TTL=3600  # 缓存有效期（秒）
-mkdir -p "$CACHE_DIR" &>/dev/null  # 创建缓存目录
 
-# 初始化优化脚本运行环境
+CACHE_DIR="/root/vps_cache"
+CACHE_TTL=3600
+mkdir -p "$CACHE_DIR" &>/dev/null
+
 initialize_script() {
     {
-        # 提高文件描述符限制
         ulimit -n 65535
 
-        # 清理磁盘缓存
         echo 3 > /proc/sys/vm/drop_caches
 
-        # 提升当前脚本优先级
         renice -n -5 $$ &>/dev/null
-    } &>/dev/null  # 隐藏所有输出
+    } &>/dev/null
 }
 
-# 获取缓存内容或生成新缓存
-# 参数1: 缓存文件名
-# 参数2: 需要执行的命令
 get_cache() {
     local cache_file="$CACHE_DIR/$1"
     local command="$2"
 
     {
-        # 检查缓存是否存在且未过期
         if [ -f "$cache_file" ]; then
             local cache_age=$(( $(date +%s) - $(stat -c %Y "$cache_file") ))
             if [ "$cache_age" -lt "$CACHE_TTL" ]; then
@@ -49,13 +41,12 @@ get_cache() {
             fi
         fi
 
-        # 执行命令并生成缓存
+        
         eval "$command" > "$cache_file"
         cat "$cache_file"
-    } &>/dev/null  # 隐藏所有输出
+    } &>/dev/null 
 }
 
-# 缓存子脚本下载并执行
 execute_script() {
     local script_url="$1"
     local success_message="$2"
