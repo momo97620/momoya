@@ -130,10 +130,12 @@ install_docker() {
 
 set_ip_priority() {
     check_current_priority() {
-        if grep -q "net.ipv6.conf.all.disable_ipv6 = 1" /etc/sysctl.conf; then
-            echo "当前优先级：IPv4"
+        if grep -q "label ::ffff:0:0/96  2" /etc/gai.conf; then
+            echo "当前优先级：IPv4 优先"
+        elif grep -q "label ::/0  1" /etc/gai.conf; then
+            echo "当前优先级：IPv6 优先"
         else
-            echo "当前优先级：IPv6"
+            echo "当前优先级：IPv4 和 IPv6 同时启用（默认）"
         fi
     }
 
@@ -141,23 +143,26 @@ set_ip_priority() {
         case "$1" in
             1)
                 echo "正在设置优先使用 IPv4..."
-                echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-                echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
-                sysctl -p
+                # 设置 IPv4 优先，但不禁用 IPv6
+                echo "precedence ::ffff:0:0/96  100" > /etc/gai.conf
+                echo "label ::ffff:0:0/96  2" >> /etc/gai.conf
                 echo "IPv4 优先设置完成！"
                 ;;
             2)
                 echo "正在设置优先使用 IPv6..."
-                sed -i '/net.ipv6.conf.all.disable_ipv6/d' /etc/sysctl.conf
-                sed -i '/net.ipv6.conf.default.disable_ipv6/d' /etc/sysctl.conf
-                echo "net.ipv6.conf.all.disable_ipv6 = 0" >> /etc/sysctl.conf
-                echo "net.ipv6.conf.default.disable_ipv6 = 0" >> /etc/sysctl.conf
-                sysctl -p
+                # 设置 IPv6 优先，但不禁用 IPv4
+                echo "precedence ::/0  100" > /etc/gai.conf
+                echo "label ::/0  1" >> /etc/gai.conf
                 echo "IPv6 优先设置完成！"
                 ;;
-             
+            3)
+                echo "正在设置同时启用 IPv4 和 IPv6..."
+                # 删除优先级配置，恢复默认行为
+                rm -f /etc/gai.conf
+                echo "IPv4 和 IPv6 同时启用设置完成！"
+                ;;
             *)
-                echo "无效的选项！请输入 '1' 或 '2'。"
+                echo "无效的选项！请输入 '1'、'2' 或 '3'。"
                 exit 1
                 ;;
         esac
@@ -171,8 +176,9 @@ set_ip_priority() {
         check_current_priority
         echo "1. 优先使用 IPv4"
         echo "2. 优先使用 IPv6"
+        echo "3. 同时启用 IPv4 和 IPv6"
         echo "==============================="
-        read -p "请输入选项 [1/2，0]：" choice
+        read -p "请输入选项 [1/2/3，0]：" choice
         set_priority "$choice"
         echo "设置完成！按任意键退出..."
         read -n 1 -s -r
@@ -180,6 +186,7 @@ set_ip_priority() {
 
     show_menu
 }
+
 
 
 
