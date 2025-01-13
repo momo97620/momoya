@@ -138,12 +138,16 @@ set_ip_priority() {
 
     # 检查当前优先级
     check_current_priority() {
-        if grep -q "label ::ffff:0:0/96  2" /etc/gai.conf; then
-            echo "当前优先级：IPv4 优先"
-        elif grep -q "label ::/0  1" /etc/gai.conf; then
-            echo "当前优先级：IPv6 优先"
+        if [ -f /etc/gai.conf ]; then
+            if grep -q "label ::ffff:0:0/96  2" /etc/gai.conf; then
+                echo "当前优先级：IPv4 优先"
+            elif grep -q "label ::/0  1" /etc/gai.conf; then
+                echo "当前优先级：IPv6 优先"
+            else
+                echo "当前优先级：IPv4 和 IPv6 同时启用（默认）"
+            fi
         else
-            echo "当前优先级：IPv4 和 IPv6 同时启用（默认）"
+            echo "当前优先级：IPv4 和 IPv6 同时启用（默认，/etc/gai.conf 文件不存在）"
         fi
     }
 
@@ -175,6 +179,24 @@ set_ip_priority() {
                 exit 1
                 ;;
         esac
+
+        # 验证设置是否生效
+        if [ "$1" -eq 1 ] || [ "$1" -eq 2 ]; then
+            if [ -f /etc/gai.conf ]; then
+                echo "验证设置："
+                cat /etc/gai.conf
+            else
+                echo "错误：/etc/gai.conf 文件未创建！"
+                exit 1
+            fi
+        elif [ "$1" -eq 3 ]; then
+            if [ ! -f /etc/gai.conf ]; then
+                echo "验证设置：/etc/gai.conf 文件已删除，恢复默认行为。"
+            else
+                echo "错误：/etc/gai.conf 文件未删除！"
+                exit 1
+            fi
+        fi
     }
 
     # 显示菜单
@@ -196,8 +218,6 @@ set_ip_priority() {
 
     show_menu
 }
-
-
 
 
 update_script() {
