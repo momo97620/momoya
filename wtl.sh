@@ -785,6 +785,231 @@ install_onedrive() {
     read -n 1 -s -r -p "按任意键返回..."
 }
 
+# 安装 Trojan 函数
+install_trojan() {
+    echo "正在安装 Trojan 代理..."
+    # 这里是 Trojan 安装脚本的内容
+    # 将之前的完整脚本封装到这个函数中
+    # 注意：函数内部的变量和逻辑需要独立，避免与主脚本冲突
+
+    # 示例：Trojan 安装逻辑
+    echo "正在更新系统并安装依赖..."
+    apt update && apt upgrade -y
+    apt install -y curl wget git nginx certbot
+
+    read -p "请输入你的域名: " domain
+    read -p "请输入自定义端口（默认443）: " port
+    port=${port:-443}
+
+    echo "请选择安全协议："
+    echo "1. Trojan + TCP"
+    echo "2. Trojan + WebSocket"
+    echo "3. Trojan + WebSocket + TLS"
+    read -p "请输入选项（1/2/3）: " protocol
+
+    echo "正在获取SSL证书..."
+    certbot certonly --standalone -d $domain --preferred-challenges http --agree-tos --email admin@$domain --non-interactive
+
+    echo "正在下载Trojan..."
+    wget https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
+    tar -xvf trojan-1.16.0-linux-amd64.tar.xz
+    mv trojan /usr/local/bin/
+
+    echo "正在创建Trojan配置文件..."
+    mkdir -p /etc/trojan
+    case $protocol in
+        1)
+            cat > /etc/trojan/config.json <<EOF
+{
+    "run_type": "server",
+    "local_addr": "::",
+    "local_port": $port,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        "your_password"
+    ],
+    "log_level": 1,
+    "ssl": {
+        "cert": "/etc/letsencrypt/live/$domain/fullchain.pem",
+        "key": "/etc/letsencrypt/live/$domain/privkey.pem",
+        "key_password": "",
+        "cipher": "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384",
+        "cipher_tls13": "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+        "prefer_server_cipher": true,
+        "alpn": [
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "session_timeout": 600,
+        "plain_http_response": "",
+        "curves": "",
+        "dhparam": ""
+    },
+    "tcp": {
+        "prefer_ipv4": false,
+        "no_delay": true,
+        "keep_alive": true,
+        "reuse_port": false,
+        "fast_open": true,
+        "fast_open_qlen": 20
+    }
+}
+EOF
+            ;;
+        2)
+            cat > /etc/trojan/config.json <<EOF
+{
+    "run_type": "server",
+    "local_addr": "::",
+    "local_port": $port,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        "your_password"
+    ],
+    "log_level": 1,
+    "ssl": {
+        "cert": "/etc/letsencrypt/live/$domain/fullchain.pem",
+        "key": "/etc/letsencrypt/live/$domain/privkey.pem",
+        "key_password": "",
+        "cipher": "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384",
+        "cipher_tls13": "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+        "prefer_server_cipher": true,
+        "alpn": [
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "session_timeout": 600,
+        "plain_http_response": "",
+        "curves": "",
+        "dhparam": ""
+    },
+    "tcp": {
+        "prefer_ipv4": false,
+        "no_delay": true,
+        "keep_alive": true,
+        "reuse_port": false,
+        "fast_open": true,
+        "fast_open_qlen": 20
+    },
+    "websocket": {
+        "enabled": true,
+        "path": "/ws",
+        "host": "$domain"
+    }
+}
+EOF
+            ;;
+        3)
+            cat > /etc/trojan/config.json <<EOF
+{
+    "run_type": "server",
+    "local_addr": "::",
+    "local_port": $port,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        "your_password"
+    ],
+    "log_level": 1,
+    "ssl": {
+        "cert": "/etc/letsencrypt/live/$domain/fullchain.pem",
+        "key": "/etc/letsencrypt/live/$domain/privkey.pem",
+        "key_password": "",
+        "cipher": "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384",
+        "cipher_tls13": "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+        "prefer_server_cipher": true,
+        "alpn": [
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "session_timeout": 600,
+        "plain_http_response": "",
+        "curves": "",
+        "dhparam": ""
+    },
+    "tcp": {
+        "prefer_ipv4": false,
+        "no_delay": true,
+        "keep_alive": true,
+        "reuse_port": false,
+        "fast_open": true,
+        "fast_open_qlen": 20
+    },
+    "websocket": {
+        "enabled": true,
+        "path": "/ws",
+        "host": "$domain"
+    }
+}
+EOF
+            ;;
+        *)
+            echo "无效选项，退出脚本"
+            exit 1
+            ;;
+    esac
+
+    echo "正在创建systemd服务文件..."
+    cat > /etc/systemd/system/trojan.service <<EOF
+[Unit]
+Description=Trojan Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/trojan -c /etc/trojan/config.json
+Restart=on-failure
+User=nobody
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    echo "正在启动Trojan服务..."
+    systemctl daemon-reload
+    systemctl start trojan
+    systemctl enable trojan
+
+    echo "正在配置防火墙..."
+    ufw allow $port/tcp
+    ufw enable
+
+    echo "正在启用TCP Fast Open..."
+    echo "net.ipv4.tcp_fastopen = 3" >> /etc/sysctl.conf
+    sysctl -p
+
+    echo "正在设置证书自动续期..."
+    (crontab -l 2>/dev/null; echo "0 0 * * * certbot renew --quiet && systemctl restart trojan") | crontab -
+
+    ip=$(curl -s ifconfig.me)
+    echo "Trojan节点配置完成！"
+    echo "服务器IP: $ip"
+    echo "端口: $port"
+    echo "协议: Trojan"
+    echo "密码: your_password"
+    echo "域名: $domain"
+    echo "生成Trojan链接:"
+    case $protocol in
+        1)
+            echo "trojan://your_password@$domain:$port#$domain"
+            ;;
+        2)
+            echo "trojan://your_password@$domain:$port#$domain?type=ws&path=/ws"
+            ;;
+        3)
+            echo "trojan://your_password@$domain:$port#$domain?type=ws&path=/ws&security=tls"
+            ;;
+    esac
+
+    echo "正在清理临时文件..."
+    rm -f trojan-1.16.0-linux-amd64.tar.xz
+}
+
 
 show_main_menu() {
     clear
@@ -900,6 +1125,9 @@ while true; do
             clear_screen
             echo "正在下载并执行 realm2 转发脚本..."
             execute_script "https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh" "realm2 转发脚本"
+            ;;
+        4)  
+            install_trojan
             ;;
         0)
             echo "返回主菜单。"
