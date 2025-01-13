@@ -786,7 +786,7 @@ install_onedrive() {
 }
 
 install_trojan() {
-    echo "正在安装 Trojan 代理..."
+    echo "Installing Trojan..."
 
     # 安装依赖
     echo "正在更新系统并安装依赖..."
