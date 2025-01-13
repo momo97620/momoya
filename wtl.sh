@@ -785,18 +785,15 @@ install_onedrive() {
     read -n 1 -s -r -p "按任意键返回..."
 }
 
-# 安装 Trojan 函数
 install_trojan() {
     echo "正在安装 Trojan 代理..."
-    # 这里是 Trojan 安装脚本的内容
-    # 将之前的完整脚本封装到这个函数中
-    # 注意：函数内部的变量和逻辑需要独立，避免与主脚本冲突
 
-    # 示例：Trojan 安装逻辑
+    # 安装依赖
     echo "正在更新系统并安装依赖..."
     apt update && apt upgrade -y
     apt install -y curl wget git nginx certbot
 
+    # 获取用户输入
     read -p "请输入你的域名: " domain
     read -p "请输入自定义端口（默认443）: " port
     port=${port:-443}
@@ -807,14 +804,30 @@ install_trojan() {
     echo "3. Trojan + WebSocket + TLS"
     read -p "请输入选项（1/2/3）: " protocol
 
+    # 获取SSL证书
     echo "正在获取SSL证书..."
+    if sudo netstat -tuln | grep -q ":80 "; then
+        echo "检测到80端口被占用，尝试停止相关服务..."
+        sudo systemctl stop nginx 2>/dev/null || true
+        sudo systemctl stop apache2 2>/dev/null || true
+    fi
     certbot certonly --standalone -d $domain --preferred-challenges http --agree-tos --email admin@$domain --non-interactive
+    if sudo systemctl list-unit-files | grep -q "nginx.service"; then
+        echo "重新启动Nginx服务..."
+        sudo systemctl start nginx
+    fi
+    if sudo systemctl list-unit-files | grep -q "apache2.service"; then
+        echo "重新启动Apache服务..."
+        sudo systemctl start apache2
+    fi
 
+    # 下载并安装Trojan
     echo "正在下载Trojan..."
     wget https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
     tar -xvf trojan-1.16.0-linux-amd64.tar.xz
     mv trojan /usr/local/bin/
 
+    # 配置Trojan
     echo "正在创建Trojan配置文件..."
     mkdir -p /etc/trojan
     case $protocol in
@@ -954,6 +967,7 @@ EOF
             ;;
     esac
 
+    # 创建systemd服务文件
     echo "正在创建systemd服务文件..."
     cat > /etc/systemd/system/trojan.service <<EOF
 [Unit]
@@ -970,22 +984,27 @@ User=nobody
 WantedBy=multi-user.target
 EOF
 
+    # 启动Trojan服务
     echo "正在启动Trojan服务..."
     systemctl daemon-reload
     systemctl start trojan
     systemctl enable trojan
 
+    # 配置防火墙
     echo "正在配置防火墙..."
     ufw allow $port/tcp
     ufw enable
 
+    # 启用TCP Fast Open
     echo "正在启用TCP Fast Open..."
     echo "net.ipv4.tcp_fastopen = 3" >> /etc/sysctl.conf
     sysctl -p
 
+    # 设置证书自动续期
     echo "正在设置证书自动续期..."
     (crontab -l 2>/dev/null; echo "0 0 * * * certbot renew --quiet && systemctl restart trojan") | crontab -
 
+    # 输出结果
     ip=$(curl -s ifconfig.me)
     echo "Trojan节点配置完成！"
     echo "服务器IP: $ip"
@@ -1006,10 +1025,30 @@ EOF
             ;;
     esac
 
+    # 清理临时文件
     echo "正在清理临时文件..."
     rm -f trojan-1.16.0-linux-amd64.tar.xz
+
+    press_any_key_to_continue
+    
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+    echo
 }
 
+ 卸载Trojan函数
+uninstall_trojan() {
+    echo "正在卸载Trojan..."
+    systemctl stop trojan 2>/dev/null || true
+    systemctl disable trojan 2>/dev/null || true
+    rm -f /etc/systemd/system/trojan.service
+    rm -rf /etc/trojan
+    rm -f /usr/local/bin/trojan
+    echo "Trojan已卸载。"
+    press_any_key_to_continue
+    
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+    echo
+}
 
 show_main_menu() {
     clear
@@ -1107,6 +1146,8 @@ while true; do
     echo -e "\e[1;34m-----------------------\e[0m"
     echo -e "\e[1;30m4) trojan手搓\e[0m"
     echo -e "\e[1;34m-----------------------\e[0m"
+    echo -e "\e[1;30m5) trojan卸载\e[0m"
+    echo -e "\e[1;34m-----------------------\e[0m"
     echo -e "\e[1;30m0) 返回主菜单\e[0m"
     echo -e "\e[1;34m=========================\e[0m"
 
@@ -1129,8 +1170,11 @@ while true; do
             execute_script "https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh" "realm2 转发脚本"
             ;;
         4)  
-            install_trojan
-            ;;
+            install_trojan 
+            ;; 
+        5)  
+            uninstall_trojan
+            ;;    
         0)
             echo "返回主菜单。"
             break
