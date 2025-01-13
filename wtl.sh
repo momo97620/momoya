@@ -128,19 +128,16 @@ install_docker() {
     read -n 1 -s -r -p "按任意键返回..."
 }
 
+
 set_ip_priority() {
-    # 检查是否以 root 用户运行
+    # 检查当前用户是否为 root
     if [ "$EUID" -ne 0 ]; then
         echo "请以 root 用户运行此脚本！"
         exit 1
     fi
 
+    # 检查当前优先级
     check_current_priority() {
-        if [ ! -f /etc/gai.conf ]; then
-            echo "当前优先级：IPv4 和 IPv6 同时启用（默认）"
-            return
-        fi
-
         if grep -q "label ::ffff:0:0/96  2" /etc/gai.conf; then
             echo "当前优先级：IPv4 优先"
         elif grep -q "label ::/0  1" /etc/gai.conf; then
@@ -150,6 +147,7 @@ set_ip_priority() {
         fi
     }
 
+    # 设置优先级
     set_priority() {
         case "$1" in
             1)
@@ -179,6 +177,7 @@ set_ip_priority() {
         esac
     }
 
+    # 显示菜单
     show_menu() {
         clear
         echo "==============================="
@@ -189,7 +188,7 @@ set_ip_priority() {
         echo "2. 优先使用 IPv6"
         echo "3. 同时启用 IPv4 和 IPv6"
         echo "==============================="
-        read -p "请输入选项 [1/2/3]：" choice
+        read -p "请输入选项 [1/2/3，0]：" choice
         set_priority "$choice"
         echo "设置完成！按任意键退出..."
         read -n 1 -s -r
