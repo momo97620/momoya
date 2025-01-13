@@ -816,7 +816,7 @@ echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}      ${BLUE}10
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}该密钥登录${NC}    ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
+echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}该密钥登录${NC}     ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
 
 echo "-------------------------------------"
 
@@ -836,7 +836,7 @@ echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速     ${BLUE}15$
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC} ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
+echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}    ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
 
 echo "-------------------------------------"
 
