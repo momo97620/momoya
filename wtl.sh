@@ -857,7 +857,7 @@ echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}该密钥登录${NC}     ${BLU
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}4.${NC} ${PINK}♥${NC} ${GREEN}改登录端口${NC}       ${BLUE}12${NC} ${PINK}♥${NC} ${YELLOW}保持ssh连接${NC}"
+echo -e "  ${BLUE}4.${NC} ${PINK}♥${NC} ${GREEN}改登录端口${NC}      ${BLUE}12${NC} ${PINK}♥${NC} ${YELLOW}保持ssh连接${NC}"
 
 echo "-------------------------------------"
 
