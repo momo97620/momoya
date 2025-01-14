@@ -853,7 +853,7 @@ echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}      ${BLUE}10
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}该密钥登录${NC}     ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
+echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}改密钥登录${NC}      ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
 
 echo "-------------------------------------"
 
