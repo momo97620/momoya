@@ -1,16 +1,6 @@
   #!/bin/bash
 
 # 定义颜色
-RED='\033[0;31m'          # 红
-GREEN='\033[0;32m'        # 绿色
-BRIGHT_GREEN='\033[1;32m' # 亮绿色
-YELLOW='\033[0;94m'       # 黄色
-BLUE='\033[0;34m'         # 蓝色
-DARK_RED='\033[1;31m'     # 深红色
-LIGHTBLUE='\033[1;34m'    # 亮蓝色
-LIGHTCYAN='\033[1;36m'    # 亮青色
-PINK='\033[38;5;198m'     # 深粉色
-DEEPRED='\033[0;91m'      # 深红色
 NC='\033[0m'              # 无颜色
 
 set_shanghai_time() {
