@@ -153,26 +153,27 @@ set_ip_priority() {
 
     # 设置优先级
     set_priority() {
+        # 备份配置文件
+        cp -n /etc/gai.conf /etc/gai.conf.bak 2>/dev/null
+
+        # 清理已有配置
+        sed -i '/precedence/d' /etc/gai.conf 2>/dev/null
+        sed -i '/label/d' /etc/gai.conf 2>/dev/null
+
         case "$1" in
             1)
                 echo "正在设置优先使用 IPv4..."
-                # 设置 IPv4 优先，但不禁用 IPv6
-                echo "precedence ::ffff:0:0/96  100" > /etc/gai.conf
+                echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
                 echo "label ::ffff:0:0/96  2" >> /etc/gai.conf
-                echo "IPv4 优先设置完成！"
                 ;;
             2)
                 echo "正在设置优先使用 IPv6..."
-                # 设置 IPv6 优先，但不禁用 IPv4
-                echo "precedence ::/0  100" > /etc/gai.conf
+                echo "precedence ::/0  100" >> /etc/gai.conf
                 echo "label ::/0  1" >> /etc/gai.conf
-                echo "IPv6 优先设置完成！"
                 ;;
             3)
                 echo "正在设置同时启用 IPv4 和 IPv6..."
-                # 删除优先级配置，恢复默认行为
                 rm -f /etc/gai.conf
-                echo "IPv4 和 IPv6 同时启用设置完成！"
                 ;;
             *)
                 echo "无效的选项！请输入 '1'、'2' 或 '3'。"
@@ -180,22 +181,17 @@ set_ip_priority() {
                 ;;
         esac
 
-        # 验证设置是否生效
-        if [ "$1" -eq 1 ] || [ "$1" -eq 2 ]; then
-            if [ -f /etc/gai.conf ]; then
-                echo "验证设置："
-                cat /etc/gai.conf
-            else
-                echo "错误：/etc/gai.conf 文件未创建！"
-                exit 1
-            fi
-        elif [ "$1" -eq 3 ]; then
+        # 验证设置
+        if [ "$1" -eq 3 ]; then
             if [ ! -f /etc/gai.conf ]; then
                 echo "验证设置：/etc/gai.conf 文件已删除，恢复默认行为。"
             else
                 echo "错误：/etc/gai.conf 文件未删除！"
                 exit 1
             fi
+        else
+            echo "验证设置："
+            cat /etc/gai.conf
         fi
     }
 
@@ -210,7 +206,11 @@ set_ip_priority() {
         echo "2. 优先使用 IPv6"
         echo "3. 同时启用 IPv4 和 IPv6"
         echo "==============================="
-        read -p "请输入选项 [1/2/3，0]：" choice
+        read -p "请输入选项 [1/2/3]：" choice
+        if ! [[ "$choice" =~ ^[123]$ ]]; then
+            echo "无效的输入！请输入正确选项。"
+            exit 1
+        fi
         set_priority "$choice"
         echo "设置完成！按任意键退出..."
         read -n 1 -s -r
