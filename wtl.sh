@@ -817,7 +817,7 @@ show_main_menu() {
     clear
     # 定义颜色
     LIGHTCYAN='\033[1;36m'  # 明亮的青色
-    PINK='\033[38;5;
+    PINK='\033[38;5;198m'     # 深粉色
     NC='\033[0m'           # 重置颜色
 
     echo -e "${LIGHTCYAN}"
