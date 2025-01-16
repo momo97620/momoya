@@ -830,21 +830,21 @@ show_main_menu() {
     echo -e "${NC}"
 
     echo -e "${LIGHTCYAN}============================= VPS 脚本菜单 =============================${NC}"
-    echo -e "${LIGHTBLUE}使用快捷指令 m 可快速打开脚本😊${NC}"
+    echo -e "${LIGHTCYAN}使用快捷指令 m 可快速打开脚本😊${NC}"
     echo -e "${PINK}作者：梧桐里${NC}"
     echo -e "${LIGHTCYAN}=====================================================================${NC}"
     
     echo -e "${YELLOW}请选择要执行的任务：${NC}"
 
-    echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${NC}节点合集 ▶${NC}      ${BLUE}09${NC} ${PINK}♥${NC} ${LIGHTCYAN}系统信息查询${NC}"
+    echo -e "  ${BLUE}1.${NC} ${PINK}♥${NC} ${NC}节点合集 ▶${NC}      ${BLUE}09${NC} ${PINK}♥${NC} ${NC}系统信息查询${NC}"
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}      ${BLUE}10${NC} ${PINK}♥${NC} ${LIGHTCYAN}IPv4/6优先${NC}"
+echo -e "  ${BLUE}2.${NC} ${PINK}♥${NC} ${NC}UFW 防火墙${NC}      ${BLUE}10${NC} ${PINK}♥${NC} ${NC}IPv4/6优先${NC}"
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}改密钥登录${NC}      ${BLUE}11${NC} ${PINK}♥${NC} ${LIGHTCYAN}更新主脚本${NC}"
+echo -e "  ${BLUE}3.${NC} ${PINK}♥${NC} ${GREEN}改密钥登录${NC}      ${BLUE}11${NC} ${PINK}♥${NC} ${NC}更新主脚本${NC}"
 
 echo "-------------------------------------"
 
@@ -864,7 +864,7 @@ echo -e "  ${BLUE}7.${NC} ${PINK}♥${NC} ${GREEN}一键BBR加速     ${BLUE}15$
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${LIGHTCYAN}Docker项目 ▶${NC}    ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
+echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${NC}Docker项目 ▶${NC}    ${BLUE}16${NC} ${PINK}♥${NC} ${RED}测试流媒体${NC}"
 
 echo "-------------------------------------"
 
