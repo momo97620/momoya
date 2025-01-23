@@ -948,7 +948,6 @@ NC='\033[0m'
 
 LOG_FILE="/var/log/ufw_script.log"
 
-
 if [ $EUID -ne 0 ]; then
     echo "此脚本必须以root权限运行 (sudo)" 
     exit 1
@@ -998,6 +997,7 @@ fi
 mkdir -p ~/tools
 
 cat << 'EOF' > ~/tools/ufw_port.sh
+#!/bin/bash
 
 if [ $EUID -ne 0 ]; then
    echo "此脚本必须以root权限运行 (sudo)" 
@@ -1064,19 +1064,20 @@ disable_port() {
             ;;
     esac
 }
+
 save_rules() {
     read -p "请输入保存文件的路径 (默认: ./ufw_rules.backup): " file_path
     file_path=${file_path:-./ufw_rules.backup}
-    ufw status > "$file_path"
+    sudo ufw status > "$file_path"
     echo -e "${GREEN}规则已保存到 $file_path${NC}"
 }
 
 load_rules() {
     read -p "请输入规则文件的路径 (默认: ./ufw_rules.backup): " file_path
     file_path=${file_path:-./ufw_rules.backup}
-    if [[ -f "$file_path" ]]; then
+    if [ -f "$file_path" ]; then
         while read -r rule; do
-            ufw "$rule"
+            sudo ufw $rule
         done < "$file_path"
         echo -e "${GREEN}规则已从 $file_path 加载${NC}"
     else
@@ -1142,7 +1143,7 @@ echo -e "${GREEN}UFW端口管理工具安装完成！${NC}"
 echo -e "您可以使用快捷命令 'n' 来启动UFW端口管理工具。"
 echo -e "如果快捷命令 'n' 无法立即使用，请重新登录您的会话。"
 sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
-    ;;
+         ;;
        
         3)
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
