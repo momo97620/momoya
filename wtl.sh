@@ -949,7 +949,7 @@ NC='\033[0m'
 LOG_FILE="/var/log/ufw_script.log"
 
 
-if [[ $EUID -ne 0 ]]; then
+if [ $EUID -ne 0 ]; then
     echo "此脚本必须以root权限运行 (sudo)" 
     exit 1
 fi
@@ -999,7 +999,7 @@ mkdir -p ~/tools
 
 cat << 'EOF' > ~/tools/ufw_port.sh
 
-if [[ $EUID -ne 0 ]]; then
+if [ $EUID -ne 0 ]; then
    echo "此脚本必须以root权限运行 (sudo)" 
    exit 1
 fi
