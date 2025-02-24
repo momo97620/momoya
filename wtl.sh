@@ -1442,7 +1442,7 @@ services:
     image: ddsderek/easyimage:latest
     container_name: easyimage
     ports:
-      - '8080:80'
+      - '6520:80'
     environment:
       - TZ=Asia/Shanghai
       - PUID=1000
@@ -1463,7 +1463,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "已安装成功，请手动放行8080端口，使用IP+8080浏览器登录。"
+echo "已安装成功，请手动放行652端口，使用IP+6520浏览器登录。"
 
 read -n 1 -s -r -p "按任意键返回上一页..."
 
