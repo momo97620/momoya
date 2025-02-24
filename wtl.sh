@@ -812,6 +812,42 @@ install_onedrive() {
     read -n 1 -s -r -p "按任意键返回..."
 }
 
+# 在主脚本中添加选项 18)
+
+function configure_swap() {
+    SWAP_SIZE="2G"
+
+    if swapon --show | grep -q "/swapfile"; then
+        echo "✅ Swap 已经启用，无需重复设置！"
+        read -n 1 -s -r -p "🔹 按任意键返回..."
+        return
+    fi
+
+    echo "==== 开始创建 Swap ($SWAP_SIZE) ===="
+
+    echo "🔹 创建 Swap 文件..."
+    sudo fallocate -l $SWAP_SIZE /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=$(( $(echo $SWAP_SIZE | sed 's/G//') * 1024 ))
+
+    echo "🔹 设置 Swap 文件权限..."
+    sudo chmod 600 /swapfile
+
+    echo "🔹 格式化 Swap 文件..."
+    sudo mkswap /swapfile
+    echo "🔹 启用 Swap..."
+    sudo swapon /swapfile
+
+    if ! grep -q "/swapfile" /etc/fstab; then
+        echo "🔹 配置 Swap 挂载..."
+        echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    fi
+
+    echo "✅ Swap 已成功创建并启用！"
+    swapon --show
+    free -h
+
+    read -n 1 -s -r -p "🔹 按任意键返回..."
+}
+
 
 show_main_menu() {
     clear
@@ -868,7 +904,7 @@ echo -e "  ${BLUE}8.${NC} ${PINK}♥${NC} ${NC}Docker项目 ▶${NC}    ${BLUE}1
 
 echo "-------------------------------------"
 
-echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}"
+echo -e "  ${BLUE}17.${NC} ${PINK}♥${NC} ${YELLOW}一键反向代理${NC}   ${BLUE}18${NC} ${PINK}♥${NC} ${RED}swap增加内存${NC}"
 
 echo "-------------------------------------"
 
@@ -1557,6 +1593,10 @@ read -p "请输入选项 [1-3，0]: " sub_choice
 done
 
             ;;  
+        18)
+           configure_swap
+            ;;
+
         14) 
              execute_script "https://raw.githubusercontent.com/ecouus/Feed-Push/refs/heads/main/bot_deploy.sh" "TG关键词订阅部署完成。"
             ;;  
