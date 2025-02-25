@@ -695,15 +695,14 @@ backup_menu() {
     done
 }
 
-# 如果脚本是被直接运行，而不是被 `source`，才执行菜单
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+# 定义一个显式调用的函数
+start_backup_menu() {
     if [[ $1 == "auto" ]]; then
         handle_auto_backup
     else
         backup_menu
     fi
-fi
-
+}
 container_management() {
     while true; do
     clear
