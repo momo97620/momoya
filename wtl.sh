@@ -695,12 +695,13 @@ backup_menu() {
     done
 }
 
-# 处理自动执行情况
-if [[ $1 == "auto" ]]; then
-    handle_auto_backup
-else
-    setup_onedrive  # 运行时优先检查 OneDrive 绑定
-    backup_menu
+# 如果脚本是被直接运行，而不是被 `source`，才执行菜单
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    if [[ $1 == "auto" ]]; then
+        handle_auto_backup
+    else
+        backup_menu
+    fi
 fi
 
 container_management() {
