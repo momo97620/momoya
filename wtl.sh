@@ -521,85 +521,149 @@ RAINBOW_PROMPT::main() {
 }
 
 
-BACKUP_DIR="$HOME/backup"  # 备份存储路径
 BACKUP_SCRIPT="$HOME/backup.sh"  # 脚本自身路径
+CONFIG_FILE="$HOME/.backup_config"  # 备份路径配置文件
+ONEDRIVE_REMOTE="onedrive"  # rclone 远程名称
+ONEDRIVE_PATH="Backup"  # 上传到 OneDrive 的目录
+LOG_FILE="$HOME/backup/backup_log.txt"
 
-mkdir -p "$BACKUP_DIR"
+mkdir -p "$HOME/backup"
 
+# 检查 rclone 是否安装
+check_rclone() {
+    if ! command -v rclone &>/dev/null; then
+        echo "rclone 未安装，正在安装..."
+        sudo apt update && sudo apt install -y rclone
+    fi
+}
+
+# 绑定 OneDrive 账号
+setup_onedrive() {
+    check_rclone
+    if ! rclone listremotes | grep -q "^$ONEDRIVE_REMOTE:"; then
+        echo "检测到未绑定 OneDrive，正在引导配置..."
+        rclone config
+        echo "OneDrive 绑定完成！"
+    else
+        echo "OneDrive 已绑定，无需重复配置。"
+    fi
+}
+
+# 读取备份路径
+get_backup_path() {
+    while true; do
+        read -p "请输入要备份的目录路径（例如 /var/lib/docker 或 /home/user/data）: " BACKUP_DIR
+        if [[ -d "$BACKUP_DIR" ]]; then
+            echo "备份路径设置为：$BACKUP_DIR"
+            echo "$BACKUP_DIR" > "$CONFIG_FILE"  # 记录路径
+            break
+        else
+            echo "错误：路径 '$BACKUP_DIR' 不存在，请重新输入！"
+        fi
+    done
+}
+
+# 备份并上传到 OneDrive
 perform_backup() {
+    get_backup_path
     TIMESTAMP=$(date +"%Y%m%d%H%M%S")
-    echo "Stopping Docker..."
+    BACKUP_FILE="$HOME/backup/backup_$(basename "$BACKUP_DIR")_$TIMESTAMP.tar.gz"
+
+    echo "停止 Docker 服务..."
     systemctl stop docker
 
-    BACKUP_FILE="$BACKUP_DIR/docker_backup_$TIMESTAMP.tar.gz"
-    echo "Backing up Docker data to $BACKUP_FILE..."
-    
-    if tar czvf "$BACKUP_FILE" /var/lib/docker; then
-        echo "Starting Docker..."
+    echo "正在备份 $BACKUP_DIR 到 $BACKUP_FILE..."
+    if tar czvf "$BACKUP_FILE" "$BACKUP_DIR"; then
+        echo "启动 Docker 服务..."
         systemctl start docker
-        echo "Backup completed successfully!"
-        echo "结果：成功" >> "$BACKUP_DIR/backup_log.txt"
+        echo "备份成功！备份文件：$BACKUP_FILE"
+
+        # 上传到 OneDrive
+        echo "正在上传备份到 OneDrive..."
+        if rclone copy "$BACKUP_FILE" "$ONEDRIVE_REMOTE:$ONEDRIVE_PATH"; then
+            echo "上传成功！"
+            echo "$(date): 成功 - 备份并上传 $BACKUP_DIR" >> "$LOG_FILE"
+            rm -f "$BACKUP_FILE"  # 删除本地备份
+        else
+            echo "上传失败！请检查 OneDrive 配置。"
+            echo "$(date): 失败 - 上传 $BACKUP_FILE 到 OneDrive 失败" >> "$LOG_FILE"
+        fi
     else
-        echo "Backup failed!"
-        echo "结果：失败 - 备份过程中发生错误" >> "$BACKUP_DIR/backup_log.txt"
+        echo "备份失败！"
+        echo "$(date): 失败 - 备份 $BACKUP_DIR 过程中发生错误" >> "$LOG_FILE"
     fi
 }
 
+# 设置自动备份任务
 setup_cron_job() {
-    (crontab -l | grep -q "$BACKUP_SCRIPT") && {
-        echo "定时任务已存在，跳过设置。"
-        echo "结果：失败 - 定时任务已存在" >> "$BACKUP_DIR/backup_log.txt"
-        return
-    }
+    get_backup_path
 
-    (crontab -l 2>/dev/null; echo "0 5 */7 * * $BACKUP_SCRIPT >> $BACKUP_DIR/backup.log 2>&1") | crontab -
+    if crontab -l | grep -q "$BACKUP_SCRIPT"; then
+        echo "定时任务已存在，跳过设置。"
+        echo "$(date): 失败 - 定时任务已存在" >> "$LOG_FILE"
+        return
+    fi
+
     echo "已设置定时任务：每 7 天凌晨 5 点自动备份。"
-    echo "结果：成功" >> "$BACKUP_DIR/backup_log.txt"
+    echo "$(date): 成功 - 设置定时任务" >> "$LOG_FILE"
+
+    (crontab -l 2>/dev/null; echo "0 5 */7 * * $BACKUP_SCRIPT auto >> $HOME/backup/backup.log 2>&1") | crontab -
 }
 
+# 处理自动备份
+handle_auto_backup() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        BACKUP_DIR=$(cat "$CONFIG_FILE")
+        perform_backup
+    else
+        echo "未找到自动备份路径，请先手动设置备份路径。"
+    fi
+}
+
+# 备份恢复
 restore_backup() {
-    read -p "请输入备份文件名（例如 docker_backup_YYYYMMDDHHMMSS.tar.gz）： " BACKUP_FILE
+    read -p "请输入备份文件名（例如 backup_xxx_YYYYMMDDHHMMSS.tar.gz）： " BACKUP_FILE
     read -p "请输入新服务器的 IP 地址： " SERVER_IP
 
-    echo "正在复制备份文件到新服务器..."
-    if scp "$BACKUP_DIR/$BACKUP_FILE" user@"$SERVER_IP":/path/to/backup/; then
-        echo "正在恢复备份..."
-        ssh user@"$SERVER_IP" << EOF
-            cd /path/to/backup/
-            echo "解压备份文件..."
-            if tar xzvf "$BACKUP_FILE"; then
-                echo "停止 Docker 服务..."
-                sudo systemctl stop docker
-                echo "恢复 Docker 数据..."
-                if sudo rsync -a --remove-source-files ./var/lib/docker/ /var/lib/docker/; then
-                    echo "启动 Docker 服务..."
-                    sudo systemctl start docker
-                    echo "备份恢复完成！"
-                    echo "结果：成功" >> "$BACKUP_DIR/backup_log.txt"
-                else
-                    echo "恢复 Docker 数据失败！"
-                    echo "结果：失败 - 恢复过程中发生错误" >> "$BACKUP_DIR/backup_log.txt"
-                fi
-            else
-                echo "解压备份文件失败！"
-                echo "结果：失败 - 解压过程中发生错误" >> "$BACKUP_DIR/backup_log.txt"
-            fi
-EOF
+    echo "正在从 OneDrive 下载备份文件..."
+    if rclone copy "$ONEDRIVE_REMOTE:$ONEDRIVE_PATH/$BACKUP_FILE" "$HOME/backup/"; then
+        echo "备份文件已下载到本地，开始恢复..."
     else
-        echo "复制备份文件失败！"
-        echo "结果：失败 - 复制过程中发生错误" >> "$BACKUP_DIR/backup_log.txt"
+        echo "下载失败，请检查文件名是否正确。"
+        return
     fi
+
+    echo "正在恢复备份..."
+    ssh user@"$SERVER_IP" << EOF
+        cd /path/to/backup/
+        echo "解压备份文件..."
+        if tar xzvf "$BACKUP_FILE"; then
+            echo "停止 Docker 服务..."
+            sudo systemctl stop docker
+            echo "恢复数据..."
+            if sudo rsync -a --remove-source-files ./var/lib/docker/ /var/lib/docker/; then
+                echo "启动 Docker 服务..."
+                sudo systemctl start docker
+                echo "备份恢复完成！"
+            else
+                echo "恢复数据失败！"
+            fi
+        else
+            echo "解压备份文件失败！"
+        fi
+EOF
 }
 
+# 备份菜单
 backup_menu() {
     while true; do
         echo "请选择操作："
         echo "1. 手动备份"
         echo "2. 自动备份（每7天一次）"
         echo "3. 恢复备份"
-        echo "4. onedrive邮箱"
+        echo "4. 绑定 OneDrive"
         echo "5. 返回主菜单"
-        read -p "请输入选项 (1、2、3或4): " choice
+        read -p "请输入选项 (1、2、3、4或5): " choice
 
         case $choice in
             1)
@@ -607,24 +671,22 @@ backup_menu() {
                 perform_backup
                 ;;
             2)
-                echo "开始自动备份..."
+                echo "开始自动备份设置..."
                 setup_cron_job
-                echo "请注意，自动备份将在每 7 天的凌晨 5 点执行。"
                 ;;
             3)
                 echo "开始恢复备份..."
                 restore_backup
                 ;;
             4)
-                install_onedrive
+                setup_onedrive
                 ;;
-               
             5)
                 echo "返回主菜单。"
                 return
                 ;;
             *)
-                echo "无效选项，请选择1、2、3、4或5。"
+                echo "无效选项，请选择 1、2、3、4 或 5。"
                 ;;
         esac
 
@@ -632,6 +694,14 @@ backup_menu() {
         echo
     done
 }
+
+# 处理自动执行情况
+if [[ $1 == "auto" ]]; then
+    handle_auto_backup
+else
+    setup_onedrive  # 运行时优先检查 OneDrive 绑定
+    backup_menu
+fi
 
 container_management() {
     while true; do
