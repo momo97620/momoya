@@ -700,6 +700,7 @@ backup_menu() {
                 ;;
             4)
                 check_rclone
+                install_onedrive
                 ;;
             5)
                 echo "返回主菜单。"
@@ -837,69 +838,6 @@ read -n 1 -s -r -p "按任意键返回..."
                 ;;
         esac
     done
-}
-
-install_onedrive() {
-    echo "正在增加交换空间..."
-    sudo fallocate -l 2G /swapfile
-    sudo chmod 600 /swapfile
-    sudo mkswap /swapfile
-    sudo swapon /swapfile
-    echo "交换空间已启用。"
-
-    echo "正在安装必要的依赖项..."
-    if ! sudo apt update; then
-        echo "更新失败，请检查网络连接。"
-        read -n 1 -s -r -p "按任意键返回..."
-        return
-    fi
-
-    if ! sudo apt install -y build-essential git wget curl libcurl4-openssl-dev libsqlite3-dev ldc; then
-        echo "依赖项安装失败，请检查错误信息。"
-        read -n 1 -s -r -p "按任意键返回..."
-        return
-    fi
-
-    echo "正在下载 OneDrive 客户端..."
-    if ! wget https://github.com/abraunegg/onedrive/archive/refs/tags/v2.5.3.tar.gz; then
-        echo "下载失败，请检查网络连接。"
-        read -n 1 -s -r -p "按任意键返回..."
-        return
-    fi
-
-    echo "正在解压下载的文件..."
-    if ! tar -xzvf v2.5.3.tar.gz; then
-        echo "解压失败，请检查下载的文件。"
-        read -n 1 -s -r -p "按任意键返回..."
-        return
-    fi
-
-    cd onedrive-2.5.3 || { echo "进入目录失败"; read -n 1 -s -r -p "按任意键返回..."; return; }
-
-    echo "正在运行 ./configure..."
-    if ! ./configure; then
-        echo "./configure 失败，请检查错误信息。"
-        read -n 1 -s -r -p "按任意键返回..."
-        return
-    fi
-
-    echo "正在编译 OneDrive..."
-    if ! make -j1; then
-        echo "编译失败，请检查错误信息。"
-        read -n 1 -s -r -p "按任意键返回..."
-        return
-    fi
-
-    echo "正在安装 OneDrive..."
-    if ! sudo make install; then
-        echo "安装失败，请检查错误信息。"
-        read -n 1 -s -r -p "按任意键返回..."
-        return
-    fi
-
-    echo "OneDrive 安装完成。请运行 'onedrive' 进行初始配置。"
-    echo "要启动 OneDrive，请使用 'onedrive --monitor'。"
-    read -n 1 -s -r -p "按任意键返回..."
 }
 
 # 在主脚本中添加选项 18)
