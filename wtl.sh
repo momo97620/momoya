@@ -529,12 +529,42 @@ LOG_FILE="$HOME/backup/backup_log.txt"
 
 mkdir -p "$HOME/backup"
 
-# 检查 rclone 是否安装
 check_rclone() {
-    if ! command -v rclone &>/dev/null; then
-        echo "rclone 未安装，正在安装..."
-        sudo apt update && sudo apt install -y rclone
+    # 确保安装 unzip
+    if ! command -v unzip &>/dev/null; then
+        echo "unzip 未安装，正在安装..."
+        sudo apt update && sudo apt install -y unzip
     fi
+
+    # 获取当前安装的 rclone 版本
+    if command -v rclone &>/dev/null; then
+        CURRENT_VERSION=$(rclone version | awk 'NR==1{print $2}' | tr -d 'v')
+
+        # 比较版本号，若低于 1.65.0 则更新
+        if [ "$(printf '1.65.0\n%s\n' "$CURRENT_VERSION" | sort -V | head -n1)" != "1.65.0" ]; then
+            echo "rclone 版本过旧（当前版本：$CURRENT_VERSION），正在更新到最新版本..."
+            install_latest_rclone
+        else
+            echo "rclone 已安装，版本：$CURRENT_VERSION，无需更新。"
+        fi
+    else
+        echo "rclone 未安装，正在安装最新版本..."
+        install_latest_rclone
+    fi
+}
+
+# 安装最新版本的 rclone
+install_latest_rclone() {
+    sudo apt update && sudo apt install -y curl unzip  # 确保 curl 和 unzip 可用
+    sudo rm -f /usr/bin/rclone  # 先移除旧版本（如果存在）
+    curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
+    unzip rclone-current-linux-amd64.zip
+    cd rclone-*-linux-amd64 || { echo "解压失败，退出安装。"; exit 1; }
+    sudo cp rclone /usr/bin/
+    sudo chmod +x /usr/bin/rclone
+    cd ..
+    rm -rf rclone-*-linux-amd64 rclone-current-linux-amd64.zip
+    echo "rclone 最新版本安装完成！"
 }
 
 # 绑定 OneDrive 账号
@@ -1544,6 +1574,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
             ;;  
             
         6)
+            handle_auto_backup
             backup_menu
             ;;
             
