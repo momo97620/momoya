@@ -876,21 +876,31 @@ function configure_swap() {
     read -n 1 -s -r -p "🔹 按任意键返回..."
 }
 
-deploy_wallos() {
-    echo "切换到 root 用户..."
-    if [ "$(id -u)" -ne 0 ]; then
-        echo "请使用 root 用户或运行 sudo -i 后再执行此脚本。"
-        return 1
+# 主脚本函数区添加（使用唯一前缀）
+myapp_deploy_wallos() {
+    # 本地化所有变量
+    local work_dir="/root/data/docker_data/wallos"
+    local compose_file="docker-compose.yml"
+    
+    # 权限检查
+    if [[ $EUID -ne 0 ]]; then
+        echo "需要root权限，正在尝试自动提权..."
+        if ! sudo -n true 2>/dev/null; then
+            sudo echo "权限验证通过"
+        fi
     fi
 
-    echo "创建所需目录..."
-    mkdir -p /root/data/docker_data/wallos
+    # 创建目录
+    echo "正在创建目录结构..."
+    sudo mkdir -p "${work_dir}" || {
+        echo "目录创建失败！"; return 1
+    }
 
-    echo "切换到目标目录..."
-    cd /root/data/docker_data/wallos || { echo "切换目录失败！"; return 1; }
-
-    echo "创建 docker-compose.yml 配置文件..."
-    cat > docker-compose.yml <<EOF
+    # 生成docker-compose文件
+    echo "正在生成Docker配置..."
+    sudo tee "${work_dir}/${compose_file}" <<'EOF' >/dev/null || {
+        echo "配置文件写入失败！"; return 1
+    }
 version: '3'
 
 services:
@@ -907,12 +917,18 @@ services:
       - TZ=Asia/Shanghai
 EOF
 
-    echo "启动 Wallos 容器..."
-    docker compose up -d
+    # 部署容器
+    echo "正在启动Docker服务..."
+    (
+        cd "${work_dir}" || exit 1
+        sudo docker compose up -d
+    ) || {
+        echo "容器启动失败！"; return 1
+    }
 
-    echo "Wallos 部署完成！"
+    echo -e "\n部署完成！访问地址：http://服务器IP:6270"
+    read -p "按回车返回主菜单..."
 }
-
 show_main_menu() {
     clear
     # 定义颜色
@@ -1544,7 +1560,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
             backup_menu
             ;;
         8）
-            deploy_wallos
+            myapp_deploy_wallos
             ;;
         0)
             echo "返回主菜单..."
