@@ -876,6 +876,46 @@ function configure_swap() {
     read -n 1 -s -r -p "🔹 按任意键返回..."
 }
 
+deploy_wallos() {
+    echo "开始部署 Wallos..."
+
+    # 切换到 root 用户
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "请使用 root 用户执行此脚本，或者使用 'sudo -i' 切换到 root。"
+        exit 1
+    fi
+
+    # 创建 Wallos 相关目录
+    mkdir -p /root/data/docker_data/wallos
+
+    # 进入 Wallos 目录
+    cd /root/data/docker_data/wallos || exit 1
+
+    # 创建 docker-compose.yml 文件
+    cat > docker-compose.yml <<EOF
+version: '3'
+
+services:
+  wallos:
+    image: bellamy/wallos:latest
+    container_name: wallos
+    restart: unless-stopped
+    ports:
+      - 6270:80
+    volumes:
+      - ./data:/var/www/html/db
+      - ./logos:/var/www/html/images/uploads/logos
+    environment:
+      - TZ=Asia/Shanghai
+EOF
+
+    # 启动 Wallos 容器
+    docker compose up -d
+
+    echo "Wallos 已成功部署！"
+    read -rp "按回车键返回主菜单..."
+}  
+    
 
 show_main_menu() {
     clear
@@ -1508,43 +1548,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
             backup_menu
             ;;
         8）
-          echo "开始部署 Wallos..."
-
-            # 切换到 root 用户（如果不是 root 需要手动输入密码）
-            if [ "$(id -u)" -ne 0 ]; then
-                echo "请使用 root 用户执行此脚本，或者使用 'sudo -i' 切换到 root。"
-                exit 1
-            fi
-
-            # 创建 Wallos 相关目录
-            mkdir -p /root/data/docker_data/wallos
-
-            # 进入 Wallos 目录
-            cd /root/data/docker_data/wallos || exit 1
-
-            # 创建 docker-compose.yml 文件
-            cat > docker-compose.yml <<EOF
-version: '3'
-
-services:
-  wallos:
-    image: bellamy/wallos:latest
-    container_name: wallos
-    restart: unless-stopped
-    ports:
-      - 6270:80
-    volumes:
-      - ./data:/var/www/html/db
-      - ./logos:/var/www/html/images/uploads/logos
-    environment:
-      - TZ=Asia/Shanghai
-EOF
-
-            # 启动 Wallos 容器
-            docker compose up -d
-
-            echo "Wallos 已成功部署！提示: 浏览器IP+6520端口登录"
-            read -rp "按回车键返回主菜单..."
+          deploy_wallos
             ;;
         0)
             echo "返回主菜单..."
