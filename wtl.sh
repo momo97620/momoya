@@ -899,7 +899,7 @@ services:
     container_name: wallos
     restart: unless-stopped
     ports:
-      - 8080:80
+      - 6270:80
     volumes:
       - ./data:/var/www/html/db
       - ./logos:/var/www/html/images/uploads/logos
