@@ -1498,33 +1498,32 @@ echo "已安装成功，请手动放行652端口，使用IP+6520浏览器登录�
 read -n 1 -s -r -p "按任意键返回上一页..."
 
             ;;
-        8)
-           case $choice in
-        clear
-        echo "正在部署WallOS服务..."
-        
-        # 提权检查
-        if [[ $EUID -ne 0 ]]; then
-            echo "检测到非root权限，需要提权操作"
-            sudo echo "[权限验证]" || {
-                echo "提权失败，请手动执行 sudo -i 后重试"; 
-                read -p "按回车返回主菜单";
+      "8")  # 注意这里必须有双引号和右括号
+            clear
+            echo "正在部署WallOS服务..."
+            
+            # 提权检查
+            if [[ $EUID -ne 0 ]]; then
+                echo "检测到非root权限，需要提权操作"
+                if ! sudo -n true 2>/dev/null; then
+                    echo "提权失败，请手动执行 sudo -i 后重试"
+                    read -p "按回车返回主菜单"
+                    continue  # 必须使用continue回到循环开始
+                fi
+            fi
+
+            # 工作目录（使用变量更安全）
+            DEPLOY_DIR="/root/data/docker_data/wallos"
+            
+            # ▼▼▼ 创建目录带错误处理 ▼▼▼
+            if ! sudo mkdir -p "$DEPLOY_DIR"; then
+                echo "目录创建失败：$DEPLOY_DIR"
+                read -p "按回车返回主菜单"
                 continue
-            }
-        fi
+            fi
 
-        # 工作目录
-        DEPLOY_DIR="/root/data/docker_data/wallos"
-        
-        # 创建目录
-        sudo mkdir -p "$DEPLOY_DIR" || {
-            echo "目录创建失败：$DEPLOY_DIR"; 
-            read -p "按回车返回主菜单";
-            continue
-        }
-
-        # 生成配置文件
-        sudo tee "$DEPLOY_DIR/docker-compose.yml" <<EOF >/dev/null
+            # ▼▼▼ 生成配置文件（注意EOF必须顶格） ▼▼▼
+            sudo tee "$DEPLOY_DIR/docker-compose.yml" >/dev/null <<'EOF'
 version: '3'
 
 services:
@@ -1541,23 +1540,26 @@ services:
       - TZ=Asia/Shanghai
 EOF
 
-        # 检查文件是否生成
-        if [ ! -f "$DEPLOY_DIR/docker-compose.yml" ]; then
-            echo "配置文件生成失败！"; 
-            read -p "按回车返回主菜单";
-            continue
-        fi
+            # 检查文件生成结果
+            if [ ! -f "$DEPLOY_DIR/docker-compose.yml" ]; then
+                echo "配置文件生成失败！"
+                read -p "按回车返回主菜单"
+                continue
+            fi
 
-        # 启动容器
-        ( cd "$DEPLOY_DIR" && sudo docker compose up -d ) || {
-            echo "容器启动失败，请检查配置"; 
-            read -p "按回车返回主菜单";
-            continue
-        }
+            # 启动容器（子shell操作目录）
+            if ! (cd "$DEPLOY_DIR" && sudo docker compose up -d); then
+                echo "容器启动失败，请检查："
+                echo "1. Docker是否运行：systemctl status docker"
+                echo "2. 端口是否冲突：lsof -i :6270"
+                read -p "按回车返回主菜单"
+                continue
+            fi
 
-        echo -e "\n► 部署完成！访问地址：http://IP:6270"
-        read -p "按回车返回主菜单..."
-        ;;
+            echo -e "\n► 部署完成！访问地址：http://$(ip route get 1 | awk '{print $7}'):6270"
+            read -p "按回车返回主菜单..."
+            ;;  # 必须双分号结束选项
+
         
         3)
            image_management #镜像管理
