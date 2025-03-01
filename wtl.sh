@@ -877,23 +877,19 @@ function configure_swap() {
 }
 
 deploy_wallos() {
-    echo "开始部署 Wallos..."
-
-    # 确保 Docker Compose 命令兼容
-    if command -v docker compose >/dev/null 2>&1; then
-        COMPOSE_CMD="docker compose"
-    else
-        COMPOSE_CMD="docker-compose"
+    echo "切换到 root 用户..."
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "请使用 root 用户或运行 sudo -i 后再执行此脚本。"
+        return 1
     fi
 
-    # 创建 Wallos 相关目录
-    WALLOS_DIR="/root/data/docker_data/wallos"
-    mkdir -p "$WALLOS_DIR" || { echo "创建目录失败！"; exit 1; }
+    echo "创建所需目录..."
+    mkdir -p /root/data/docker_data/wallos
 
-    # 进入 Wallos 目录
-    cd "$WALLOS_DIR" || { echo "无法进入目录！"; exit 1; }
+    echo "切换到目标目录..."
+    cd /root/data/docker_data/wallos || { echo "切换目录失败！"; return 1; }
 
-    # 创建 docker-compose.yml 文件并写入内容
+    echo "创建 docker-compose.yml 配置文件..."
     cat > docker-compose.yml <<EOF
 version: '3'
 
@@ -903,7 +899,7 @@ services:
     container_name: wallos
     restart: unless-stopped
     ports:
-      - 6270:80
+      - 8080:80
     volumes:
       - ./data:/var/www/html/db
       - ./logos:/var/www/html/images/uploads/logos
@@ -911,16 +907,11 @@ services:
       - TZ=Asia/Shanghai
 EOF
 
-    # 确保 YAML 文件没有 Windows 换行符
-    dos2unix docker-compose.yml 2>/dev/null
+    echo "启动 Wallos 容器..."
+    docker compose up -d
 
-    # 启动 Wallos 容器
-    $COMPOSE_CMD up -d || { echo "Wallos 部署失败！"; exit 1; }
-
-    echo "Wallos 已成功部署！"
-    read -n 1 -s -r -p "按任意键返回主菜单..."
+    echo "Wallos 部署完成！"
 }
-    
 
 show_main_menu() {
     clear
@@ -1553,7 +1544,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
             backup_menu
             ;;
         8）
-          deploy_wallos
+            deploy_wallos
             ;;
         0)
             echo "返回主菜单..."
