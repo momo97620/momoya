@@ -879,19 +879,21 @@ function configure_swap() {
 deploy_wallos() {
     echo "开始部署 Wallos..."
 
-    # 切换到 root 用户
-    if [ "$(id -u)" -ne 0 ]; then
-        echo "请使用 root 用户执行此脚本，或者使用 'sudo -i' 切换到 root。"
-        exit 1
+    # 确保 Docker Compose 命令兼容
+    if command -v docker compose >/dev/null 2>&1; then
+        COMPOSE_CMD="docker compose"
+    else
+        COMPOSE_CMD="docker-compose"
     fi
 
     # 创建 Wallos 相关目录
-    mkdir -p /root/data/docker_data/wallos
+    WALLOS_DIR="/root/data/docker_data/wallos"
+    mkdir -p "$WALLOS_DIR" || { echo "创建目录失败！"; exit 1; }
 
     # 进入 Wallos 目录
-    cd /root/data/docker_data/wallos || exit 1
+    cd "$WALLOS_DIR" || { echo "无法进入目录！"; exit 1; }
 
-    # 创建 docker-compose.yml 文件
+    # 创建 docker-compose.yml 文件并写入内容
     cat > docker-compose.yml <<EOF
 version: '3'
 
@@ -909,12 +911,15 @@ services:
       - TZ=Asia/Shanghai
 EOF
 
+    # 确保 YAML 文件没有 Windows 换行符
+    dos2unix docker-compose.yml 2>/dev/null
+
     # 启动 Wallos 容器
-    docker compose up -d
+    $COMPOSE_CMD up -d || { echo "Wallos 部署失败！"; exit 1; }
 
     echo "Wallos 已成功部署！"
-    read -rp "按回车键返回主菜单..."
-}  
+    read -n 1 -s -r -p "按任意键返回主菜单..."
+}
     
 
 show_main_menu() {
