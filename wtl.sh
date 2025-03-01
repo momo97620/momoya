@@ -1498,7 +1498,67 @@ echo "已安装成功，请手动放行652端口，使用IP+6520浏览器登录�
 read -n 1 -s -r -p "按任意键返回上一页..."
 
             ;;
-            
+        8)
+           case $choice in
+        clear
+        echo "正在部署WallOS服务..."
+        
+        # 提权检查
+        if [[ $EUID -ne 0 ]]; then
+            echo "检测到非root权限，需要提权操作"
+            sudo echo "[权限验证]" || {
+                echo "提权失败，请手动执行 sudo -i 后重试"; 
+                read -p "按回车返回主菜单";
+                continue
+            }
+        fi
+
+        # 工作目录
+        DEPLOY_DIR="/root/data/docker_data/wallos"
+        
+        # 创建目录
+        sudo mkdir -p "$DEPLOY_DIR" || {
+            echo "目录创建失败：$DEPLOY_DIR"; 
+            read -p "按回车返回主菜单";
+            continue
+        }
+
+        # 生成配置文件
+        sudo tee "$DEPLOY_DIR/docker-compose.yml" <<EOF >/dev/null
+version: '3'
+
+services:
+  wallos:
+    image: bellamy/wallos:latest
+    container_name: wallos
+    restart: unless-stopped
+    ports:
+      - 6270:80
+    volumes:
+      - ./data:/var/www/html/db
+      - ./logos:/var/www/html/images/uploads/logos
+    environment:
+      - TZ=Asia/Shanghai
+EOF
+
+        # 检查文件是否生成
+        if [ ! -f "$DEPLOY_DIR/docker-compose.yml" ]; then
+            echo "配置文件生成失败！"; 
+            read -p "按回车返回主菜单";
+            continue
+        fi
+
+        # 启动容器
+        ( cd "$DEPLOY_DIR" && sudo docker compose up -d ) || {
+            echo "容器启动失败，请检查配置"; 
+            read -p "按回车返回主菜单";
+            continue
+        }
+
+        echo -e "\n► 部署完成！访问地址：http://IP:6270"
+        read -p "按回车返回主菜单..."
+        ;;
+        
         3)
            image_management #镜像管理
             ;;  
