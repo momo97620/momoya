@@ -1623,9 +1623,9 @@ done
 
             ;;  
         18)
-           configure_swap
+          
+            configure_swap
             ;;
-
         14) 
              execute_script "https://raw.githubusercontent.com/ecouus/Feed-Push/refs/heads/main/bot_deploy.sh" "TG关键词订阅部署完成。"
             ;;  
