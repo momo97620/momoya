@@ -1102,17 +1102,24 @@ open_port() {
 }
 
 disable_port() {
+    echo -e "${YELLOW}当前已开放的端口:${NC}"
+    sudo ufw status numbered | grep -E "^[0-9]+.*ALLOW"  
+
     read -p "请输入要禁用的端口号: " port
-    read -p "选择协议 (1.TCP 2.UDP 3.所有协议): " protocol_choice
+    echo "选择协议："
+    echo "1. TCP"
+    echo "2. UDP"
+    echo "3. 所有协议（TCP + UDP）"
+    read -p "请选择协议 (1-3): " protocol_choice
 
     case $protocol_choice in
         1)
             sudo ufw delete allow "$port"/tcp
-            echo -e "${GREEN}已禁用TCP端口 $port${NC}"
+            echo -e "${GREEN}已禁用 TCP 端口 $port${NC}"
             ;;
         2)
             sudo ufw delete allow "$port"/udp
-            echo -e "${GREEN}已禁用UDP端口 $port${NC}"
+            echo -e "${GREEN}已禁用 UDP 端口 $port${NC}"
             ;;
         3)
             sudo ufw delete allow "$port"/tcp
