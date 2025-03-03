@@ -1203,7 +1203,7 @@ if ! grep -q "alias n='sudo ~/tools/ufw_port.sh'" ~/.bashrc; then
     echo -e "${GREEN}快捷命令 'n' 已成功添加到 .bashrc${NC}"
 fi
 
-echo -e "${YELLOW}重新加载 .bashrc 配置以使快捷命令生效...${NC}"
+
 source ~/.bashrc
 hash -r
 exec bash
