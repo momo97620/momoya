@@ -1199,6 +1199,7 @@ fi
 echo -e "${YELLOW}重新加载 .bashrc 配置以使快捷命令生效...${NC}"
 source ~/.bashrc
 hash -r
+exec bash
 
 echo -e "${GREEN}UFW端口管理工具安装完成！${NC}"
 echo -e "您可以使用快捷命令 'n' 来启动UFW端口管理工具。"
