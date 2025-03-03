@@ -1224,59 +1224,53 @@ PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 PAM_SSHD_CONFIG="/etc/pam.d/sshd"
 
-echo "正在生成密钥对..."
+echo "正在生成密钥对（Ed25519，私钥更短更安全）..."
 mkdir -p "$KEY_DIR"
 chmod 700 "$KEY_DIR"
-ssh-keygen -t rsa -b 2048 -f "$PRIVATE_KEY" -N "" -q  # 生成 2048 位密钥
+ssh-keygen -t ed25519 -f "$PRIVATE_KEY" -N "" -q
 if [ $? -ne 0 ]; then
     echo "密钥生成失败，请检查系统配置。"
     read -n 1 -s -r -p "按任意键返回菜单..."
     exit 1
 fi
 
-echo "密钥生成成功！"
-echo "请复制并保存您的私钥（非常重要）："
+echo "密钥生成成功！请复制并保存您的私钥（非常重要）："
 echo "--------------------------------------"
 cat "$PRIVATE_KEY"
 echo "--------------------------------------"
 echo "私钥路径: $PRIVATE_KEY"
 echo "公钥路径: $PUBLIC_KEY"
-echo "请确保您已保存私钥，并将其放在合适的位置以便后续登录。"
+echo "请确保您已保存私钥，否则将无法登录！"
 
 # 提供一些时间给用户保存私钥
 echo -e "\n【重要提示】"
 echo -e "✅ **当前 SSH 仍然可以使用密码登录，SFTP 可用。**"
 echo -e "✅ **SSH 密码登录将被禁用，必须使用密钥！**"
 echo -e "✅ **请务必保存好私钥，否则将无法登录！**"
-sleep 15
+sleep 6
 
-echo "正在配置公钥登录..."
+# 配置公钥登录（静默执行）
 AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
 cat "$PUBLIC_KEY" >> "$AUTHORIZED_KEYS"
 chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
-echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-# **检查并修改 SSH 配置文件以禁用密码登录**
-echo "修改 SSH 配置文件，禁用密码登录..."
-sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
-sed -i 's/^ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' "$SSHD_CONFIG"
-sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
+# 修改 SSH 配置文件以禁用密码登录（静默执行）
+sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG" >/dev/null 2>&1
+sed -i 's/^ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' "$SSHD_CONFIG" >/dev/null 2>&1
+sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG" >/dev/null 2>&1
 echo "PasswordAuthentication no" >> "$SSHD_CONFIG"
 echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
 echo "UsePAM no" >> "$SSHD_CONFIG"
 echo "AuthenticationMethods publickey" >> "$SSHD_CONFIG"
 
-# **检查并修改 PAM 配置文件**
-echo "检查并修改 PAM 配置..."
+# 检查并修改 PAM 配置文件（静默执行）
 if grep -q "^@include common-auth" "$PAM_SSHD_CONFIG"; then
-    sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
-    echo "已注释掉 @include common-auth 配置。"
+    sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG" >/dev/null 2>&1
 fi
 
-# **重启 SSH 服务使配置生效**
-echo "正在重启 SSH 服务..."
-systemctl restart ssh
+# 重启 SSH 服务（静默执行）
+systemctl restart ssh >/dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "⚠️ SSH 服务未正确重启，可能存在问题，请手动检查配置！"
     exit 1
@@ -1285,7 +1279,7 @@ fi
 
 # 15 秒后禁用密码登录
 nohup bash -c "
-    sleep 15
+    sleep 6
     # 再次修改配置文件，强制禁用密码登录
     sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
     sed -i 's/^ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
