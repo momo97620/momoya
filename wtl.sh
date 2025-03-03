@@ -1301,7 +1301,7 @@ echo -e "${DARK_RED}重要提示：${NC}"
 echo -e "${DARK_RED}‼️  切记要先保存好私钥！！！${NC}"
 echo -e "${DARK_RED}‼️  私钥路径: $PRIVATE_KEY${NC}"
 echo -e "${DARK_RED}‼️  新配置将在您手动重启 VPS 后生效。${NC}"
-echo -e "${DARK_RED}‼️  在此期间，SFTP 仍可正常使用。${NC}"
+echo -e "${DARK_RED}‼️  在此期间，SFTP 仍可使用密码登录。${NC}"
 
 # 创建重启检测脚本
 REBOOT_HOOK_SCRIPT="/etc/rc.local"
@@ -1312,6 +1312,7 @@ fi
 
 # 添加重启后生效的逻辑
 if ! grep -q "systemctl restart sshd" "$REBOOT_HOOK_SCRIPT"; then
+    echo "sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config" >> "$REBOOT_HOOK_SCRIPT"
     echo "systemctl restart sshd" >> "$REBOOT_HOOK_SCRIPT"
     echo "echo 'SSH配置已生效，密码登录已禁用。'" >> "$REBOOT_HOOK_SCRIPT"
     echo "sed -i '/systemctl restart sshd/d' $REBOOT_HOOK_SCRIPT" >> "$REBOOT_HOOK_SCRIPT"  # 清理脚本
@@ -1322,6 +1323,8 @@ systemctl enable rc-local > /dev/null 2>&1
 systemctl start rc-local > /dev/null 2>&1
 
 echo -e "${BRIGHT_GREEN}配置已保存，重启 VPS 后生效。${NC}"
+
+# 按任意键返回菜单
 read -n 1 -s -r -p "按任意键返回菜单..."
 echo ""
         ;;
