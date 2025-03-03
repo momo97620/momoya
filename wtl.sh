@@ -1208,7 +1208,6 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
        
         3)
 
-
 #!/bin/bash
 
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
@@ -1228,7 +1227,7 @@ PAM_SSHD_CONFIG="/etc/pam.d/sshd"
 echo "正在生成密钥对..."
 mkdir -p "$KEY_DIR"
 chmod 700 "$KEY_DIR"
-ssh-keygen -t rsa -b 4096 -f "$PRIVATE_KEY" -N "" -q
+ssh-keygen -t rsa -b 2048 -f "$PRIVATE_KEY" -N "" -q  # 生成 2048 位密钥
 if [ $? -ne 0 ]; then
     echo "密钥生成失败，请检查系统配置。"
     read -n 1 -s -r -p "按任意键返回菜单..."
@@ -1236,12 +1235,19 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "密钥生成成功！"
+echo "请复制并保存您的私钥（非常重要）："
+echo "--------------------------------------"
+cat "$PRIVATE_KEY"
+echo "--------------------------------------"
 echo "私钥路径: $PRIVATE_KEY"
 echo "公钥路径: $PUBLIC_KEY"
 echo "请确保您已保存私钥，并将其放在合适的位置以便后续登录。"
 
 # 提供一些时间给用户保存私钥
-echo -e "\n您有 15 秒时间保存私钥后，系统将禁用密码登录。"
+echo -e "\n【重要提示】"
+echo -e "✅ **当前 SSH 仍然可以使用密码登录，SFTP 可用。**"
+echo -e "✅ **SSH 密码登录将被禁用，必须使用密钥！**"
+echo -e "✅ **请务必保存好私钥，否则将无法登录！**"
 sleep 15
 
 echo "正在配置公钥登录..."
@@ -1276,10 +1282,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo -e "\n【重要提示】"
-echo -e "✅ **当前 SSH 仍然可以使用密码登录，SFTP 可用。**"
-echo -e "✅ **15 秒后，SSH 密码登录将被禁用，必须使用密钥！**"
-echo -e "✅ **请务必保存好私钥: $PRIVATE_KEY**\n"
 
 # 15 秒后禁用密码登录
 nohup bash -c "
