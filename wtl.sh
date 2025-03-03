@@ -1208,6 +1208,8 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
        
         3)
 
+#!/bin/bash
+
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -1253,20 +1255,6 @@ if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
     echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 fi
 
-# **创建 15 秒后禁用密码的脚本**
-DISABLE_SCRIPT="/usr/local/bin/disable_password_after_reboot.sh"
-cat <<EOF > "$DISABLE_SCRIPT"
-#!/bin/bash
-sleep 15  # 延迟 15 秒，确保 SSH 启动完成
-sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-systemctl restart ssh
-echo "SSH 密码登录已禁用。" >> /var/log/ssh-disable.log
-EOF
-chmod +x "$DISABLE_SCRIPT"
-
-# **使用 `cron` 在重启后 15 秒运行**
-echo "@reboot root /bin/bash $DISABLE_SCRIPT" > /etc/cron.d/disable-password
-
 # **立即重启 SSH，保证当前会话不受影响**
 systemctl restart ssh
 if [ $? -ne 0 ]; then
@@ -1276,8 +1264,16 @@ fi
 
 echo -e "\n【重要提示】"
 echo -e "✅ **当前 SSH 仍然可以使用密码登录，SFTP 可用。**"
-echo -e "✅ **VPS 重启后，SSH 密码登录将在 15 秒后禁用，必须使用密钥！**"
+echo -e "✅ **15 秒后，SSH 密码登录将被禁用，必须使用密钥！**"
 echo -e "✅ **请务必保存好私钥: $PRIVATE_KEY**\n"
+
+# **创建 15 秒后禁用密码的脚本**
+nohup bash -c "
+    sleep 15
+    sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+    systemctl restart ssh
+    echo 'SSH 密码登录已禁用。' >> /var/log/ssh-disable.log
+" > /dev/null 2>&1 &
 
 # 按任意键返回菜单
 read -n 1 -s -r -p "按任意键返回菜单..."
