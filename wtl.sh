@@ -1250,14 +1250,38 @@ if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
     echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 fi
 
-# **仅对 SFTP 用户保留密码登录**
-if ! grep -q "Match Group sftp" "$SSHD_CONFIG"; then
-    echo "" >> "$SSHD_CONFIG"
-    echo "Match Group sftp" >> "$SSHD_CONFIG"
-    echo "    PasswordAuthentication yes" >> "$SSHD_CONFIG"
-fi
+# **创建开机后禁用密码登录的脚本**
+DISABLE_SCRIPT="/usr/local/bin/disable_password_after_reboot.sh"
+cat <<EOF > "$DISABLE_SCRIPT"
+#!/bin/bash
+sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+systemctl restart ssh
+echo "SSH 密码登录已禁用。" >> /var/log/ssh-disable.log
+rm -f /etc/systemd/system/disable-password.service
+EOF
+chmod +x "$DISABLE_SCRIPT"
 
-# 立即重启 SSH 服务
+# **创建 systemd 服务，在重启后自动禁用密码**
+SERVICE_FILE="/etc/systemd/system/disable-password.service"
+cat <<EOF > "$SERVICE_FILE"
+[Unit]
+Description=Disable SSH password login after reboot
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=$DISABLE_SCRIPT
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+chmod 644 "$SERVICE_FILE"
+systemctl daemon-reload
+systemctl enable disable-password.service
+
+# **立即重启 SSH**
 systemctl restart ssh
 if [ $? -ne 0 ]; then
     echo "⚠️  SSH 服务未正确启动，可能存在问题，请手动检查配置！"
@@ -1265,30 +1289,9 @@ if [ $? -ne 0 ]; then
 fi
 
 echo -e "\n【重要提示】"
-echo -e "✅ **当前 SSH 只能使用密钥登录，SFTP 仍可使用密码登录。**"
-echo -e "✅ **重启 VPS 后，SFTP 也将只能使用密钥登录！**"
+echo -e "✅ **当前 SSH 仍然可以使用密码登录，SFTP 可用。**"
+echo -e "✅ **VPS 重启后，SSH 密码登录将自动禁用，必须使用密钥！**"
 echo -e "✅ **请务必保存好私钥: $PRIVATE_KEY**\n"
-
-# **创建 rc.local 确保重启后 SFTP 也禁用密码**
-REBOOT_SCRIPT="/etc/rc.local"
-if [ ! -f "$REBOOT_SCRIPT" ]; then
-    echo "#!/bin/bash" > "$REBOOT_SCRIPT"
-    chmod +x "$REBOOT_SCRIPT"
-fi
-
-if ! grep -q "Disable SFTP password login" "$REBOOT_SCRIPT"; then
-    echo "echo 'Disable SFTP password login on reboot' " >> "$REBOOT_SCRIPT"
-    echo "sed -i '/^Match Group sftp/,+1 d' $SSHD_CONFIG" >> "$REBOOT_SCRIPT"
-    echo "systemctl restart sshd" >> "$REBOOT_SCRIPT"
-    echo "sed -i '/Disable SFTP password login/d' $REBOOT_SCRIPT" >> "$REBOOT_SCRIPT"
-fi
-
-# 启用 rc.local
-chmod +x "$REBOOT_SCRIPT"
-systemctl enable rc-local > /dev/null 2>&1
-systemctl start rc-local > /dev/null 2>&1
-
-echo -e "\n✅ **配置已完成，重启 VPS 后，SFTP 也将只能使用密钥登录。**"
 
 # 按任意键返回菜单
 read -n 1 -s -r -p "按任意键返回菜单..."
