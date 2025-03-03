@@ -1103,7 +1103,7 @@ open_port() {
 
 disable_port() {
     echo -e "${YELLOW}当前已开放的端口:${NC}"
-    sudo ufw status numbered | grep -E "^[0-9]+.*ALLOW"  
+    sudo ufw status | awk '/ALLOW/ {print NR-2, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}'  
 
     read -p "请输入要禁用的端口号: " port
     echo "选择协议："
