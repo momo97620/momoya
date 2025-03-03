@@ -1207,7 +1207,7 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
          ;;
        
         3)
-echo "执行选项 3：自动申请密钥并配置密钥登录..."
+      echo "执行选项 3：自动申请密钥并配置密钥登录..."
 if [ "$(id -u)" -ne 0 ]; then
     echo "请以 root 用户运行此脚本。"
     read -n 1 -s -r -p "按任意键返回菜单..."
@@ -1257,8 +1257,9 @@ echo "修改 SSH 配置以禁用密码登录..."
 if ! grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
     echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
 fi
-sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
-sed -i 's/^#PasswordAuthentication no/PasswordAuthentication no/' "$SSHD_CONFIG"
+# 注释掉以下两行，确保未重启前密码登录仍然有效
+# sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
+# sed -i 's/^#PasswordAuthentication no/PasswordAuthentication no/' "$SSHD_CONFIG"
 if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
     echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 fi
@@ -1288,14 +1289,13 @@ if [ -f "$PAM_SSHD_CONFIG" ]; then
     sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
 fi
 
-echo "立即应用新配置..."
-if systemctl reload sshd &>/dev/null; then
-    echo "SSH配置已热重载，新连接即刻生效"
-else
-    echo "配置重载失败，请手动执行：systemctl reload sshd"
-fi
-
-# 在脚本末尾替换以下内容：
+# 注释掉立即生效的逻辑
+# echo "立即应用新配置..."
+# if systemctl reload sshd &>/dev/null; then
+#     echo "SSH配置已热重载，新连接即刻生效"
+# else
+#     echo "配置重载失败，请手动执行：systemctl reload sshd"
+# fi
 
 echo -e "${DARK_RED}重要提示：${NC}"
 echo -e "${DARK_RED}‼️  切记要先保存好私钥！！！${NC}"
