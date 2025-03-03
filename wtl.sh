@@ -727,7 +727,7 @@ container_management() {
     clear
     echo -e "${BLUE}\n===== 容器管理 =====${NC}"
     
-    # 第一排选项
+    
     echo -e "${RED}1.${NC} ${BOLD_GREEN}列出所有容器${NC}      ${RED}2.${NC} ${BOLD_GREEN}启动容器${NC}"
     echo -e "---------------------------"
     
@@ -838,7 +838,6 @@ read -n 1 -s -r -p "按任意键返回..."
     done
 }
 
-# 在主脚本中添加选项 18)
 
 function configure_swap() {
     SWAP_SIZE="2G"
@@ -1289,20 +1288,36 @@ if [ -f "$PAM_SSHD_CONFIG" ]; then
     sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
 fi
 
+echo "立即应用新配置..."
+if systemctl reload sshd &>/dev/null; then
+    echo "SSH配置已热重载，新连接即刻生效"
+else
+    echo "配置重载失败，请手动执行：systemctl reload sshd"
+fi
+
+# 在脚本末尾替换以下内容：
+
 echo -e "${DARK_RED}重要提示：${NC}"
-echo -e "${DARK_RED}‼️  切记要先保存好私钥！！！。${NC}"
-echo -e "${DARK_RED}‼️  退出菜单输入以下重启命令:${NC}"
+echo -e "${DARK_RED}‼️  切记要先保存好私钥！！！${NC}"
+echo -e "${DARK_RED}‼️  私钥路径: $PRIVATE_KEY${NC}"
+echo -e "${DARK_RED}‼️  新配置将在您手动重启 VPS 后生效。${NC}"
+echo -e "${DARK_RED}‼️  在此期间，SFTP 仍可正常使用。${NC}"
 
-echo -e "${DARK_RED}‼️  systemctl restart sshd${NC}"
+# 创建重启检测脚本
+REBOOT_HOOK_SCRIPT="/etc/rc.local"
+if [ ! -f "$REBOOT_HOOK_SCRIPT" ]; then
+    echo "#!/bin/bash" > "$REBOOT_HOOK_SCRIPT"
+    chmod +x "$REBOOT_HOOK_SCRIPT"
+fi
 
-echo -e "${DARK_RED}‼️  然后重启SSH禁用密码才会被加载生效、然后用私钥登录${NC}"
+# 添加重启后生效的逻辑
+if ! grep -q "systemctl reload sshd" "$REBOOT_HOOK_SCRIPT"; then
+    echo "systemctl reload sshd" >> "$REBOOT_HOOK_SCRIPT"
+    echo "echo 'SSH配置已生效，密码登录已禁用。'" >> "$REBOOT_HOOK_SCRIPT"
+    echo "sed -i '/systemctl reload sshd/d' $REBOOT_HOOK_SCRIPT" >> "$REBOOT_HOOK_SCRIPT"  # 清理脚本
+fi
 
-echo -e "${BRIGHT_GREEN}公钥路径: $PUBLIC_KEY${NC}"
-echo -e "${BRIGHT_GREEN}私钥路径: $PRIVATE_KEY${NC}"
-
-echo ""
-read -n 1 -s -r -p "按任意键返回菜单..."
-echo ""
+echo -e "${BRIGHT_GREEN}配置已保存，重启 VPS 后生效。${NC}"
         ;;
         4)
             execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
@@ -1496,11 +1511,11 @@ echo "已安装成功，请手动放行652端口，使用IP+6520浏览器登录�
 read -n 1 -s -r -p "按任意键返回上一页..."
 
             ;;
-      "8")  # 注意这里必须有双引号和右括号
+      "8")  
             clear
             echo "正在部署WallOS服务..."
             
-            # 提权检查
+            
             if [[ $EUID -ne 0 ]]; then
                 echo "检测到非root权限，需要提权操作"
                 if ! sudo -n true 2>/dev/null; then
@@ -1510,17 +1525,17 @@ read -n 1 -s -r -p "按任意键返回上一页..."
                 fi
             fi
 
-            # 工作目录（使用变量更安全）
+            
             DEPLOY_DIR="/root/data/docker_data/wallos"
             
-            # ▼▼▼ 创建目录带错误处理 ▼▼▼
+            
             if ! sudo mkdir -p "$DEPLOY_DIR"; then
                 echo "目录创建失败：$DEPLOY_DIR"
                 read -p "按回车返回主菜单"
                 continue
             fi
 
-            # ▼▼▼ 生成配置文件（注意EOF必须顶格） ▼▼▼
+            
             sudo tee "$DEPLOY_DIR/docker-compose.yml" >/dev/null <<'EOF'
 version: '3'
 
@@ -1538,14 +1553,14 @@ services:
       - TZ=Asia/Shanghai
 EOF
 
-            # 检查文件生成结果
+            
             if [ ! -f "$DEPLOY_DIR/docker-compose.yml" ]; then
                 echo "配置文件生成失败！"
                 read -p "按回车返回主菜单"
                 continue
             fi
 
-            # 启动容器（子shell操作目录）
+            
             if ! (cd "$DEPLOY_DIR" && sudo docker compose up -d); then
                 echo "容器启动失败，请检查："
                 echo "1. Docker是否运行：systemctl status docker"
@@ -1556,11 +1571,11 @@ EOF
 
             echo -e "\n► 部署完成！访问地址：http://$(ip route get 1 | awk '{print $7}'):6270"
             read -p "按回车返回主菜单..."
-            ;;  # 必须双分号结束选项
+            ;;  
 
         
         3)
-           image_management #镜像管理
+           image_management 
             ;;  
             
         6)
