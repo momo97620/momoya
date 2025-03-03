@@ -1207,7 +1207,8 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
          ;;
        
         3)
-      echo "执行选项 3：自动申请密钥并配置密钥登录..."
+    echo "执行选项 3：自动申请密钥并配置密钥登录..."
+
 if [ "$(id -u)" -ne 0 ]; then
     echo "请以 root 用户运行此脚本。"
     read -n 1 -s -r -p "按任意键返回菜单..."
@@ -1253,13 +1254,12 @@ chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-echo "修改 SSH 配置以禁用密码登录..."
-if ! grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
+echo "修改 SSH 配置以禁用密码登录（将在重启后生效）..."
+# 确保当前允许密码登录，以便 SFTP 可用
+sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' "$SSHD_CONFIG"
+if ! grep -q "^PasswordAuthentication yes" "$SSHD_CONFIG"; then
     echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
 fi
-# 注释掉以下两行，确保未重启前密码登录仍然有效
-# sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
-# sed -i 's/^#PasswordAuthentication no/PasswordAuthentication no/' "$SSHD_CONFIG"
 if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
     echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 fi
@@ -1271,58 +1271,43 @@ if grep -q "^UsePAM yes" "$SSHD_CONFIG"; then
 fi
 
 if [ -f "$CLOUD_INIT_CONFIG" ]; then
-    echo "检测到 $CLOUD_INIT_CONFIG，清空文件并添加 PasswordAuthentication no..."
-    
-    > "$CLOUD_INIT_CONFIG"
-    
-    echo "PasswordAuthentication no" >> "$CLOUD_INIT_CONFIG"
-
-    if grep -q "^PasswordAuthentication no" "$CLOUD_INIT_CONFIG"; then
-        echo "成功修改 $CLOUD_INIT_CONFIG 中的 PasswordAuthentication 为 no。"
-    else
-        echo "修改 $CLOUD_INIT_CONFIG 失败，请手动检查文件。"
-    fi
+    echo "检测到 $CLOUD_INIT_CONFIG，确保密码登录仍然可用..."
+    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' "$CLOUD_INIT_CONFIG"
+    echo "PasswordAuthentication yes" >> "$CLOUD_INIT_CONFIG"
 fi
 
 if [ -f "$PAM_SSHD_CONFIG" ]; then
-    echo "注释掉 PAM 配置中的 @include common-auth..."
-    sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
+    echo "确保 PAM 允许密码登录..."
+    sed -i 's/^#@include common-auth/@include common-auth/' "$PAM_SSHD_CONFIG"
 fi
 
-# 注释掉立即生效的逻辑
-# echo "立即应用新配置..."
-# if systemctl reload sshd &>/dev/null; then
-#     echo "SSH配置已热重载，新连接即刻生效"
-# else
-#     echo "配置重载失败，请手动执行：systemctl reload sshd"
-# fi
+echo -e "\n【重要提示】"
+echo -e "‼️  **请先下载私钥，并存放在安全的位置！**"
+echo -e "‼️  **私钥路径: $PRIVATE_KEY**"
+echo -e "‼️  **当前 SFTP 登录仍然可用，重启 VPS 后禁用密码登录。**\n"
 
-echo -e "${DARK_RED}重要提示：${NC}"
-echo -e "${DARK_RED}‼️  切记要先保存好私钥！！！${NC}"
-echo -e "${DARK_RED}‼️  私钥路径: $PRIVATE_KEY${NC}"
-echo -e "${DARK_RED}‼️  新配置将在您手动重启 VPS 后生效。${NC}"
-echo -e "${DARK_RED}‼️  在此期间，SFTP 仍可使用密码登录。${NC}"
-
-# 创建重启检测脚本
-REBOOT_HOOK_SCRIPT="/etc/rc.local"
-if [ ! -f "$REBOOT_HOOK_SCRIPT" ]; then
-    echo "#!/bin/bash" > "$REBOOT_HOOK_SCRIPT"
-    chmod +x "$REBOOT_HOOK_SCRIPT"
+# 创建 rc.local 以确保重启后禁用密码登录
+REBOOT_SCRIPT="/etc/rc.local"
+if [ ! -f "$REBOOT_SCRIPT" ]; then
+    echo "#!/bin/bash" > "$REBOOT_SCRIPT"
+    chmod +x "$REBOOT_SCRIPT"
 fi
 
-# 添加重启后生效的逻辑
-if ! grep -q "systemctl restart sshd" "$REBOOT_HOOK_SCRIPT"; then
-    echo "sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config" >> "$REBOOT_HOOK_SCRIPT"
-    echo "systemctl restart sshd" >> "$REBOOT_HOOK_SCRIPT"
-    echo "echo 'SSH配置已生效，密码登录已禁用。'" >> "$REBOOT_HOOK_SCRIPT"
-    echo "sed -i '/systemctl restart sshd/d' $REBOOT_HOOK_SCRIPT" >> "$REBOOT_HOOK_SCRIPT"  # 清理脚本
+if ! grep -q "Disable SSH password login" "$REBOOT_SCRIPT"; then
+    echo "echo 'Disable SSH password login on reboot' " >> "$REBOOT_SCRIPT"
+    echo "sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' $SSHD_CONFIG" >> "$REBOOT_SCRIPT"
+    echo "sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' $CLOUD_INIT_CONFIG" >> "$REBOOT_SCRIPT"
+    echo "sed -i 's/^@include common-auth/#@include common-auth/' $PAM_SSHD_CONFIG" >> "$REBOOT_SCRIPT"
+    echo "systemctl restart sshd" >> "$REBOOT_SCRIPT"
+    echo "sed -i '/Disable SSH password login/d' $REBOOT_SCRIPT" >> "$REBOOT_SCRIPT"  # 清理自身
 fi
 
-# 确保 rc.local 服务已启用
+# 确保 rc.local 服务启用
+chmod +x "$REBOOT_SCRIPT"
 systemctl enable rc-local > /dev/null 2>&1
 systemctl start rc-local > /dev/null 2>&1
 
-echo -e "${BRIGHT_GREEN}配置已保存，重启 VPS 后生效。${NC}"
+echo -e "\n✅ **配置已完成，重启 VPS 后密码登录将被禁用。**"
 
 # 按任意键返回菜单
 read -n 1 -s -r -p "按任意键返回菜单..."
