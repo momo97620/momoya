@@ -1,28 +1,26 @@
   #!/bin/bash
 
-# 定义颜色
-NC='\033[0m'              # 无颜色
+NC='\033[0m'             # 无颜色
 
 set_shanghai_time() {
-    # 检查当前时区
     CURRENT_TIMEZONE=$(timedatectl | grep "Time zone" | awk '{print $3}')
     
-    # 如果时区不是上海时间，则设置为上海时间
+    
     if [ "$CURRENT_TIMEZONE" != "Asia/Shanghai" ]; then
         timedatectl set-timezone Asia/Shanghai &> /dev/null
     fi
 
-    # 启用网络时间同步
+    
     timedatectl set-ntp true &> /dev/null
 }
 
-# 检查脚本是否有执行权限，如果没有则自动赋予权限
+
 SCRIPT_PATH=$(readlink -f "$0")
 if [ ! -x "$SCRIPT_PATH" ]; then
     chmod +x "$SCRIPT_PATH"
 fi
 
-# 调用函数
+
 set_shanghai_time
 CACHE_DIR="/root/vps_cache"
 CACHE_TTL=3600
@@ -120,13 +118,13 @@ install_docker() {
 
 
 set_ip_priority() {
-    # 检查当前用户是否为 root
+    
     if [ "$EUID" -ne 0 ]; then
         echo "请以 root 用户运行此脚本！"
         exit 1
     fi
 
-    # 检查当前优先级
+    
     check_current_priority() {
         if [ -f /etc/gai.conf ]; then
             if grep -q "label ::ffff:0:0/96  2" /etc/gai.conf; then
@@ -141,12 +139,12 @@ set_ip_priority() {
         fi
     }
 
-    # 设置优先级
+    
     set_priority() {
-        # 备份配置文件
+        
         cp -n /etc/gai.conf /etc/gai.conf.bak 2>/dev/null
 
-        # 清理已有配置
+        
         sed -i '/precedence/d' /etc/gai.conf 2>/dev/null
         sed -i '/label/d' /etc/gai.conf 2>/dev/null
 
@@ -171,7 +169,7 @@ set_ip_priority() {
                 ;;
         esac
 
-        # 验证设置
+        
         if [ "$1" -eq 3 ]; then
             if [ ! -f /etc/gai.conf ]; then
                 echo "验证设置：/etc/gai.conf 文件已删除，恢复默认行为。"
@@ -185,7 +183,7 @@ set_ip_priority() {
         fi
     }
 
-    # 显示菜单
+    
     show_menu() {
         clear
         echo "==============================="
@@ -212,7 +210,7 @@ set_ip_priority() {
 
 update_script() {
     local remote_url="https://raw.githubusercontent.com/momo97620/momoya/refs/heads/main/wtl.sh"
-    local local_path="/root/wtl.sh"  # 确保文件名是正确的
+    local local_path="/root/wtl.sh"  
 
     echo -e "${YELLOW}正在更新脚本到最新版本...${NC}"
 
@@ -299,7 +297,7 @@ image_management() {
     echo -e "---------------------------"
     
     echo -e "${RED}7.${NC} ${BOLD_GREEN}重启镜像${NC}          ${RED}0.${NC} ${BOLD_GREEN}返回主菜单${NC}"
-    echo -e "---------------------------"  # 添加分隔线
+    echo -e "---------------------------"  
     
     read -p "请选择操作: " image_choice  
 
