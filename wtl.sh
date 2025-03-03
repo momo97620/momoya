@@ -1220,8 +1220,6 @@ PRIVATE_KEY="$KEY_DIR/id_rsa"
 PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 BACKUP_CONFIG="/etc/ssh/sshd_config.bak"
-CLOUD_INIT_CONFIG="/etc/ssh/sshd_config.d/50-cloud-init.conf"
-PAM_SSHD_CONFIG="/etc/pam.d/sshd"
 
 echo "正在生成密钥对..."
 mkdir -p "$KEY_DIR"
@@ -1243,64 +1241,54 @@ chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
+# **确保 SFTP 仍然可以使用密码**
 echo "确保 SSH 允许密码登录（保证 SFTP 可用）..."
-# 强制开启密码认证（确保当前会话仍然可以 SFTP）
-sed -i '/^PasswordAuthentication /d' "$SSHD_CONFIG"
-echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
-
-sed -i '/^PubkeyAuthentication /d' "$SSHD_CONFIG"
-echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
-
-sed -i '/^ChallengeResponseAuthentication /d' "$SSHD_CONFIG"
-echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
-
-# 确保 PAM 允许密码认证（避免 SFTP 登录受影响）
-if [ -f "$PAM_SSHD_CONFIG" ]; then
-    sed -i 's/^#@include common-auth/@include common-auth/' "$PAM_SSHD_CONFIG"
+if ! grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
+    echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
+fi
+if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
+    echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 fi
 
-# 确保 SFTP 仍然可用（针对 `subsystem` 配置）
-if ! grep -q "^Subsystem sftp /usr/lib/openssh/sftp-server" "$SSHD_CONFIG"; then
-    echo "Subsystem sftp /usr/lib/openssh/sftp-server" >> "$SSHD_CONFIG"
+# **仅对 SFTP 用户保留密码登录**
+if ! grep -q "Match Group sftp" "$SSHD_CONFIG"; then
+    echo "" >> "$SSHD_CONFIG"
+    echo "Match Group sftp" >> "$SSHD_CONFIG"
+    echo "    PasswordAuthentication yes" >> "$SSHD_CONFIG"
 fi
 
-# 立即重启 SSH 服务，确保当前会话仍可使用密码登录 SFTP
-systemctl restart sshd
-
-# 测试 SFTP 是否可用
-sleep 2
-if ! systemctl status sshd | grep -q "active (running)"; then
+# 立即重启 SSH 服务
+systemctl restart ssh
+if [ $? -ne 0 ]; then
     echo "⚠️  SSH 服务未正确启动，可能存在问题，请手动检查配置！"
     exit 1
 fi
 
 echo -e "\n【重要提示】"
-echo -e "‼️  **请先下载私钥，并存放在安全的位置！**"
-echo -e "‼️  **私钥路径: $PRIVATE_KEY**"
-echo -e "‼️  **当前 SFTP 登录仍然可用，重启 VPS 后禁用密码登录。**\n"
+echo -e "✅ **当前 SSH 只能使用密钥登录，SFTP 仍可使用密码登录。**"
+echo -e "✅ **重启 VPS 后，SFTP 也将只能使用密钥登录！**"
+echo -e "✅ **请务必保存好私钥: $PRIVATE_KEY**\n"
 
-# 创建 rc.local 以确保重启后禁用密码登录
+# **创建 rc.local 确保重启后 SFTP 也禁用密码**
 REBOOT_SCRIPT="/etc/rc.local"
 if [ ! -f "$REBOOT_SCRIPT" ]; then
     echo "#!/bin/bash" > "$REBOOT_SCRIPT"
     chmod +x "$REBOOT_SCRIPT"
 fi
 
-if ! grep -q "Disable SSH password login" "$REBOOT_SCRIPT"; then
-    echo "echo 'Disable SSH password login on reboot' " >> "$REBOOT_SCRIPT"
-    echo "sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' $SSHD_CONFIG" >> "$REBOOT_SCRIPT"
-    echo "sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' $CLOUD_INIT_CONFIG" >> "$REBOOT_SCRIPT"
-    echo "sed -i 's/^@include common-auth/#@include common-auth/' $PAM_SSHD_CONFIG" >> "$REBOOT_SCRIPT"
+if ! grep -q "Disable SFTP password login" "$REBOOT_SCRIPT"; then
+    echo "echo 'Disable SFTP password login on reboot' " >> "$REBOOT_SCRIPT"
+    echo "sed -i '/^Match Group sftp/,+1 d' $SSHD_CONFIG" >> "$REBOOT_SCRIPT"
     echo "systemctl restart sshd" >> "$REBOOT_SCRIPT"
-    echo "sed -i '/Disable SSH password login/d' $REBOOT_SCRIPT" >> "$REBOOT_SCRIPT"  # 清理自身
+    echo "sed -i '/Disable SFTP password login/d' $REBOOT_SCRIPT" >> "$REBOOT_SCRIPT"
 fi
 
-# 确保 rc.local 服务启用
+# 启用 rc.local
 chmod +x "$REBOOT_SCRIPT"
 systemctl enable rc-local > /dev/null 2>&1
 systemctl start rc-local > /dev/null 2>&1
 
-echo -e "\n✅ **配置已完成，重启 VPS 后密码登录将被禁用。**"
+echo -e "\n✅ **配置已完成，重启 VPS 后，SFTP 也将只能使用密钥登录。**"
 
 # 按任意键返回菜单
 read -n 1 -s -r -p "按任意键返回菜单..."
