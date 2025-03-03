@@ -1207,7 +1207,7 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
          ;;
        
         3)
-    echo "执行选项 3：自动申请密钥并配置密钥登录..."
+echo "执行选项 3：自动申请密钥并配置密钥登录..."
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "请以 root 用户运行此脚本。"
@@ -1243,26 +1243,36 @@ chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-echo "确保 SSH 允许密码登录（SFTP 可用）..."
-# 强制开启密码认证（让 SFTP 在脚本运行后仍可使用）
+echo "确保 SSH 允许密码登录（保证 SFTP 可用）..."
+# 强制开启密码认证（确保当前会话仍然可以 SFTP）
 sed -i '/^PasswordAuthentication /d' "$SSHD_CONFIG"
 echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
 
-# 允许公钥认证
 sed -i '/^PubkeyAuthentication /d' "$SSHD_CONFIG"
 echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 
-# 确保 ChallengeResponseAuthentication 禁用
 sed -i '/^ChallengeResponseAuthentication /d' "$SSHD_CONFIG"
 echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
 
-# 确保 PAM 允许密码认证（防止影响 SFTP）
+# 确保 PAM 允许密码认证（避免 SFTP 登录受影响）
 if [ -f "$PAM_SSHD_CONFIG" ]; then
     sed -i 's/^#@include common-auth/@include common-auth/' "$PAM_SSHD_CONFIG"
 fi
 
+# 确保 SFTP 仍然可用（针对 `subsystem` 配置）
+if ! grep -q "^Subsystem sftp /usr/lib/openssh/sftp-server" "$SSHD_CONFIG"; then
+    echo "Subsystem sftp /usr/lib/openssh/sftp-server" >> "$SSHD_CONFIG"
+fi
+
 # 立即重启 SSH 服务，确保当前会话仍可使用密码登录 SFTP
 systemctl restart sshd
+
+# 测试 SFTP 是否可用
+sleep 2
+if ! systemctl status sshd | grep -q "active (running)"; then
+    echo "⚠️  SSH 服务未正确启动，可能存在问题，请手动检查配置！"
+    exit 1
+fi
 
 echo -e "\n【重要提示】"
 echo -e "‼️  **请先下载私钥，并存放在安全的位置！**"
