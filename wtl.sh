@@ -1208,7 +1208,6 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
        
         3)
 
-#!/bin/bash
 
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
 
@@ -1222,6 +1221,7 @@ KEY_DIR="$HOME/.ssh"
 PRIVATE_KEY="$KEY_DIR/id_rsa"
 PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
 SSHD_CONFIG="/etc/ssh/sshd_config"
+PAM_SSHD_CONFIG="/etc/pam.d/sshd"
 
 echo "正在生成密钥对..."
 mkdir -p "$KEY_DIR"
@@ -1255,10 +1255,28 @@ if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
     echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 fi
 
-# **立即重启 SSH，保证当前会话不受影响**
+# **检查并修改 PAM 配置文件**
+echo "检查并修改 PAM 配置..."
+if grep -q "^@include common-auth" "$PAM_SSHD_CONFIG"; then
+    sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
+    echo "已注释掉 @include common-auth 配置。"
+fi
+
+# **修改其他 SSH 配置文件，确保禁用密码登录**
+echo "修改 SSH 配置文件，禁用密码登录..."
+sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
+sed -i 's/^ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' "$SSHD_CONFIG"
+sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
+echo "PasswordAuthentication no" >> "$SSHD_CONFIG"
+echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
+echo "UsePAM no" >> "$SSHD_CONFIG"
+echo "AuthenticationMethods publickey" >> "$SSHD_CONFIG"
+
+# **确保 SSH 服务正确重启**
+echo "正在重启 SSH 服务..."
 systemctl restart ssh
 if [ $? -ne 0 ]; then
-    echo "⚠️  SSH 服务未正确启动，可能存在问题，请手动检查配置！"
+    echo "⚠️ SSH 服务未正确重启，可能存在问题，请手动检查配置！"
     exit 1
 fi
 
@@ -1270,7 +1288,10 @@ echo -e "✅ **请务必保存好私钥: $PRIVATE_KEY**\n"
 # **创建 15 秒后禁用密码的脚本**
 nohup bash -c "
     sleep 15
+    # 再次修改配置文件，强制禁用密码登录
     sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sed -i 's/^ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+    sed -i 's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
     systemctl restart ssh
     echo 'SSH 密码登录已禁用。' >> /var/log/ssh-disable.log
 " > /dev/null 2>&1 &
