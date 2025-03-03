@@ -1207,19 +1207,19 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
          ;;
        
         3)
+
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "请以 root 用户运行此脚本。"
     read -n 1 -s -r -p "按任意键返回菜单..."
-    continue
+    exit 1
 fi
 
 KEY_DIR="$HOME/.ssh"
 PRIVATE_KEY="$KEY_DIR/id_rsa"
 PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
 SSHD_CONFIG="/etc/ssh/sshd_config"
-BACKUP_CONFIG="/etc/ssh/sshd_config.bak"
 
 echo "正在生成密钥对..."
 mkdir -p "$KEY_DIR"
@@ -1228,8 +1228,9 @@ ssh-keygen -t rsa -b 4096 -f "$PRIVATE_KEY" -N "" -q
 if [ $? -ne 0 ]; then
     echo "密钥生成失败，请检查系统配置。"
     read -n 1 -s -r -p "按任意键返回菜单..."
-    continue
+    exit 1
 fi
+
 echo "密钥生成成功！"
 echo "私钥路径: $PRIVATE_KEY"
 echo "公钥: $PUBLIC_KEY"
@@ -1241,10 +1242,12 @@ chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-# **确保 SFTP 仍然可以使用密码**
+# **确保 SSH 密码登录暂时可用**
 echo "确保 SSH 允许密码登录（保证 SFTP 可用）..."
 if ! grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
     echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
+else
+    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' "$SSHD_CONFIG"
 fi
 if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
     echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
@@ -1254,6 +1257,7 @@ fi
 DISABLE_SCRIPT="/usr/local/bin/disable_password_after_reboot.sh"
 cat <<EOF > "$DISABLE_SCRIPT"
 #!/bin/bash
+sleep 15  # 延迟 15 秒，确保 SSH 启动完成
 sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
 systemctl restart ssh
 echo "SSH 密码登录已禁用。" >> /var/log/ssh-disable.log
@@ -1281,7 +1285,7 @@ chmod 644 "$SERVICE_FILE"
 systemctl daemon-reload
 systemctl enable disable-password.service
 
-# **立即重启 SSH**
+# **立即重启 SSH，保证当前会话不受影响**
 systemctl restart ssh
 if [ $? -ne 0 ]; then
     echo "⚠️  SSH 服务未正确启动，可能存在问题，请手动检查配置！"
@@ -1290,7 +1294,7 @@ fi
 
 echo -e "\n【重要提示】"
 echo -e "✅ **当前 SSH 仍然可以使用密码登录，SFTP 可用。**"
-echo -e "✅ **VPS 重启后，SSH 密码登录将自动禁用，必须使用密钥！**"
+echo -e "✅ **VPS 重启后，SSH 密码登录将在 15 秒后禁用，必须使用密钥！**"
 echo -e "✅ **请务必保存好私钥: $PRIVATE_KEY**\n"
 
 # 按任意键返回菜单
