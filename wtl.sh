@@ -1209,6 +1209,8 @@ sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
         3)
 
 
+#!/bin/bash
+
 echo "执行选项 3：自动申请密钥并配置密钥登录..."
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -1235,7 +1237,12 @@ fi
 
 echo "密钥生成成功！"
 echo "私钥路径: $PRIVATE_KEY"
-echo "公钥: $PUBLIC_KEY"
+echo "公钥路径: $PUBLIC_KEY"
+echo "请确保您已保存私钥，并将其放在合适的位置以便后续登录。"
+
+# 提供一些时间给用户保存私钥
+echo -e "\n您有 15 秒时间保存私钥后，系统将禁用密码登录。"
+sleep 15
 
 echo "正在配置公钥登录..."
 AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
@@ -1244,25 +1251,7 @@ chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-# **确保 SSH 密码登录暂时可用**
-echo "确保 SSH 允许密码登录（保证 SFTP 可用）..."
-if ! grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
-    echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
-else
-    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' "$SSHD_CONFIG"
-fi
-if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
-    echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
-fi
-
-# **检查并修改 PAM 配置文件**
-echo "检查并修改 PAM 配置..."
-if grep -q "^@include common-auth" "$PAM_SSHD_CONFIG"; then
-    sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
-    echo "已注释掉 @include common-auth 配置。"
-fi
-
-# **修改其他 SSH 配置文件，确保禁用密码登录**
+# **检查并修改 SSH 配置文件以禁用密码登录**
 echo "修改 SSH 配置文件，禁用密码登录..."
 sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG"
 sed -i 's/^ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' "$SSHD_CONFIG"
@@ -1272,7 +1261,14 @@ echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
 echo "UsePAM no" >> "$SSHD_CONFIG"
 echo "AuthenticationMethods publickey" >> "$SSHD_CONFIG"
 
-# **确保 SSH 服务正确重启**
+# **检查并修改 PAM 配置文件**
+echo "检查并修改 PAM 配置..."
+if grep -q "^@include common-auth" "$PAM_SSHD_CONFIG"; then
+    sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG"
+    echo "已注释掉 @include common-auth 配置。"
+fi
+
+# **重启 SSH 服务使配置生效**
 echo "正在重启 SSH 服务..."
 systemctl restart ssh
 if [ $? -ne 0 ]; then
@@ -1285,7 +1281,7 @@ echo -e "✅ **当前 SSH 仍然可以使用密码登录，SFTP 可用。**"
 echo -e "✅ **15 秒后，SSH 密码登录将被禁用，必须使用密钥！**"
 echo -e "✅ **请务必保存好私钥: $PRIVATE_KEY**\n"
 
-# **创建 15 秒后禁用密码的脚本**
+# 15 秒后禁用密码登录
 nohup bash -c "
     sleep 15
     # 再次修改配置文件，强制禁用密码登录
