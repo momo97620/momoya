@@ -1253,7 +1253,7 @@ if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
     echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 fi
 
-# **创建开机后禁用密码登录的脚本**
+# **创建 15 秒后禁用密码的脚本**
 DISABLE_SCRIPT="/usr/local/bin/disable_password_after_reboot.sh"
 cat <<EOF > "$DISABLE_SCRIPT"
 #!/bin/bash
@@ -1261,29 +1261,11 @@ sleep 15  # 延迟 15 秒，确保 SSH 启动完成
 sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
 systemctl restart ssh
 echo "SSH 密码登录已禁用。" >> /var/log/ssh-disable.log
-rm -f /etc/systemd/system/disable-password.service
 EOF
 chmod +x "$DISABLE_SCRIPT"
 
-# **创建 systemd 服务，在重启后自动禁用密码**
-SERVICE_FILE="/etc/systemd/system/disable-password.service"
-cat <<EOF > "$SERVICE_FILE"
-[Unit]
-Description=Disable SSH password login after reboot
-After=multi-user.target
-
-[Service]
-Type=oneshot
-ExecStart=$DISABLE_SCRIPT
-RemainAfterExit=no
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-chmod 644 "$SERVICE_FILE"
-systemctl daemon-reload
-systemctl enable disable-password.service
+# **使用 `cron` 在重启后 15 秒运行**
+echo "@reboot root /bin/bash $DISABLE_SCRIPT" > /etc/cron.d/disable-password
 
 # **立即重启 SSH，保证当前会话不受影响**
 systemctl restart ssh
