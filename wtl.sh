@@ -1311,13 +1311,19 @@ if [ ! -f "$REBOOT_HOOK_SCRIPT" ]; then
 fi
 
 # 添加重启后生效的逻辑
-if ! grep -q "systemctl reload sshd" "$REBOOT_HOOK_SCRIPT"; then
-    echo "systemctl reload sshd" >> "$REBOOT_HOOK_SCRIPT"
+if ! grep -q "systemctl restart sshd" "$REBOOT_HOOK_SCRIPT"; then
+    echo "systemctl restart sshd" >> "$REBOOT_HOOK_SCRIPT"
     echo "echo 'SSH配置已生效，密码登录已禁用。'" >> "$REBOOT_HOOK_SCRIPT"
-    echo "sed -i '/systemctl reload sshd/d' $REBOOT_HOOK_SCRIPT" >> "$REBOOT_HOOK_SCRIPT"  # 清理脚本
+    echo "sed -i '/systemctl restart sshd/d' $REBOOT_HOOK_SCRIPT" >> "$REBOOT_HOOK_SCRIPT"  # 清理脚本
 fi
 
+# 确保 rc.local 服务已启用
+systemctl enable rc-local > /dev/null 2>&1
+systemctl start rc-local > /dev/null 2>&1
+
 echo -e "${BRIGHT_GREEN}配置已保存，重启 VPS 后生效。${NC}"
+read -n 1 -s -r -p "按任意键返回菜单..."
+echo ""
         ;;
         4)
             execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
