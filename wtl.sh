@@ -1224,7 +1224,7 @@ PUBLIC_KEY="$KEY_DIR/id_rsa.pub"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 PAM_SSHD_CONFIG="/etc/pam.d/sshd"
 
-echo "正在生成密钥对（Ed25519，私钥更短更安全）..."
+echo "正在生成密钥对（私钥更短更安全）..."
 mkdir -p "$KEY_DIR"
 chmod 700 "$KEY_DIR"
 ssh-keygen -t ed25519 -f "$PRIVATE_KEY" -N "" -q
