@@ -1233,19 +1233,8 @@ if [ $? -ne 0 ]; then
     continue
 fi
 echo "密钥生成成功！"
-echo "密钥文件路径："
-echo "私钥: $PRIVATE_KEY"
+echo "私钥路径: $PRIVATE_KEY"
 echo "公钥: $PUBLIC_KEY"
-
-echo "生成公钥的 ASCII 图形化表示..."
-ssh-keygen -lv -f "$PUBLIC_KEY"
-
-if [ ! -f "$BACKUP_CONFIG" ]; then
-    cp "$SSHD_CONFIG" "$BACKUP_CONFIG"
-    echo "sshd 配置文件已备份到 $BACKUP_CONFIG。"
-else
-    echo "sshd 配置文件已存在备份，跳过备份步骤。"
-fi
 
 echo "正在配置公钥登录..."
 AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
@@ -1254,32 +1243,26 @@ chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 echo "公钥已添加到 $AUTHORIZED_KEYS。"
 
-echo "修改 SSH 配置以禁用密码登录（将在重启后生效）..."
-# 确保当前允许密码登录，以便 SFTP 可用
-sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' "$SSHD_CONFIG"
-if ! grep -q "^PasswordAuthentication yes" "$SSHD_CONFIG"; then
-    echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
-fi
-if ! grep -q "^PubkeyAuthentication yes" "$SSHD_CONFIG"; then
-    echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
-fi
-if ! grep -q "^ChallengeResponseAuthentication no" "$SSHD_CONFIG"; then
-    echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
-fi
-if grep -q "^UsePAM yes" "$SSHD_CONFIG"; then
-    sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG"
-fi
+echo "确保 SSH 允许密码登录（SFTP 可用）..."
+# 强制开启密码认证（让 SFTP 在脚本运行后仍可使用）
+sed -i '/^PasswordAuthentication /d' "$SSHD_CONFIG"
+echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
 
-if [ -f "$CLOUD_INIT_CONFIG" ]; then
-    echo "检测到 $CLOUD_INIT_CONFIG，确保密码登录仍然可用..."
-    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' "$CLOUD_INIT_CONFIG"
-    echo "PasswordAuthentication yes" >> "$CLOUD_INIT_CONFIG"
-fi
+# 允许公钥认证
+sed -i '/^PubkeyAuthentication /d' "$SSHD_CONFIG"
+echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
 
+# 确保 ChallengeResponseAuthentication 禁用
+sed -i '/^ChallengeResponseAuthentication /d' "$SSHD_CONFIG"
+echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
+
+# 确保 PAM 允许密码认证（防止影响 SFTP）
 if [ -f "$PAM_SSHD_CONFIG" ]; then
-    echo "确保 PAM 允许密码登录..."
     sed -i 's/^#@include common-auth/@include common-auth/' "$PAM_SSHD_CONFIG"
 fi
+
+# 立即重启 SSH 服务，确保当前会话仍可使用密码登录 SFTP
+systemctl restart sshd
 
 echo -e "\n【重要提示】"
 echo -e "‼️  **请先下载私钥，并存放在安全的位置！**"
