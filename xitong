@@ -85,6 +85,8 @@ get_network_info() {
 
 # 主程序
 main() {
+    # **不显示脚本执行过程，直接输出最终信息**
+    
     # 获取系统信息
     IFS='|' read -r HOSTNAME OS_INFO KERNEL_VERSION CPU_INFO CPU_CORES CPU_ARCH MEM_INFO SWAP_INFO DISK_INFO <<< "$(get_system_info)"
 
@@ -97,7 +99,7 @@ main() {
     local TIMEZONE=$(timedatectl | grep "Time zone" | awk '{print $3}')
     local RUNTIME=$(format_runtime)
 
-    # 输出系统信息（不执行 `clear`，直接输出结果）
+    # **只输出最终结果**
     echo -e "${GREEN}系统基本信息:${NC}"
     echo -e "主机名:       ${YELLOW}$HOSTNAME${NC}"
     echo -e "操作系统:     ${YELLOW}$OS_INFO${NC}"
@@ -126,5 +128,5 @@ main() {
     echo -e "${RED}--------------------${NC}"
 }
 
-# **后台运行**
-(main &) > /dev/null 2>&1
+# 直接执行 main()，不让它后台运行
+main
