@@ -36,4 +36,13 @@
 运行以下命令：
 
 ```sh
-curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh  
+
+---
+
+📌 **说明**  
+该脚本适用于 Debian。  
+部分功能依赖 Docker，请确保系统已安装 Docker。  
+备份功能支持 OneDrive，需要手动绑定账号。
+
+📢 **如果遇到问题，欢迎提交 Issues！** 🎉
