@@ -23,16 +23,17 @@ format_runtime() {
     echo "已运行 $runtime"
 }
 
-# 获取 Swap 信息
 get_swap_info() {
-    local swap_total=$(free -h | awk '/Swap/{print $2}')   # 总 Swap 大小
-    local swap_used=$(free -h | awk '/Swap/{print $3}')    # 已使用 Swap 大小
+    local swap_total=$(grep SwapTotal /proc/meminfo | awk '{printf "%.2f GB", $2 / 1024 / 1024}')
+    local swap_used=$(grep SwapFree /proc/meminfo | awk '{printf "%.2f GB", ($2 / 1024 / 1024)}')
 
-    if [[ "$swap_total" == "0B" || -z "$swap_total" ]]; then
-        echo -e "Swap:         ${YELLOW}未安装${NC}"
+    if [[ "$swap_total" == "0.00 GB" || -z "$swap_total" ]]; then
+        echo "未安装"
     else
-        local swap_percentage=$(free | awk '/Swap/{printf "%.1f%%", $3/$2*100}')
-        echo -e "Swap:         ${YELLOW}$swap_used/$swap_total ($swap_percentage)${NC}"
+        local swap_used_val=$(echo $swap_used | awk '{print $1}')
+        local swap_total_val=$(echo $swap_total | awk '{print $1}')
+        local swap_percentage=$(awk "BEGIN {printf \"%.1f%%\", (($swap_total_val - $swap_used_val) / $swap_total_val) * 100}")
+        echo "$swap_used/$swap_total ($swap_percentage)"
     fi
 }
 # 获取系统基本信息
@@ -55,7 +56,7 @@ get_system_info() {
     local MEM_INFO=$(free -h | awk 'NR==2{printf "%s/%s (%.1f%%)", $3, $2, $3/$2*100}')
     
     # Swap内存
-    local SWAP_INFO=$(get_swap_info)  # 添加 Swap 信息
+    local SWAP_INFO=$(get_swap_info)  # 获取 Swap 信息
     
     # 硬盘信息
     local DISK_INFO=$(df -h | awk '$NF=="/" {printf "%s/%s (%s)", $3, $2, $5}')
