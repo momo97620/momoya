@@ -23,6 +23,18 @@ format_runtime() {
     echo "已运行 $runtime"
 }
 
+# 获取 Swap 信息
+get_swap_info() {
+    local swap_total=$(free -h | awk '/Swap/{print $2}')   # 总 Swap 大小
+    local swap_used=$(free -h | awk '/Swap/{print $3}')    # 已使用 Swap 大小
+
+    if [[ "$swap_total" == "0B" || -z "$swap_total" ]]; then
+        echo -e "Swap:         ${YELLOW}未安装${NC}"
+    else
+        local swap_percentage=$(free | awk '/Swap/{printf "%.1f%%", $3/$2*100}')
+        echo -e "Swap:         ${YELLOW}$swap_used/$swap_total ($swap_percentage)${NC}"
+    fi
+}
 # 获取系统基本信息
 get_system_info() {
     # 主机名
@@ -145,6 +157,7 @@ main() {
             echo -e "CPU核心数:    ${YELLOW}$CPU_CORES${NC}"
             echo -e "CPU架构:      ${YELLOW}$CPU_ARCH${NC}"
             echo -e "内存:         ${YELLOW}$MEM_INFO${NC}"
+            echo -e "Swap:         ${YELLOW}$SWAP_INFO${NC}"
             echo -e "硬盘:         ${YELLOW}$DISK_INFO${NC}"
             echo -e "${RED}--------------------${NC}"
 
