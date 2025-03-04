@@ -2,8 +2,8 @@
 
 # 颜色定义
 NC='\033[0m' # 恢复默认颜色
-GREEN='\033[1;32m' # 绿色
-RED='\033[1;31m' # 红色
+GREEN='\033[1;32m'
+RED='\033[1;31m'
 
 # 格式化运行时间为中文
 format_runtime() {
@@ -26,17 +26,15 @@ format_runtime() {
 
 # 获取 Swap 信息
 get_swap_info() {
-    local swap_total_kb=$(grep SwapTotal /proc/meminfo | awk '{print $2}')
-    local swap_free_kb=$(grep SwapFree /proc/meminfo | awk '{print $2}')
-
-    if [[ -z "$swap_total_kb" || "$swap_total_kb" -eq 0 ]]; then
+    local swap_total=$(grep SwapTotal /proc/meminfo | awk '{printf "%.2f GB", $2 / 1024 / 1024}')
+    local swap_free=$(grep SwapFree /proc/meminfo | awk '{printf "%.2f GB", $2 / 1024 / 1024}')
+    
+    if [[ "$swap_total" == "0.00 GB" || -z "$swap_total" ]]; then
         echo "未安装"
     else
-        local swap_total=$(awk "BEGIN {printf \"%.2f GB\", $swap_total_kb / 1024 / 1024}")
-        local swap_used=$(awk "BEGIN {printf \"%.2f GB\", ($swap_total_kb - $swap_free_kb) / 1024 / 1024}")
-        local swap_percentage=$(awk "BEGIN {printf \"%.1f%%\", (($swap_total_kb - $swap_free_kb) / $swap_total_kb) * 100}")
-
-        echo "$swap_used/$swap_total ($swap_percentage)"
+        local swap_used_val=$(echo $swap_total | awk '{print $1}')-$(echo $swap_free | awk '{print $1}')
+        local swap_percentage=$(awk "BEGIN {printf \"%.1f%%\", (($swap_used_val) / $swap_total) * 100}")
+        echo "$swap_free/$swap_total ($swap_percentage)"
     fi
 }
 
@@ -49,30 +47,56 @@ get_system_info() {
     local CPU_CORES=$(nproc)
     local CPU_ARCH=$(uname -m)
     local MEM_INFO=$(free -h | awk 'NR==2{printf "%s/%s (%.1f%%)", $3, $2, $3/$2*100}')
-    local SWAP_INFO=$(get_swap_info)
+    local SWAP_INFO=$(get_swap_info)  # 获取 Swap 信息
     local DISK_INFO=$(df -h | awk '$NF=="/" {printf "%s/%s (%s)", $3, $2, $5}')
 
     echo "$HOSTNAME|$OS_INFO|$KERNEL_VERSION|$CPU_INFO|$CPU_CORES|$CPU_ARCH|$MEM_INFO|$SWAP_INFO|$DISK_INFO"
 }
 
+# 获取地理位置信息
+get_location() {
+    local services=("ipinfo.io" "ip-api.com" "freegeoip.net")
+    local ipinfo country city isp
+
+    for service in "${services[@]}"; do
+        ipinfo=$(curl -s "https://$service")
+        country=$(echo "$ipinfo" | grep 'country' | awk -F': ' '{print $2}' | tr -d '",')
+        city=$(echo "$ipinfo" | grep 'city' | awk -F': ' '{print $2}' | tr -d '",')
+        isp=$(echo "$ipinfo" | grep 'org' | awk -F': ' '{print $2}' | tr -d '",')
+
+        if [ -n "$country" ] && [ -n "$city" ]; then
+            echo "$country $city|$isp"
+            return
+        fi
+    done
+
+    echo "未知位置|未知运营商"
+}
+
 # 获取网络流量
 get_network_traffic() {
     local interface=$(ip route | grep default | awk '{print $5}' | head -n1)
-    if [[ -z "$interface" ]]; then
+
+    if [ -z "$interface" ]; then
         interface=$(ip link show | awk -F: '$2 !~ /lo/ {print $2;exit}' | tr -d ' ')
     fi
-    if [[ -z "$interface" ]]; then
+
+    if [ -z "$interface" ]; then
         echo "0.00"
         return
     fi
-    local rx_bytes=$(awk -v iface="$interface" '$1 == iface ":" {print $2}' /proc/net/dev)
-    local tx_bytes=$(awk -v iface="$interface" '$1 == iface ":" {print $10}' /proc/net/dev)
-    if [[ -z "$rx_bytes" || -z "$tx_bytes" ]]; then
+
+    local rx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $2}')
+    local tx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $10}')
+    
+    if [ -z "$rx_bytes" ] || [ -z "$tx_bytes" ]; then
         echo "0.00"
         return
     fi
+
     local total_bytes=$((rx_bytes + tx_bytes))
     local total_gb=$(echo "scale=2; $total_bytes/1024/1024/1024" | bc)
+
     echo "${total_gb:-0.00}"
 }
 
@@ -80,27 +104,44 @@ get_network_traffic() {
 get_network_info() {
     local ipv4=$(curl -s4 https://ipinfo.io/ip)
     local ipv6=$(ip -6 addr show | grep inet6 | grep -v '::1' | grep -v 'fe80' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
+
     echo "${ipv4:-未分配}|${ipv6:-未分配}"
+}
+
+# 获取真实时区
+get_real_timezone() {
+    local ip=$(ip route get 1 | awk '{print $7; exit}')
+    local timezone=""
+
+    if [ -n "$ip" ]; then
+        timezone=$(whois "$ip" | grep -i "timezone" | awk -F ': ' '{print $2}' | head -n 1)
+        if [ -z "$timezone" ]; then
+            timezone=$(geoiplookup "$ip" | awk -F ', ' '{print $NF}')
+        fi
+    fi
+
+    if [ -z "$timezone" ]; then
+        timezone=$(timedatectl | grep "Time zone" | awk '{print $3}')
+    fi
+
+    echo "$timezone"
 }
 
 # 主程序
 main() {
-    # **不显示脚本执行过程，直接输出最终信息**
-    clear
-    
-    # 获取系统信息
-    IFS='|' read -r HOSTNAME OS_INFO KERNEL_VERSION CPU_INFO CPU_CORES CPU_ARCH MEM_INFO SWAP_INFO DISK_INFO <<< "$(get_system_info)"
+    clear  # 清屏
 
-    # 获取网络信息
+    echo -e "${GREEN}系统信息收集与分析${NC}"
+    echo -e "${RED}--------------------${NC}"
+
+    IFS='|' read -r HOSTNAME OS_INFO KERNEL_VERSION CPU_INFO CPU_CORES CPU_ARCH MEM_INFO SWAP_INFO DISK_INFO <<< "$(get_system_info)"
+    IFS='|' read -r LOCATION ISP <<< "$(get_location)"
     IFS='|' read -r IPV4 IPV6 <<< "$(get_network_info)"
     local TOTAL_TRAFFIC=$(get_network_traffic)
-
-    # 当前时间和时区
     local CURRENT_TIME=$(date "+%Y-%m-%d %H:%M:%S")
-    local TIMEZONE=$(timedatectl | grep "Time zone" | awk '{print $3}')
+    local TIMEZONE=$(get_real_timezone)
     local RUNTIME=$(format_runtime)
 
-    # **只输出最终结果**
     echo -e "${GREEN}系统基本信息:${NC}"
     echo -e "主机名:       ${YELLOW}$HOSTNAME${NC}"
     echo -e "操作系统:     ${YELLOW}$OS_INFO${NC}"
@@ -117,6 +158,8 @@ main() {
     echo -e "${RED}--------------------${NC}"
 
     echo -e "${GREEN}网络信息:${NC}"
+    echo -e "运营商:       ${YELLOW}$ISP${NC}"
+    echo -e "地理位置:     ${YELLOW}$LOCATION${NC}"
     echo -e "IPv4地址:     ${YELLOW}$IPV4${NC}"
     echo -e "IPv6地址:     ${YELLOW}$IPV6${NC}"
     echo -e "总网络流量:   ${YELLOW}${TOTAL_TRAFFIC}GB${NC}"
@@ -126,8 +169,7 @@ main() {
     echo -e "时区:         ${YELLOW}$TIMEZONE${NC}"
     echo -e "当前时间:     ${YELLOW}$CURRENT_TIME${NC}"
     echo -e "运行时间:     ${YELLOW}$RUNTIME${NC}"
-    echo -e "${RED}--------------------${NC}"
+    echo -e "\n${GREEN}信息查询完毕${NC}"
 }
 
-# 直接执行 main()，不让它后台运行
 main
