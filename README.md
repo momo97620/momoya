@@ -31,7 +31,6 @@
 
 ```bash
 curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
-
 📌 说明
 	•	该脚本适用于 Debian。
 	•	部分功能依赖 Docker，请确保系统已安装 Docker。
