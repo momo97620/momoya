@@ -1020,6 +1020,8 @@ while true; do
     echo -e "\n1) Hy2搭建    2) 多协议搭建    3) realm2转发    0) 返回主菜单\n"
 
     read -p "输入选项 (0-3): " sub_choice
+    
+    case $sub_choice in
         1)
             clear_screen
             echo "正在下载并执行 Hy2 搭建脚本..."
