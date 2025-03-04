@@ -33,9 +33,6 @@ curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 
 执行后，将会弹出菜单，让你选择需要安装或配置的功能。
 
-![Wutongli VPS 脚本菜单](./images/wutongli_main_menu.jpeg)  
-![LDNMP 环境检测](./images/wutongli_ldnmp_check.jpeg)  
-
 📜 许可证
 
 本项目基于 MIT 许可证，详情请查看 LICENSE 文件。
