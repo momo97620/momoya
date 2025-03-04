@@ -54,6 +54,9 @@ get_system_info() {
     # 内存信息
     local MEM_INFO=$(free -h | awk 'NR==2{printf "%s/%s (%.1f%%)", $3, $2, $3/$2*100}')
     
+    # Swap内存
+    local SWAP_INFO=$(get_swap_info)  # 添加 Swap 信息
+    
     # 硬盘信息
     local DISK_INFO=$(df -h | awk '$NF=="/" {printf "%s/%s (%s)", $3, $2, $5}')
     
