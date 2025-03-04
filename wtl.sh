@@ -1013,10 +1013,18 @@ execute_script() {
     rm -f temp_script.sh
 }
 
+center_text() {
+    local text="$1"
+    local term_width=$(tput cols)      # 获取终端宽度
+    local text_width=${#text}          # 获取文本长度
+    local padding=$(( (term_width - text_width) / 2 ))  # 计算左侧空格数
+    printf "%*s%s\n" "$padding" "" "$text"  # 输出居中文本
+}
+
 while true; do
-    clear_screen
-             echo -e "\e[1;32m多协议节点搭建 + 流量转发\e[0m"
-             
+    clear  # 清屏，避免重复显示
+    center_text "$(echo -e "\e[1;32m多协议节点搭建 + 流量转发\e[0m")"
+    
     echo -e "\n1) Hy2搭建    2) 多协议搭建    3) realm2转发    0) 返回主菜单\n"
 
     read -p "输入选项 (0-3): " sub_choice
@@ -1634,7 +1642,7 @@ done
             ;;
         12) 
             set_ssh_keepalive
-            install_autossh
+            install_autossh 
             ;;
         13) 
  while true; do
