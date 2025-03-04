@@ -288,8 +288,6 @@ set_ssh_keepalive() {
         exit 1
     fi
 
-    echo "按任意键返回主菜单..."
-    read -n 1 -s -r
 }
 
 install_autossh() {
@@ -335,6 +333,8 @@ EOF
     sudo systemctl start autossh
 
     echo "autossh 已安装并配置完成，SSH 连接将自动保持在线！"
+    echo "按任意键返回主菜单..."
+    read -n 1 -s -r
 }
 
 image_management() {
