@@ -37,3 +37,7 @@
 
 ```bash
 curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+
+---
+
+## 📌 **说明**
