@@ -237,7 +237,7 @@ set_ssh_keepalive() {
     local interval=60
     local count=10
 
-    echo "正在配置 SSH 客户端保持连接参数..."
+    echo "正在配置 SSH 服务器保持连接参数..."
     if [[ ! -f "$config_file" ]]; then
         echo "错误：SSH 配置文件 $config_file 不存在。" >&2
         exit 1
@@ -259,6 +259,7 @@ set_ssh_keepalive() {
         count=$user_count
     fi
 
+    # 修改或添加 SSH 配置参数
     if grep -q '^#\?ClientAliveInterval' "$config_file"; then
         sed -ri "s/^#?.*ClientAliveInterval.*/ClientAliveInterval $interval/" "$config_file"
     else
@@ -271,6 +272,13 @@ set_ssh_keepalive() {
         echo "ClientAliveCountMax $count" >> "$config_file"
     fi
 
+    # 新增 TCPKeepAlive 配置，确保 SSH 连接不中断
+    if grep -q '^#\?TCPKeepAlive' "$config_file"; then
+        sed -ri "s/^#?.*TCPKeepAlive.*/TCPKeepAlive yes/" "$config_file"
+    else
+        echo "TCPKeepAlive yes" >> "$config_file"
+    fi
+
     echo "重启 SSH 服务以应用更改..."
     sudo systemctl restart sshd
     if [[ $? -eq 0 ]]; then
@@ -279,9 +287,56 @@ set_ssh_keepalive() {
         echo "SSH 服务重启失败，请检查配置。" >&2
         exit 1
     fi
+
     echo "按任意键返回主菜单..."
     read -n 1 -s -r
 }
+
+install_autossh() {
+    echo "正在安装 autossh..."
+    if ! command -v autossh &> /dev/null; then
+        sudo apt update && sudo apt install -y autossh
+        if [[ $? -eq 0 ]]; then
+            echo "autossh 安装成功！"
+        else
+            echo "autossh 安装失败，请检查网络连接。" >&2
+            exit 1
+        fi
+    else
+        echo "autossh 已安装，跳过安装步骤。"
+    fi
+
+    # 创建 autossh 启动脚本
+    local autossh_script="/usr/local/bin/start_autossh.sh"
+    cat << 'EOF' | sudo tee "$autossh_script" > /dev/null
+#!/bin/bash
+autossh -M 0 -f -N -o "ServerAliveInterval=60" -o "ServerAliveCountMax=3" -o "TCPKeepAlive=yes" -R 52698:localhost:22 root@你的服务器IP
+EOF
+    sudo chmod +x "$autossh_script"
+
+    # 添加 systemd 服务，确保 autossh 自动启动
+    local autossh_service="/etc/systemd/system/autossh.service"
+    cat << EOF | sudo tee "$autossh_service" > /dev/null
+[Unit]
+Description=AutoSSH to keep SSH connection alive
+After=network.target
+
+[Service]
+ExecStart=$autossh_script
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable autossh
+    sudo systemctl start autossh
+
+    echo "autossh 已安装并配置完成，SSH 连接将自动保持在线！"
+}
+
 image_management() {
     while true; do
     clear
@@ -1587,6 +1642,7 @@ done
             ;;
         12) 
             set_ssh_keepalive
+            install_autossh
             ;;
         13) 
  while true; do
