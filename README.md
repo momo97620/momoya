@@ -1,9 +1,9 @@
-# 🌿 **梧桐里 💗 一键部署脚本**  
+# 🌿 **梧桐里一键脚本**  
 
-> **简洁高效 | 便捷实用 | 贴心守护**  
+> **简洁高效 | 便捷实用**  
 
 ✨ **本项目提供了一键部署脚本**，支持 **服务器运维**、**环境搭建**、**系统优化** 等功能。  
-✅ 适用于 **Debian 11 (bullseye)** 系统，让服务器管理更加轻松便捷！  
+✅ 适用于 **Debian 11 (bullseye)** 系统，让服务器管理更加轻松便捷！    
 
 ✨ **功能列表**
 
@@ -27,11 +27,11 @@
 - 📡 TG 关键词监控
 - 🎬 流媒体解锁检测
 
+**一键脚本：**  
 
-1. 运行以下命令：
+```bash
+curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 
-   ```bash
-   curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 📌 说明
 	•	该脚本适用于 Debian。
 	•	部分功能依赖 Docker，请确保系统已安装 Docker。
