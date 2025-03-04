@@ -31,13 +31,21 @@
 
 ---
 
-
-```markdown
 ## 🚀 **一键脚本**
 
 运行以下命令：
 
-```sh
-curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh  <!-- GitHub 解析器 Bug 修复：防止代码块合并 -->
-### **方法 3：插入 Markdown 注释**
-如果 GitHub 仍然解析错误，可以插入 Markdown 注释，它不会在页面上显示，但能阻止解析器合并内容。
+<pre>
+curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+</pre>
+
+### 🌟 服务器运维功能：
+- 🚀 一键搭建节点  
+- 💾 一键 DD 系统（重装系统）  
+- 🌍 一键配置 WARP  
+- 🐳 Docker 及容器管理（包含多种一键部署）  
+- ☁️ 自动备份（支持上传 OneDrive）  
+- 🤖 NextChatGPT 部署  
+- 🖥️ Wallos 服务器续费提醒  
+- 🎯 TG 关键词监控  
+- 🎬 流媒体解锁检测  
