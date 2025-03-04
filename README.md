@@ -39,13 +39,9 @@
 curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 </pre>
 
-### 🌟 服务器运维功能：
-- 🚀 一键搭建节点  
-- 💾 一键 DD 系统（重装系统）  
-- 🌍 一键配置 WARP  
-- 🐳 Docker 及容器管理（包含多种一键部署）  
-- ☁️ 自动备份（支持上传 OneDrive）  
-- 🤖 NextChatGPT 部署  
-- 🖥️ Wallos 服务器续费提醒  
-- 🎯 TG 关键词监控  
-- 🎬 流媒体解锁检测  
+📌 **说明**  
+该脚本适用于 Debian。  
+部分功能依赖 Docker，请确保系统已安装 Docker。  
+备份功能支持 OneDrive，需要手动绑定账号。
+
+📢 **如果遇到问题，欢迎提交 Issues！** 🎉
