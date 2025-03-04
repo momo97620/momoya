@@ -5,7 +5,9 @@
 ✨ **本项目提供了一键部署脚本**，支持 **服务器运维**、**环境搭建**、**系统优化** 等功能。  
 ✅ 适用于 **Debian 11 (bullseye)** 系统，让服务器管理更加轻松便捷！    
 
-✨ **功能列表**
+---
+
+## ✨ **功能列表**
 
 🔧 **系统管理**
 - 🛑 UFW 防火墙配置
@@ -27,10 +29,13 @@
 - 📡 TG 关键词监控
 - 🎬 流媒体解锁检测
 
-**一键脚本：**  
+---
+
+## 🚀 **一键脚本**
 
 ```bash
 curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+
 📌 说明
 	•	该脚本适用于 Debian。
 	•	部分功能依赖 Docker，请确保系统已安装 Docker。
@@ -40,6 +45,6 @@ curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 
 📷 预览
 
-可以在 README.md 里插入图片，方法如下：
+你可以在 README.md 里插入图片，方法如下：
 
-
+![描述](图片链接)
