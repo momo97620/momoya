@@ -24,12 +24,11 @@
 - 📡 TG 关键词监控
 - 🎬 流媒体解锁检测
 
-🛠 **使用方法**
 
 1. 运行以下命令：
 
-```bash
-curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+   ```bash
+   curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 📌 说明
 	•	该脚本适用于 Debian。
 	•	部分功能依赖 Docker，请确保系统已安装 Docker。
