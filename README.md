@@ -34,17 +34,13 @@
 ## 🚀 **一键脚本**
 
 运行以下命令：
+
 ```bash
 curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+
 📌 说明
 	•	该脚本适用于 Debian。
 	•	部分功能依赖 Docker，请确保系统已安装 Docker。
 	•	备份功能支持 OneDrive，需要手动绑定账号。
 
 📢 如果遇到问题，欢迎提交 Issues！ 🎉
-
-📷 预览
-
-你可以在 README.md 里插入图片，方法如下：
-
-![描述](图片链接)
