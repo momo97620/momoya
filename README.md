@@ -18,7 +18,6 @@
 	•	一键 DD 系统（重装系统）
 	•	一键配置 WARP
 	•	Docker 及容器管理 
-	   （里面包含各种项目一键部署）
 	•	自动备份（支持上传 OneDrive）
 	•	NextChatGPT 部署
 	•	Wallos 服务器续费提醒
