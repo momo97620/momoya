@@ -86,6 +86,7 @@ get_network_info() {
 # 主程序
 main() {
     # **不显示脚本执行过程，直接输出最终信息**
+    clear
     
     # 获取系统信息
     IFS='|' read -r HOSTNAME OS_INFO KERNEL_VERSION CPU_INFO CPU_CORES CPU_ARCH MEM_INFO SWAP_INFO DISK_INFO <<< "$(get_system_info)"
