@@ -36,4 +36,8 @@
 运行以下命令：
 
 ```bash
-curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh  
+
+---
+
+## 📌 **说明**
