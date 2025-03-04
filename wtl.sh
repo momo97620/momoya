@@ -1015,21 +1015,11 @@ execute_script() {
 
 while true; do
     clear_screen
-    echo -e "\e[1;34m=========================\e[0m"
-    echo -e "\e[1;32m  多协议节点搭建 + 流量转发  \e[0m"
-    echo -e "\e[1;34m=========================\e[0m"
-    echo -e "\e[1;30m1) Hy2搭建\e[0m"
-    echo -e "\e[1;34m-----------------------\e[0m"
-    echo -e "\e[1;30m2) 多协议搭建\e[0m"
-    echo -e "\e[1;34m-----------------------\e[0m"
-    echo -e "\e[1;30m3) realm2转发\e[0m"
-    echo -e "\e[1;34m-----------------------\e[0m"
-    echo -e "\e[1;30m0) 返回主菜单\e[0m"
-    echo -e "\e[1;34m=========================\e[0m"
+             echo -e "\e[1;32m多协议节点搭建 + 流量转发\e[0m"
+             
+    echo -e "\n1) Hy2搭建    2) 多协议搭建    3) realm2转发    0) 返回主菜单\n"
 
     read -p "输入选项 (0-3): " sub_choice
-
-    case $sub_choice in
         1)
             clear_screen
             echo "正在下载并执行 Hy2 搭建脚本..."
