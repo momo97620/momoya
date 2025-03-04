@@ -23,13 +23,12 @@
 - 📝 Wallos 服务器续费提醒
 - 📡 TG 关键词监控
 - 🎬 流媒体解锁检测
-🛠 使用方法
-	1.	运行以下命令：
+🛠 **使用方法**
 
-curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+1. 运行以下命令：
 
-
-	2.	运行后，将会弹出菜单，让你选择需要安装或配置的功能。
+   ```bash
+   curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 
 📌 说明
 	•	该脚本适用于 Debian。
