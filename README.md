@@ -31,8 +31,6 @@
 
 ---
 
-### **方法 3：插入 Markdown 注释**
-如果 GitHub 仍然解析错误，可以插入 Markdown 注释，它不会在页面上显示，但能阻止解析器合并内容。
 
 ```markdown
 ## 🚀 **一键脚本**
@@ -41,9 +39,5 @@
 
 ```sh
 curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh  <!-- GitHub 解析器 Bug 修复：防止代码块合并 -->
-📌 **说明**  
-该脚本适用于 Debian。  
-部分功能依赖 Docker，请确保系统已安装 Docker。  
-备份功能支持 OneDrive，需要手动绑定账号。
-
-📢 **如果遇到问题，欢迎提交 Issues！** 🎉
+### **方法 3：插入 Markdown 注释**
+如果 GitHub 仍然解析错误，可以插入 Markdown 注释，它不会在页面上显示，但能阻止解析器合并内容。
