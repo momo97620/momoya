@@ -122,7 +122,7 @@ get_network_traffic() {
     
     # 计算总流量
     local total_bytes=$((rx_bytes + tx_bytes))
-    local total_gb=$(echo "scale=2; $total_bytes/1024/1024/1024" | bc)
+    local total_gb=$(awk "BEGIN {printf \"%.2f\", $total_bytes/1024/1024/1024}")
     
     echo "${total_gb:-0.00}"
 }
