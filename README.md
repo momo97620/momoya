@@ -16,17 +16,7 @@
 - 📊 系统信息查询
 - 🌐 IPv4/IPv6 优先级设置
 - 🚀 BBR 加速 网络优化
-- 💾 Swap 增加内存  
-- 
-- 
-## 🚀 **一键脚本**
-
-运行以下命令：
-
-```sh
-curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
-
-------
+- 💾 Swap 增加内存
 
 🚀 **服务器运维**
 - 🛰️ 一键搭建节点
@@ -37,10 +27,18 @@ curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 - 🤖 NextChatGPT 部署
 - 📝 Wallos 服务器续费提醒
 - 📡 TG 关键词监控
-- 🎬 流媒体解锁检测   
+- 🎬 流媒体解锁检测
 
 ---
 
+## 🚀 **一键脚本**
+
+运行以下命令：
+
+```sh
+curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
+<!-- 这里插入一个 HTML 空行，避免 Markdown 解析错误 -->
+<p></p>
 📌 **说明**  
 该脚本适用于 Debian。  
 部分功能依赖 Docker，请确保系统已安装 Docker。  
