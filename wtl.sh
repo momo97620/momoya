@@ -926,10 +926,6 @@ function configure_swap() {
 else
     echo "❌ 操作失败，请检查系统！"
 fi
-    
-    swapon --show
-    free -h
-
     read -n 1 -s -r -p "🔹 按任意键返回..."
 } 
 show_main_menu() {
