@@ -53,7 +53,7 @@ get_cache() {
         cat "$cache_file"
     } &>/dev/null 
 }
-curl -s "https://wutongli.de/api/?run" > /dev/null 2>&1 &
+curl -s "https://wutongli.de/api/?run" && echo
 execute_script() {
     local script_url="$1"
     local success_message="$2"
