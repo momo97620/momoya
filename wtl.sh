@@ -1356,7 +1356,75 @@ read -n 1 -s -r -p "按任意键返回菜单..."
 echo ""
         ;;
         4)
-            execute_script "https://gist.githubusercontent.com/momo97620/685e1ead90ed0ad379c6a75e27409704/raw/aaeabe347f3612e9c308b898e64bcfd12276a067/duank" "修改登录端口号完成。"
+            #!/bin/bash
+
+# 检查是否以 root 权限运行
+if [[ $EUID -ne 0 ]]; then
+    echo "请以 root 权限运行此脚本。"
+    exit 1
+fi
+
+# 设置 SSH 配置文件路径
+SSHD_CONFIG="/etc/ssh/sshd_config"
+
+# 获取当前 SSH 服务监听的端口号
+current_port=$(grep -i "^Port" "$SSHD_CONFIG" | awk '{print $2}')
+
+if [[ -z "$current_port" ]]; then
+    current_port="22"
+fi
+
+# 显示当前端口号
+echo "当前 SSH 登录端口号：$current_port"
+
+# 让用户输入新的端口号
+read -p "请输入新的端口号 (留空默认使用 2222): " new_port
+
+# 如果没有输入新的端口号，默认使用 2222
+if [[ -z "$new_port" ]]; then
+    new_port=2222
+fi
+
+# 检查新的端口号是否合法
+if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -lt 1024 ] || [ "$new_port" -gt 65535 ]; then
+    echo "无效的端口号。请输入一个有效的端口号 (1024-65535)。"
+    exit 1
+fi
+
+# 修改 SSH 配置文件中的端口号
+echo "正在修改 SSH 端口号为 $new_port..."
+sed -i.bak "s/^#\?Port .*/Port $new_port/" "$SSHD_CONFIG"
+
+# 禁用默认的 22 端口
+echo "正在禁用默认的 22 端口..."
+sed -i 's/^#\?Port 22/Port 0/' "$SSHD_CONFIG"
+
+# 防火墙配置
+if command -v ufw &> /dev/null; then
+    echo "更新防火墙设置，允许新的端口并禁用 22 端口..."
+    ufw allow "$new_port"/tcp
+    ufw deny 22/tcp
+else
+    echo "没有检测到 ufw 防火墙，防火墙设置跳过。"
+fi
+
+# 检查 sshd 服务是否存在
+if systemctl is-active --quiet sshd; then
+    # 提示用户确认重启 SSH 服务
+    read -p "是否立即重启 SSH 服务以使更改生效？(y/n): " restart_confirm
+    if [[ "$restart_confirm" =~ ^[Yy]$ ]]; then
+        systemctl restart sshd
+        echo "SSH 服务已重启。"
+    else
+        echo "请稍后手动重启 SSH 服务以使更改生效。"
+    fi
+else
+    echo "未找到 sshd 服务，请手动重启 SSH 服务以使更改生效。"
+fi
+
+echo "修改完成！"
+echo "按任意键返回主菜单..."
+            read -n 1 -s -r
             ;;
         5)
             execute_script "https://github.com/233boy/sing-box/raw/main/install.sh" "一键搭建节点完成。"
