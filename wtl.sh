@@ -904,6 +904,7 @@ function configure_swap() {
 
     echo "==== 开始创建 Swap ($SWAP_SIZE) ===="
 
+  {
     echo "🔹 创建 Swap 文件..."
     sudo fallocate -l $SWAP_SIZE /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=$(( $(echo $SWAP_SIZE | sed 's/G//') * 1024 ))
 
@@ -919,15 +920,17 @@ function configure_swap() {
         echo "🔹 配置 Swap 挂载..."
         echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
     fi
-
-    echo "✅ Swap 已成功创建并启用！"
+}>/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+    echo "✅ Swap 已成功创建并启用虚拟内存2G！"
+else
+    echo "❌ 操作失败，请检查系统！"
+fi
+    
     swapon --show
     free -h
 
     read -n 1 -s -r -p "🔹 按任意键返回..."
-}
-
-
 show_main_menu() {
     clear
     
