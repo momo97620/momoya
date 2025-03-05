@@ -1,6 +1,6 @@
   #!/bin/bash
 
-NC='\033[0m'             # 无颜色
+NC='\033[0m'
 
 set_shanghai_time() {
     CURRENT_TIMEZONE=$(timedatectl | grep "Time zone" | awk '{print $3}')
@@ -220,7 +220,7 @@ update_script() {
             echo -e "${GREEN}脚本更新成功！最新版本已保存到 $local_path。${NC}"
 
             echo -e "${YELLOW}正在执行更新后的脚本...${NC}"
-            exec "$local_path"  # 使用 exec 替换当前进程
+            exec "$local_path"
         else
             echo -e "${RED}脚本更新失败，请检查远程 URL 是否正确。${NC}"
         fi
@@ -259,7 +259,7 @@ set_ssh_keepalive() {
         count=$user_count
     fi
 
-    # 修改或添加 SSH 配置参数
+
     if grep -q '^#\?ClientAliveInterval' "$config_file"; then
         sed -ri "s/^#?.*ClientAliveInterval.*/ClientAliveInterval $interval/" "$config_file"
     else
@@ -272,7 +272,7 @@ set_ssh_keepalive() {
         echo "ClientAliveCountMax $count" >> "$config_file"
     fi
 
-    # 新增 TCPKeepAlive 配置，确保 SSH 连接不中断
+    
     if grep -q '^#\?TCPKeepAlive' "$config_file"; then
         sed -ri "s/^#?.*TCPKeepAlive.*/TCPKeepAlive yes/" "$config_file"
     else
@@ -304,7 +304,7 @@ install_autossh() {
         echo "autossh 已安装，跳过安装步骤。"
     fi
 
-    # 创建 autossh 启动脚本
+    
     local autossh_script="/usr/local/bin/start_autossh.sh"
     cat << 'EOF' | sudo tee "$autossh_script" > /dev/null
 #!/bin/bash
@@ -312,7 +312,7 @@ autossh -M 0 -f -N -o "ServerAliveInterval=60" -o "ServerAliveCountMax=3" -o "TC
 EOF
     sudo chmod +x "$autossh_script"
 
-    # 添加 systemd 服务，确保 autossh 自动启动
+    
     local autossh_service="/etc/systemd/system/autossh.service"
     cat << EOF | sudo tee "$autossh_service" > /dev/null
 [Unit]
@@ -769,7 +769,6 @@ backup_menu() {
     done
 }
 
-# 定义一个显式调用的函数
 start_backup_menu() {
     if [[ $1 == "auto" ]]; then
         handle_auto_backup
@@ -796,7 +795,7 @@ container_management() {
     echo -e "---------------------------"
     
     echo -e "${RED}0.${NC} ${BOLD_GREEN}返回主菜单${NC}"
-    echo -e "---------------------------"  # 添加分隔线
+    echo -e "---------------------------" 
     
     read -p "请选择操作: " container_choice
     
@@ -931,10 +930,10 @@ function configure_swap() {
 
 show_main_menu() {
     clear
-    # 定义颜色
-    LIGHTCYAN='\033[1;36m'  # 明亮的青色
-    PINK='\033[38;5;198m'     # 深粉色
-    NC='\033[0m'           # 重置颜色
+    
+    LIGHTCYAN='\033[1;36m'  
+    PINK='\033[38;5;198m' 
+    NC='\033[0m'  
 
     echo -e "${LIGHTCYAN}"
     echo " ██╗    ██╗██╗   ██╗████████╗ ██████╗ ███╗   ██╗ ██████╗ ██╗     ██╗"
@@ -1015,14 +1014,14 @@ execute_script() {
 
 center_text() {
     local text="$1"
-    local term_width=$(tput cols)      # 获取终端宽度
-    local text_width=${#text}          # 获取文本长度
-    local padding=$(( (term_width - text_width) / 2 ))  # 计算左侧空格数
-    printf "%*s%s\n" "$padding" "" "$text"  # 输出居中文本
+    local term_width=$(tput cols)   
+    local text_width=${#text}         
+    local padding=$(( (term_width - text_width) / 2 ))  
+    printf "%*s%s\n" "$padding" "" "$text"  
 }
 
 while true; do
-    clear  # 清屏，避免重复显示
+    clear  
     center_text "$(echo -e "\e[1;32m多协议节点搭建 + 流量转发\e[0m")"
     
     echo -e "\n1) Hy2搭建    2) 多协议搭建    3) realm2转发    0) 返回主菜单\n"
@@ -1120,7 +1119,7 @@ if [ $EUID -ne 0 ]; then
    exit 1
 fi
 
-# 颜色定义
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -1266,7 +1265,7 @@ exec bash
 echo -e "${GREEN}UFW端口管理工具安装完成！${NC}"
 echo -e "您可以使用快捷命令 'n' 来启动UFW端口管理工具。"
 echo -e "如果快捷命令 'n' 无法立即使用，请重新登录您的会话。"
-sudo ~/tools/ufw_port.sh  # 自动打开菜单页面
+sudo ~/tools/ufw_port.sh  
          ;;
        
         3)
@@ -1305,20 +1304,18 @@ echo "私钥路径: $PRIVATE_KEY"
 echo "公钥路径: $PUBLIC_KEY"
 echo "请确保您已保存私钥，否则将无法登录！"
 
-# 提供一些时间给用户保存私钥
+
 echo -e "\n【重要提示】"
 echo -e "✅ **当前 SSH 仍然可以使用密码登录，SFTP 可用。**"
 echo -e "✅ **SSH 密码登录将被禁用，必须使用密钥！**"
 echo -e "✅ **请务必保存好私钥，否则将无法登录！**"
 sleep 6
 
-# 配置公钥登录（静默执行）
 AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
 cat "$PUBLIC_KEY" >> "$AUTHORIZED_KEYS"
 chmod 600 "$AUTHORIZED_KEYS"
 chown -R "$(whoami):$(whoami)" "$KEY_DIR"
 
-# 修改 SSH 配置文件以禁用密码登录（静默执行）
 sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "$SSHD_CONFIG" >/dev/null 2>&1
 sed -i 's/^ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' "$SSHD_CONFIG" >/dev/null 2>&1
 sed -i 's/^UsePAM yes/UsePAM no/' "$SSHD_CONFIG" >/dev/null 2>&1
@@ -1327,12 +1324,12 @@ echo "ChallengeResponseAuthentication no" >> "$SSHD_CONFIG"
 echo "UsePAM no" >> "$SSHD_CONFIG"
 echo "AuthenticationMethods publickey" >> "$SSHD_CONFIG"
 
-# 检查并修改 PAM 配置文件（静默执行）
+
 if grep -q "^@include common-auth" "$PAM_SSHD_CONFIG"; then
     sed -i 's/^@include common-auth/#@include common-auth/' "$PAM_SSHD_CONFIG" >/dev/null 2>&1
 fi
 
-# 重启 SSH 服务（静默执行）
+
 systemctl restart ssh >/dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "⚠️ SSH 服务未正确重启，可能存在问题，请手动检查配置！"
@@ -1340,7 +1337,6 @@ if [ $? -ne 0 ]; then
 fi
 
 
-# 15 秒后禁用密码登录
 nohup bash -c "
     sleep 6
     # 再次修改配置文件，强制禁用密码登录
@@ -1351,53 +1347,46 @@ nohup bash -c "
     echo 'SSH 密码登录已禁用。' >> /var/log/ssh-disable.log
 " > /dev/null 2>&1 &
 
-# 按任意键返回菜单
 read -n 1 -s -r -p "按任意键返回菜单..."
 echo ""
         ;;
         4)
-         # 检查是否以 root 权限运行
 if [[ $EUID -ne 0 ]]; then
     echo "请以 root 权限运行此脚本。"
     exit 1
 fi
 
-# 设置 SSH 配置文件路径
 SSHD_CONFIG="/etc/ssh/sshd_config"
 
-# 获取当前 SSH 服务监听的端口号
 current_port=$(grep -i "^Port" "$SSHD_CONFIG" | awk '{print $2}')
 
 if [[ -z "$current_port" ]]; then
     current_port="22"
 fi
 
-# 显示当前端口号
+
 echo "当前 SSH 登录端口号：$current_port"
 
-# 让用户输入新的端口号
 read -p "请输入新的端口号 (留空默认使用 2222): " new_port
 
-# 如果没有输入新的端口号，默认使用 2222
 if [[ -z "$new_port" ]]; then
     new_port=2222
 fi
 
-# 检查新的端口号是否合法
+
 if ! [[ "$new_port" =~ ^[0-9]+$ ]] || [ "$new_port" -lt 1024 ] || [ "$new_port" -gt 65535 ]; then
     echo "无效的端口号。请输入一个有效的端口号 (1024-65535)。"
     exit 1
 fi
 
-# 修改 SSH 配置文件中的端口号
 echo "正在修改 SSH 端口号为 $new_port..."
 sed -i.bak "s/^#\?Port .*/Port $new_port/" "$SSHD_CONFIG"
 
-# 禁用默认的 22 端口
+
 echo "正在禁用默认的 22 端口..."
 sed -i 's/^#\?Port 22/Port 0/' "$SSHD_CONFIG"
 
-# 防火墙配置
+
 if command -v ufw &> /dev/null; then
     echo "更新防火墙设置，允许新的端口并禁用 22 端口..."
     ufw allow "$new_port"/tcp
@@ -1406,9 +1395,7 @@ else
     echo "没有检测到 ufw 防火墙，防火墙设置跳过。"
 fi
 
-# 检查 sshd 服务是否存在
 if systemctl is-active --quiet sshd; then
-    # 提示用户确认重启 SSH 服务
     read -p "是否立即重启 SSH 服务以使更改生效？(y/n): " restart_confirm
     if [[ "$restart_confirm" =~ ^[Yy]$ ]]; then
         systemctl restart sshd
@@ -1435,7 +1422,7 @@ echo "按任意键返回主菜单..."
             ;;
         8)
 while true; do
-    clear  # 清除屏幕
+    clear 
 check_ldnmp() {
     if command -v php &> /dev/null; then
         php_version="PHP: $(php -v | head -n 1 | awk '{print $2}')"
@@ -1460,7 +1447,6 @@ check_ldnmp() {
         docker_version="Docker: 未安装"
     fi
               echo -e "${BLUE}\n===== LDNMP 环境检测 =====${NC}"
-    # 输出结果为一排
     echo -e "${BOLD_GREEN} ${docker_version} | ${mysql_version} | ${php_version} | ${nginx_version}${NC}"
     
     echo -e "${DEEPRED}-----------------------------${NC}"
@@ -1493,12 +1479,12 @@ echo -e "${LIGHTCYAN}⚠️ 所有项目安装前需要先安装 Docker！否则
             install_docker
             ;;
         4)
-            clear  # 清除屏幕
+            clear 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 BRIGHT_GREEN='\033[1;32m'
-DEEPRED='\033[1;31m'  # 深红色
-NC='\033[0m'          # 无颜色
+DEEPRED='\033[1;31m'  
+NC='\033[0m'      
   
 
 if ! grep -q "export LANG=en_US.UTF-8" ~/.bashrc; then
@@ -1623,7 +1609,7 @@ read -n 1 -s -r -p "按任意键返回上一页..."
                 if ! sudo -n true 2>/dev/null; then
                     echo "提权失败，请手动执行 sudo -i 后重试"
                     read -p "按回车返回主菜单"
-                    continue  # 必须使用continue回到循环开始
+                    continue  
                 fi
             fi
 
@@ -1690,7 +1676,7 @@ EOF
             break
             ;;
         *)
-            clear  # 清除屏幕
+            clear  
             echo "无效选择，请重新输入！"
             read -p "按任意键继续..."
             ;;
@@ -1700,10 +1686,9 @@ done
         9)
             #!/bin/bash
 
-# 颜色定义
-NC='\033[0m' # 恢复默认颜色
 
-# 格式化运行时间为中文
+NC='\033[0m' 
+
 format_runtime() {
     local runtime=$(uptime -p)
     runtime=${runtime/up /}
@@ -1722,41 +1707,38 @@ format_runtime() {
     echo "已运行 $runtime"
 }
 
-# 获取时区信息
 get_real_timezone() {
     local timezone=$(curl -s "http://ip-api.com/line/?fields=timezone")
     echo "$timezone"
 }
 
-# 获取系统基本信息
+
 get_system_info() {
-    # 主机名
+    
     local HOSTNAME=$(hostname)
     
-    # 操作系统信息
+    
     local OS_INFO=$(grep PRETTY_NAME /etc/os-release | cut -d '=' -f2 | tr -d '"')
     
-    # 内核版本
+    
     local KERNEL_VERSION=$(uname -r)
     
-    # CPU信息
+    
     local CPU_INFO=$(lscpu | awk -F': +' '/Model name:/ {print $2; exit}')
     local CPU_CORES=$(nproc)
     local CPU_ARCH=$(uname -m)
     
-    # 内存信息
     local MEM_INFO=$(free -h | awk 'NR==2{printf "%s/%s (%.1f%%)", $3, $2, $3/$2*100}')
     
-    # Swap内存
-    local SWAP_INFO=$(get_swap_info)  # 获取 Swap 信息
     
-    # 硬盘信息
+    local SWAP_INFO=$(get_swap_info)
+    
+    
     local DISK_INFO=$(df -h | awk '$NF=="/" {printf "%s/%s (%s)", $3, $2, $5}')
     
     echo "$HOSTNAME|$OS_INFO|$KERNEL_VERSION|$CPU_INFO|$CPU_CORES|$CPU_ARCH|$MEM_INFO|$SWAP_INFO|$DISK_INFO"
 }
 
-# 获取 Swap 内存信息
 get_swap_info() {
     local swap_total=$(grep SwapTotal /proc/meminfo | awk '{printf "%.2f GB", $2 / 1024 / 1024}')
     local swap_used=$(grep SwapFree /proc/meminfo | awk '{printf "%.2f GB", ($2 / 1024 / 1024)}')
@@ -1771,7 +1753,6 @@ get_swap_info() {
     fi
 }
 
-# 获取地理位置信息
 get_location() {
     local services=("ipinfo.io" "ip-api.com" "freegeoip.net")
     local ipinfo
@@ -1794,40 +1775,38 @@ get_location() {
     echo "未知位置|未知运营商"
 }
 
-# 获取网络流量（准确方式）
 get_network_traffic() {
-    # 获取默认网关接口
+  
     local interface=$(ip route | grep default | awk '{print $5}' | head -n1)
     
     if [ -z "$interface" ]; then
-        # 如果没有找到默认接口，尝试获取第一个非lo的接口
+      
         interface=$(ip link show | awk -F: '$2 !~ /lo/ {print $2;exit}' | tr -d ' ')
     fi
     
-    # 检查接口是否存在
     if [ -z "$interface" ]; then
         echo "0.00"
         return
     fi
     
-    # 获取流量数据（接收+发送）
+  
     local rx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $2}')
     local tx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $10}')
     
-    # 校验是否成功读取数据
+    
     if [ -z "$rx_bytes" ] || [ -z "$tx_bytes" ]; then
         echo "0.00"
         return
     fi
     
-    # 计算总流量
+  
     local total_bytes=$((rx_bytes + tx_bytes))
     local total_gb=$(awk "BEGIN {printf \"%.2f\", $total_bytes/1024/1024/1024}")
     
     echo "${total_gb:-0.00}"
 }
 
-# 获取网络信息
+
 get_network_info() {
     local ipv4=$(curl -s4 https://ipinfo.io/ip)
     local ipv6=$(ip -6 addr show | grep inet6 | grep -v '::1' | grep -v 'fe80' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
@@ -1835,28 +1814,27 @@ get_network_info() {
     echo "${ipv4:-未分配}|${ipv6:-未分配}"
 }
 
-# 主程序
 main() {
     clear
     echo -e "${GREEN}系统信息收集与分析${NC}"
     echo -e "${RED}--------------------${NC}"
 
-    # 获取系统信息
+  
     IFS='|' read -r HOSTNAME OS_INFO KERNEL_VERSION CPU_INFO CPU_CORES CPU_ARCH MEM_INFO SWAP_INFO DISK_INFO <<< "$(get_system_info)"
 
-    # 获取网络和位置信息
+    
     IFS='|' read -r LOCATION ISP <<< "$(get_location)"
     IFS='|' read -r IPV4 IPV6 <<< "$(get_network_info)"
     local TOTAL_TRAFFIC=$(get_network_traffic)
 
-    # 当前时间和时区
+    
     local CURRENT_TIME=$(date "+%Y-%m-%d %H:%M:%S")
     local TIMEZONE=$(get_real_timezone)
 
-    # 系统运行时间（使用新的中文格式化函数）
+
     local RUNTIME=$(format_runtime)
 
-            # 输出系统信息
+          
             echo -e "${GREEN}系统基本信息:${NC}"
             echo -e "主机名:       ${YELLOW}$HOSTNAME${NC}"
             echo -e "操作系统:     ${YELLOW}$OS_INFO${NC}"
@@ -1889,7 +1867,7 @@ main() {
             echo -e "\n${GREEN}操作完成${NC}"
 }
 
-# 调用主程序
+
 main
             echo "按任意键返回主菜单..."
             read -n 1 -s -r
@@ -1920,7 +1898,7 @@ echo -e "${GREEN}3.${NC} 另一个DD(史上最强)"
 echo -e "\n${BLUE}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${NC}\n"  # 美化空行
 echo -e "${GREEN}0.${NC} 返回主菜单"
 echo -e "\n${BLUE}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${NC}\n"  # 美化空行
-echo -e "\n"  # 添加空行
+echo -e "\n"
 read -p "请输入选项 [1-3，0]: " sub_choice  
 
     case $sub_choice in
