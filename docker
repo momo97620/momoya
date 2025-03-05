@@ -31,7 +31,7 @@ install_docker() {
     else
         echo -e "${BLUE}正在安装 Docker 和 Docker Compose...${NC}"
         # 运行用户提供的完整安装命令
-        sudo curl -fsSL https://get.docker.com | bash && sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose && sudo systemctl start docker && sudo systemctl enable docker
+         | bash && sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose && sudo systemctl start docker && sudo systemctl enable docker
         echo -e "${GREEN}Docker 和 Docker Compose 安装完成！${NC}"
     fi
     read -n 1 -s -r -p "按任意键返回..."
@@ -39,7 +39,6 @@ install_docker() {
 
 # 启动 Docker
 start_docker() {
-    echo -e "${BLUE}正在启动 Docker...${NC}"
     sudo systemctl start docker
     echo -e "${GREEN}Docker 已启动！${NC}"
     read -n 1 -s -r -p "按任意键返回..."
@@ -53,29 +52,6 @@ stop_docker() {
     read -n 1 -s -r -p "按任意键返回..."
 }
 
-# 容器管理
-container_management() {
-    while true; do
-    clear
-    echo -e "${BLUE}\n===== 容器管理 =====${NC}"
-    
-    # 第一排选项
-    echo -e "${RED}1.${NC} ${BOLD_GREEN}列出所有容器${NC}      ${RED}2.${NC} ${BOLD_GREEN}启动容器${NC}"
-    echo -e "---------------------------"
-    
-    echo -e "${RED}3.${NC} ${BOLD_GREEN}停止容器${NC}          ${RED}4.${NC} ${BOLD_GREEN}重启容器${NC}"
-    echo -e "---------------------------"
-    
-    echo -e "${RED}5.${NC} ${BOLD_GREEN}删除容器${NC}          ${RED}6.${NC} ${BOLD_GREEN}查看容器日志${NC}"
-    echo -e "---------------------------"
-    
-    echo -e "${RED}7.${NC} ${BOLD_GREEN}停止所有容器${NC}     ${RED}8.${NC} ${BOLD_GREEN}启动所有容器${NC}"
-    echo -e "---------------------------"
-    
-    echo -e "${RED}0.${NC} ${BOLD_GREEN}返回主菜单${NC}"
-    echo -e "---------------------------"  # 添加分隔线
-    
-    read -p "请选择操作: " container_choice
     
         case $container_choice in
             1) 
@@ -90,7 +66,7 @@ container_management() {
                         echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
                         break
                     fi
-                    docker start "$container" && echo -e "${GREEN}容器 $container 已启动！${NC}" || echo -e "${RED}启动失败，请检查容器名称或ID！${NC}"
+                    docker start "$ "${GREEN}容器 $container 已启动！${NC}" || echo -e "${RED}启动失败，请检查容器名称或ID！${NC}"
                 done
                 read -n 1 -s -r -p "按任意键返回..."
                 ;;
@@ -114,7 +90,7 @@ container_management() {
                 ;;
             4) 
                 read -p "请输入容器名称或ID（按回车键返回）： " container
-                docker restart "$container" && echo -e "${GREEN}容器 $container 已重启！${NC}" || echo -e "${RED}重启失败，请检查容器名称或ID！${NC}"
+                docker restart "$"${GREEN}容器 $container 已重启！${NC}" || echo -e "${RED}重启失败，请检查容器名称或ID！${NC}"
                 read -n 1 -s -r -p "按任意键返回..."
                 ;;
             5) 
@@ -125,15 +101,15 @@ else
     echo -e "${BLUE}请选择要删除的容器（输入3返回菜单）:${NC}"
 
     PS3="请输入对应的数字选择："
-    select container in "${containers[@]}" "返回上级菜单"; do
+    select ers[@]}" "返回上级菜单"; do
         if [ "$REPLY" -eq 0 ] || [ "$REPLY" -eq $((${#containers[@]} + 1)) ]; then
             echo -e "${YELLOW}已返回上级菜单。${NC}"
             break
         elif [ -z "$container" ]; then
             echo -e "${RED}无效的选择，请重试！${NC}"
-        elif [[ "$REPLY" =~ ^[0-9]+$ ]] && [ "$REPLY" -le $((${#containers[@]} + 1)) ]; then
+        elif [[ "$REPLY" =~ ^[0-"$REPLY" -le $((${#containers[@]} + 1)) ]; then
             if [ "$REPLY" -le "${#containers[@]}" ]; then
-                docker rm -f "$container" && echo -e "${GREEN}容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
+                docker rm -f "$container" && }容器 $container 已被删除！${NC}" || echo -e "${RED}删除失败，请检查容器名称或ID！${NC}"
             fi
             break
         else
@@ -147,7 +123,7 @@ read -n 1 -s -r -p "按任意键返回..."
            ;;
             6) 
                 read -p "请输入容器名称或ID（按回车键返回）： " container
-                docker logs "$container" || echo -e "${RED}获取日志失败，请检查容器名称或ID！${NC}"
+                docker 获取日志失败，请检查容器名称或ID！${NC}"
                 read -n 1 -s -r -p "按任意键返回..."
                 ;;
             7) 
@@ -156,8 +132,7 @@ read -n 1 -s -r -p "按任意键返回..."
                 read -n 1 -s -r -p "按任意键返回..."
                 ;;
             8) 
-                echo -e "${BLUE}正在启动所有容器...${NC}"
-                docker start $(docker ps -aq) && echo -e "${GREEN}所有容器已启动！${NC}" || echo -e "${RED}启动失败！${NC}"
+                echo -e "${ps -aq) && echo -e "${GREEN}所有容器已启动！${NC}" || echo -e "${RED}启动失败！${NC}"
                 read -n 1 -s -r -p "按任意键返回..."
                 ;;
             0) 
@@ -172,26 +147,6 @@ read -n 1 -s -r -p "按任意键返回..."
     done
 }
 
-        # 镜像管理
-        image_management() {
-            while true; do
-            clear
-            echo -e "${BLUE}\n===== 镜像管理 =====${NC}"
-            
-            # 第一排选项
-            echo -e "${RED}1.${NC} ${BOLD_GREEN}列出所有镜像${NC}      ${RED}2.${NC} ${BOLD_GREEN}删除镜像${NC}"
-            echo -e "---------------------------"
-            
-            echo -e "${RED}3.${NC} ${BOLD_GREEN}启动镜像${NC}          ${RED}4.${NC} ${BOLD_GREEN}停止镜像${NC}"
-            echo -e "---------------------------"
-            
-            echo -e "${RED}5.${NC} ${BOLD_GREEN}启动所有镜像${NC}      ${RED}6.${NC} ${BOLD_GREEN}停止所有镜像${NC}"
-            echo -e "---------------------------"
-            
-            echo -e "${RED}7.${NC} ${BOLD_GREEN}重启镜像${NC}          ${RED}0.${NC} ${BOLD_GREEN}返回主菜单${NC}"
-            echo -e "---------------------------"  # 添加分隔线
-            
-            read -p "请选择操作: " image_choice  
 
                 case $image_choice in
                     1) 
@@ -207,7 +162,7 @@ read -n 1 -s -r -p "按任意键返回..."
                             PS3="请输入对应的数字选择："
                             echo -e "${BLUE}请选择要删除的镜像（按回4返回）:${NC}"
                             select image in "${images[@]}" "返回"; do
-                                if [ "$REPLY" == "0" ] || [ "$image" == "返回" ]; then
+                                if [ "$ [ "$image" == "返回" ]; then
                                     echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
                                     break
                                 elif [[ " ${images[@]} " =~ " ${image} " ]]; then
@@ -234,7 +189,7 @@ read -n 1 -s -r -p "按任意键返回..."
                             echo -e "${BLUE}请选择要停止的镜像:${NC}"
                             select image in $running_images "返回"; do
                                 if [ "$REPLY" == "0" ] || [ "$image" == "返回" ]; then
-                                    echo -e "${YELLOW}已取消操作，返回上级菜单。${NC}"
+                                    echo -e "${级菜单。${NC}"
                                     break
                                 elif [ -n "$image" ]; then
                                     image_id=$(echo "$image" | cut -d':' -f1)
@@ -263,7 +218,7 @@ read -n 1 -s -r -p "按任意键返回..."
                         ;;
                     7) 
                         images=($(docker images --format '{{.Repository}}:{{.Tag}}'))
-                        if [ ${#images[@]} -eq 0 ]; then
+                        if [ ${#then
                             echo -e "${RED}没有找到任何镜像！${NC}"
                         else
                             PS3="请输入对应的数字选择（按回车键返回）："
@@ -272,7 +227,7 @@ read -n 1 -s -r -p "按任意键返回..."
                                 if [ "$image" == "返回" ]; then
                                     break
                                 elif [[ " ${images[@]} " =~ " ${image} " ]]; then
-                                    image_id=$(docker ps -q --filter ancestor="$image")
+                                    image_id=$(docker cestor="$image")
                                     if [ -n "$image_id" ]; then
                                         docker restart "$image_id" && echo -e "${GREEN}镜像 $image 的容器已被重启！${NC}" || echo -e "${RED}重启失败！${NC}"
                                     else
@@ -322,7 +277,6 @@ main_menu() {
         case $choice in
             1) install_docker ;;
             2) start_docker ;;
-            3) stop_docker ;;
             4) container_management ;;
             5) image_management ;;
             0) exit 0 ;;
@@ -333,5 +287,4 @@ main_menu() {
 
 # 主程序
 check_root
-check_system
 main_menu
