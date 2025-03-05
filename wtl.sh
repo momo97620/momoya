@@ -920,7 +920,7 @@ function configure_swap() {
         echo "🔹 配置 Swap 挂载..."
         echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
     fi
-}>/dev/null 2>&1
+} >/dev/null 2>&1
     if [ $? -eq 0 ]; then
     echo "✅ Swap 已成功创建并启用虚拟内存2G！"
 else
@@ -931,6 +931,7 @@ fi
     free -h
 
     read -n 1 -s -r -p "🔹 按任意键返回..."
+} 
 show_main_menu() {
     clear
     
