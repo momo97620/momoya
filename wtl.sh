@@ -1632,7 +1632,199 @@ EOF
 done
             ;;    
         9)
-            execute_script "https://raw.githubusercontent.com/momo97620/momoya/main/xitong" "系统信息查询完成。"
+            #!/bin/bash
+
+# 颜色定义
+NC='\033[0m' # 恢复默认颜色
+
+# 格式化运行时间为中文
+format_runtime() {
+    local runtime=$(uptime -p)
+    runtime=${runtime/up /}
+    runtime=${runtime/years/年}
+    runtime=${runtime/year/年}
+    runtime=${runtime/months/月}
+    runtime=${runtime/month/月}
+    runtime=${runtime/weeks/周}
+    runtime=${runtime/week/周}
+    runtime=${runtime/days/天}
+    runtime=${runtime/day/天}
+    runtime=${runtime/hours/小时}
+    runtime=${runtime/hour/小时}
+    runtime=${runtime/minutes/分钟}
+    runtime=${runtime/minute/分钟}
+    echo "已运行 $runtime"
+}
+
+# 获取时区信息
+get_real_timezone() {
+    local timezone=$(curl -s "http://ip-api.com/line/?fields=timezone")
+    echo "$timezone"
+}
+
+# 获取系统基本信息
+get_system_info() {
+    # 主机名
+    local HOSTNAME=$(hostname)
+    
+    # 操作系统信息
+    local OS_INFO=$(grep PRETTY_NAME /etc/os-release | cut -d '=' -f2 | tr -d '"')
+    
+    # 内核版本
+    local KERNEL_VERSION=$(uname -r)
+    
+    # CPU信息
+    local CPU_INFO=$(lscpu | awk -F': +' '/Model name:/ {print $2; exit}')
+    local CPU_CORES=$(nproc)
+    local CPU_ARCH=$(uname -m)
+    
+    # 内存信息
+    local MEM_INFO=$(free -h | awk 'NR==2{printf "%s/%s (%.1f%%)", $3, $2, $3/$2*100}')
+    
+    # Swap内存
+    local SWAP_INFO=$(get_swap_info)  # 获取 Swap 信息
+    
+    # 硬盘信息
+    local DISK_INFO=$(df -h | awk '$NF=="/" {printf "%s/%s (%s)", $3, $2, $5}')
+    
+    echo "$HOSTNAME|$OS_INFO|$KERNEL_VERSION|$CPU_INFO|$CPU_CORES|$CPU_ARCH|$MEM_INFO|$SWAP_INFO|$DISK_INFO"
+}
+
+# 获取 Swap 内存信息
+get_swap_info() {
+    local swap_total=$(grep SwapTotal /proc/meminfo | awk '{printf "%.2f GB", $2 / 1024 / 1024}')
+    local swap_used=$(grep SwapFree /proc/meminfo | awk '{printf "%.2f GB", ($2 / 1024 / 1024)}')
+
+    if [[ "$swap_total" == "0.00 GB" || -z "$swap_total" ]]; then
+        echo "未安装"
+    else
+        local swap_used_val=$(echo $swap_used | awk '{print $1}')
+        local swap_total_val=$(echo $swap_total | awk '{print $1}')
+        local swap_percentage=$(awk "BEGIN {printf \"%.1f%%\", (($swap_total_val - $swap_used_val) / $swap_total_val) * 100}")
+        echo "$swap_used/$swap_total ($swap_percentage)"
+    fi
+}
+
+# 获取地理位置信息
+get_location() {
+    local services=("ipinfo.io" "ip-api.com" "freegeoip.net")
+    local ipinfo
+    local country
+    local city
+    local isp
+
+    for service in "${services[@]}"; do
+        ipinfo=$(curl -s "https://$service")
+        country=$(echo "$ipinfo" | grep 'country' | awk -F': ' '{print $2}' | tr -d '",')
+        city=$(echo "$ipinfo" | grep 'city' | awk -F': ' '{print $2}' | tr -d '",')
+        isp=$(echo "$ipinfo" | grep 'org' | awk -F': ' '{print $2}' | tr -d '",')
+
+        if [ -n "$country" ] && [ -n "$city" ]; then
+            echo "$country $city|$isp"
+            return
+        fi
+    done
+
+    echo "未知位置|未知运营商"
+}
+
+# 获取网络流量（准确方式）
+get_network_traffic() {
+    # 获取默认网关接口
+    local interface=$(ip route | grep default | awk '{print $5}' | head -n1)
+    
+    if [ -z "$interface" ]; then
+        # 如果没有找到默认接口，尝试获取第一个非lo的接口
+        interface=$(ip link show | awk -F: '$2 !~ /lo/ {print $2;exit}' | tr -d ' ')
+    fi
+    
+    # 检查接口是否存在
+    if [ -z "$interface" ]; then
+        echo "0.00"
+        return
+    fi
+    
+    # 获取流量数据（接收+发送）
+    local rx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $2}')
+    local tx_bytes=$(cat /proc/net/dev | grep "$interface:" | awk '{print $10}')
+    
+    # 校验是否成功读取数据
+    if [ -z "$rx_bytes" ] || [ -z "$tx_bytes" ]; then
+        echo "0.00"
+        return
+    fi
+    
+    # 计算总流量
+    local total_bytes=$((rx_bytes + tx_bytes))
+    local total_gb=$(awk "BEGIN {printf \"%.2f\", $total_bytes/1024/1024/1024}")
+    
+    echo "${total_gb:-0.00}"
+}
+
+# 获取网络信息
+get_network_info() {
+    local ipv4=$(curl -s4 https://ipinfo.io/ip)
+    local ipv6=$(ip -6 addr show | grep inet6 | grep -v '::1' | grep -v 'fe80' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
+    
+    echo "${ipv4:-未分配}|${ipv6:-未分配}"
+}
+
+# 主程序
+main() {
+    clear
+    echo -e "${GREEN}系统信息收集与分析${NC}"
+    echo -e "${RED}--------------------${NC}"
+
+    # 获取系统信息
+    IFS='|' read -r HOSTNAME OS_INFO KERNEL_VERSION CPU_INFO CPU_CORES CPU_ARCH MEM_INFO SWAP_INFO DISK_INFO <<< "$(get_system_info)"
+
+    # 获取网络和位置信息
+    IFS='|' read -r LOCATION ISP <<< "$(get_location)"
+    IFS='|' read -r IPV4 IPV6 <<< "$(get_network_info)"
+    local TOTAL_TRAFFIC=$(get_network_traffic)
+
+    # 当前时间和时区
+    local CURRENT_TIME=$(date "+%Y-%m-%d %H:%M:%S")
+    local TIMEZONE=$(get_real_timezone)
+
+    # 系统运行时间（使用新的中文格式化函数）
+    local RUNTIME=$(format_runtime)
+
+            # 输出系统信息
+            echo -e "${GREEN}系统基本信息:${NC}"
+            echo -e "主机名:       ${YELLOW}$HOSTNAME${NC}"
+            echo -e "操作系统:     ${YELLOW}$OS_INFO${NC}"
+            echo -e "内核版本:     ${YELLOW}$KERNEL_VERSION${NC}"
+            echo -e "${RED}--------------------${NC}"
+
+            echo -e "${GREEN}硬件信息:${NC}"
+            echo -e "CPU型号:      ${YELLOW}$CPU_INFO${NC}"
+            echo -e "CPU核心数:    ${YELLOW}$CPU_CORES${NC}"
+            echo -e "CPU架构:      ${YELLOW}$CPU_ARCH${NC}"
+            echo -e "内存:         ${YELLOW}$MEM_INFO${NC}"
+            echo -e "Swap:         ${YELLOW}$SWAP_INFO${NC}"
+            echo -e "硬盘:         ${YELLOW}$DISK_INFO${NC}"
+            echo -e "${RED}--------------------${NC}"
+
+            echo -e "${GREEN}网络信息:${NC}"
+            echo -e "运营商:       ${YELLOW}$ISP${NC}"
+            echo -e "地理位置:     ${YELLOW}$LOCATION${NC}"
+            echo -e "IPv4地址:     ${YELLOW}$IPV4${NC}"
+            echo -e "IPv6地址:     ${YELLOW}$IPV6${NC}"
+            echo -e "总网络流量:   ${YELLOW}${TOTAL_TRAFFIC}GB${NC}"
+            echo -e "${RED}--------------------${NC}"
+
+            echo -e "${GREEN}系统时间:${NC}"
+            echo -e "时区:         ${YELLOW}$TIMEZONE${NC}"
+            echo -e "当前时间:     ${YELLOW}$CURRENT_TIME${NC}"
+            echo -e "运行时间:     ${YELLOW}$RUNTIME${NC}"
+            echo -e "${RED}--------------------${NC}"
+
+            echo -e "\n${GREEN}操作完成${NC}"
+}
+
+# 调用主程序
+main
             ;;
         10)
             set_ip_priority
