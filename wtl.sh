@@ -1821,12 +1821,12 @@ main() {
             echo -e "${RED}--------------------${NC}"
 
             echo -e "\n${GREEN}操作完成${NC}"
-            echo "按任意键返回主菜单..."
-            read -n 1 -s -r
 }
 
 # 调用主程序
 main
+            echo "按任意键返回主菜单..."
+            read -n 1 -s -r
             ;;
         10)
             set_ip_priority
