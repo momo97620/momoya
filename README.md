@@ -31,13 +31,15 @@
 
 ---
 
+```html
 ## 🚀 **一键脚本**
 
 运行以下命令：
-
-<pre>
+<pre><code>
 curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
-</pre>
+</code></pre>
+
+📋 **提示**：手动复制上方命令并粘贴到终端执行！
 
 📌 **说明**  
 该脚本适用于 Debian。  
