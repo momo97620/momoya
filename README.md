@@ -3,7 +3,7 @@
 > **简洁高效 | 便捷实用**  
 
 ✨ **本项目提供了一键部署脚本**，支持 **服务器运维**、**环境搭建**、**系统优化** 等功能。  
-✅ 适用于 **Debian 11 (bullseye)** 系统，让服务器管理更加轻松便捷！    
+✅ 适用于 **Debian、Ubuntu** 系统，让服务器管理更加轻松便捷！    
 
 ---
 
@@ -40,7 +40,7 @@ curl -sS -O https://wutongli.de/wtl.sh && chmod +x wtl.sh && ./wtl.sh
 </code></pre>
 
 📌 **说明**  
-该脚本适用于 Debian。  
+该脚本适用于 Debian、Ubuntu
 部分功能依赖 Docker，请确保系统已安装 Docker。  
 备份功能支持 OneDrive，需要手动绑定账号。
 
