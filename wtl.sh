@@ -1356,9 +1356,7 @@ read -n 1 -s -r -p "按任意键返回菜单..."
 echo ""
         ;;
         4)
-            #!/bin/bash
-
-# 检查是否以 root 权限运行
+         # 检查是否以 root 权限运行
 if [[ $EUID -ne 0 ]]; then
     echo "请以 root 权限运行此脚本。"
     exit 1
